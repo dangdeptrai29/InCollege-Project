@@ -15,5 +15,8 @@ data/users.txt
 .devcontainer
 .vscode
 
-.DS_Store  
+.DS_Store
 incollege
+
+.devcontainer
+.vscode
