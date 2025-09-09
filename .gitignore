@@ -14,5 +14,8 @@ data/users.txt
 
 
 
-.DS_Store  
+.DS_Store
 incollege
+
+.devcontainer
+.vscode
