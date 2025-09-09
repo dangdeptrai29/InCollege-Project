@@ -1,12 +1,6 @@
 1
-wronguser1
-badpass1
-wronguser2
-badpass2
-wronguser3
-badpass3
-wronguser4
-badpass4
-testuser2
+baduser1
+Wrongpass
+testuser
 Password1!
 1
