@@ -91,6 +91,29 @@
            88  MATCH-FOUND                    VALUE 'Y'.
            88  MATCH-NOT-FOUND                VALUE 'N'.
 
+       *> Variables to hold input while creating new account
+       01  WS-NEW-USERNAME            PIC X(128) VALUE SPACES.
+       01  WS-NEW-PASSWORD            PIC X(128) VALUE SPACES.
+
+       *> Vars for validating password:
+       01  WS-PASSWORD-INVALID        PIC X VALUE 'N'.
+           88 PASS-VALID              VALUE 'N'.
+           88 PASS-INVALID            VALUE 'Y'.
+
+       01  WS-PASSWORD-ERROR          PIC X(128) VALUE SPACES.
+       01  WS-PASS-LEN                PIC 9(4) VALUE 0.
+       01  WS-UPPER-COUNT             PIC 9(4) VALUE 0.
+       01  WS-DIGIT-COUNT             PIC 9(4) VALUE 0.
+       01  WS-SPECIAL-COUNT           PIC 9(4) VALUE 0.
+       01  WS-SPECIAL-CHARS           PIC X(20) VALUE "!@#$%^&*-_+".
+
+              *> Message for account creation 
+       01 MSG-ACCOUNT-LIMIT           PIC X(64) VALUE "All permitted accounts have been created.".
+       01 MSG-USERNAME-EXISTS         PIC X(64) VALUE "Username already exists. Please try a different one.".
+       01 MSG-ENTER-NEW-USER          PIC X(64) VALUE "Enter new username:".
+       01 MSG-ENTER-NEW-PASS          PIC X(64) VALUE "Enter new password:".
+       01 MSG-ACCOUNT-SUCCESS         PIC X(64) VALUE "Account created successfully.".
+
        PROCEDURE DIVISION.
        MAIN-SECTION.
            PERFORM INIT-FILES
@@ -135,7 +158,7 @@
              WHEN '1'
                PERFORM LOGIN
              WHEN '2'
-               MOVE MSG-UNDER-CONST TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM CREATE-ACCOUNT
              WHEN OTHER
                MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
            END-EVALUATE
@@ -207,6 +230,112 @@
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-CHOICE
            END-READ
            EXIT.
+
+
+       CREATE-ACCOUNT.
+           *>Check max account
+           IF WS-USERS-COUNT >= 5
+               MOVE MSG-ACCOUNT-LIMIT TO WS-MSG PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+           
+           *> Prompt for new username
+           PERFORM UNTIL WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND
+               MOVE MSG-ENTER-NEW-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-NEW-USERNAME
+               *> CHECK UNIQUENESS
+               SET MATCH-NOT-FOUND TO TRUE
+               PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-USERS-COUNT OR MATCH-FOUND
+                   IF WS-NEW-USERNAME = WS-TBL-USERNAME(WS-I)
+                       SET MATCH-FOUND TO TRUE
+                   END-IF
+               END-PERFORM
+               IF MATCH-FOUND
+                   MOVE MSG-USERNAME-EXISTS TO WS-MSG PERFORM DISPLAY-AND-LOG
+                   MOVE SPACES TO WS-NEW-USERNAME
+               END-IF
+           END-PERFORM
+
+           *> PROMPT FOR NEW PASSWORD WITH VALIDATION
+           PERFORM UNTIL WS-PASSWORD-INVALID = 'N'
+               MOVE MSG-ENTER-NEW-PASS TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               PERFORM READ-NEW-PASSWORD
+               PERFORM VALIDATE-PASSWORD
+               IF WS-PASSWORD-INVALID = 'Y'
+                   MOVE WS-PASSWORD-ERROR TO WS-MSG
+                   PERFORM DISPLAY-AND-LOG
+               END-IF
+           END-PERFORM
+           
+           *> SAVE NEW ACCOUNT
+           ADD 1 TO WS-USERS-COUNT
+           MOVE WS-NEW-USERNAME TO WS-TBL-USERNAME(WS-USERS-COUNT)
+           MOVE WS-NEW-PASSWORD TO WS-TBL-PASSWORD(WS-USERS-COUNT)
+
+           *> UPDATE USERS.TXT
+           OPEN EXTEND USERS-FILE
+           MOVE WS-NEW-USERNAME TO USER-REC
+           STRING WS-NEW-USERNAME DELIMITED BY SIZE "|" WS-NEW-PASSWORD DELIMITED BY SIZE INTO USER-REC
+           END-STRING
+           WRITE USER-REC
+           CLOSE USERS-FILE
+
+           MOVE MSG-ACCOUNT-SUCCESS TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+           EXIT.
+
+       READ-NEW-USERNAME.
+           MOVE SPACES TO WS-NEW-USERNAME
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-NEW-USERNAME
+           END-READ
+           EXIT.
+
+       READ-NEW-PASSWORD.
+           MOVE SPACES TO WS-NEW-PASSWORD
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-NEW-PASSWORD
+           END-READ
+           EXIT.
+
+       VALIDATE-PASSWORD.
+           MOVE 'N' TO WS-PASSWORD-INVALID
+           MOVE SPACES TO WS-PASSWORD-ERROR
+
+           *> Check length
+           MOVE FUNCTION LENGTH(WS-NEW-PASSWORD) TO WS-PASS-LEN
+           IF WS-PASS-LEN < 8 OR WS-PASS-LEN > 12
+               SET PASS-INVALID TO TRUE
+               MOVE "Password must be 8–12 characters." TO WS-PASSWORD-ERROR
+           END-IF
+
+           *> Count uppercase letters
+           INSPECT WS-NEW-PASSWORD TALLYING WS-UPPER-COUNT FOR ALL 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+           IF WS-UPPER-COUNT = 0
+               SET PASS-INVALID TO TRUE
+               MOVE "Password must contain at least one uppercase letter." TO WS-PASSWORD-ERROR
+           END-IF
+
+           *> Count digits
+           INSPECT WS-NEW-PASSWORD TALLYING WS-DIGIT-COUNT FOR ALL '0123456789'
+           IF WS-DIGIT-COUNT = 0
+               SET PASS-INVALID TO TRUE
+               MOVE "Password must contain at least one digit." TO WS-PASSWORD-ERROR
+           END-IF
+
+           *> Count special characters
+           INSPECT WS-NEW-PASSWORD TALLYING WS-SPECIAL-COUNT FOR ALL WS-SPECIAL-CHARS
+           IF WS-SPECIAL-COUNT = 0
+               SET PASS-INVALID TO TRUE
+               MOVE "Password must contain at least one special character (!@#$%^&*?-_+)." TO WS-PASSWORD-ERROR
+           END-IF
+           EXIT.
+
 
        VALIDATION-SECTION.
        CHECK-CREDENTIALS.
