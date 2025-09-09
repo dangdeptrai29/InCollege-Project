@@ -97,5 +97,6 @@ Acceptance Criteria — Login Failure
 Notes
 - The menu is always printed first. The program prints `Enter Your Choice:` (prompt), then echoes the chosen value (e.g., `Enter Your Choice: 1`) after reading it from the input file.
 - Retries are unlimited; the input file controls how many attempts occur before success.
+  - At the moment, the test scripts only run test 5 times and quit the loop for the purpose of testing
 - Output is trimmed (no trailing spaces) and mirrored exactly to `io/InCollege_Output.txt`.
 - To create different scenarios, change the input file accordingly and rerun `./incollege`.
