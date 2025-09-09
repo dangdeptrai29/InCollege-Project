@@ -12,7 +12,8 @@ io/InCollege_Output.txt
 # Local users data (real or local state) – commit only example
 data/users.txt
 
-
+.devcontainer
+.vscode
 
 .DS_Store  
 incollege

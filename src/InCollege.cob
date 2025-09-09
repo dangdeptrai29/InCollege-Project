@@ -32,7 +32,7 @@
 
        FD  USERS-FILE.
        01  USER-REC                   PIC X(256).
-      
+
       FD  USERS-EXAMPLE-FILE.
       01  USER-REC-EX                PIC X(256).
 
