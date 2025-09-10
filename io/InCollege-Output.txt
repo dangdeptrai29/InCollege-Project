@@ -1,0 +1,6 @@
+Welcome to InCollege!
+1. Login
+2. Create Account
+Enter Your Choice:
+Enter Your Choice: 2
+All permitted accounts have been created, please come back later.

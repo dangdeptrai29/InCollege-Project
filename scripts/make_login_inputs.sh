@@ -2,12 +2,12 @@
 set -euo pipefail
 
 # Generate file-driven inputs for InCollege login flows.
-# Writes to io/InCollege_Input.txt by default.
+# Writes to io/InCollege-Input.txt by default.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 cd "$ROOT_DIR"
 
-OUT="io/InCollege_Input.txt"
+OUT="io/InCollege-Input.txt"
 
 usage() {
   cat <<USAGE
@@ -44,4 +44,3 @@ esac
 
 echo "[preview]"
 nl -ba "$OUT"
-
