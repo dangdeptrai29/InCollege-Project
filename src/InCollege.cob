@@ -9,7 +9,7 @@
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
-           SELECT INPUT-FILE ASSIGN TO "io/InCollege_Input.txt"
+           SELECT INPUT-FILE ASSIGN TO "io/InCollege-Input.txt"
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-IN-STATUS.
            SELECT OUTPUT-FILE ASSIGN TO "io/InCollege_Output.txt"
@@ -107,7 +107,7 @@
        01  WS-SPECIAL-COUNT           PIC 9(4) VALUE 0.
        01  WS-SPECIAL-CHARS           PIC X(20) VALUE "!@#$%^&*-_+".
 
-              *> Message for account creation 
+              *> Message for account creation
        01 MSG-ACCOUNT-LIMIT           PIC X(64) VALUE "All permitted accounts have been created.".
        01 MSG-USERNAME-EXISTS         PIC X(64) VALUE "Username already exists. Please try a different one.".
        01 MSG-ENTER-NEW-USER          PIC X(64) VALUE "Enter new username:".
@@ -238,7 +238,7 @@
                MOVE MSG-ACCOUNT-LIMIT TO WS-MSG PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
            END-IF
-           
+
            *> Prompt for new username
            PERFORM UNTIL WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND
                MOVE MSG-ENTER-NEW-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -267,7 +267,7 @@
                    PERFORM DISPLAY-AND-LOG
                END-IF
            END-PERFORM
-           
+
            *> SAVE NEW ACCOUNT
            ADD 1 TO WS-USERS-COUNT
            MOVE WS-NEW-USERNAME TO WS-TBL-USERNAME(WS-USERS-COUNT)
