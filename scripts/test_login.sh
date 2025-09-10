@@ -6,8 +6,8 @@ cd "$ROOT_DIR"
 
 BIN="./incollege"
 SRC="src/InCollege.cob"
-INPUT="io/InCollege_Input.txt"
-OUTPUT="io/InCollege_Output.txt"
+INPUT="io/InCollege-Input.txt"
+OUTPUT="io/InCollege-Output.txt"
 USERS="data/users.txt"
 
 FAIL_MSG="Incorrect username/password, please try again."
