@@ -109,7 +109,7 @@
        01  WS-CHAR                    PIC X     VALUE SPACE.
        01  WS-TMP-COUNT               PIC 9(4)  VALUE 0.
 
-              *> Message for account creation 
+              *> Message for account creation
        01 MSG-ACCOUNT-LIMIT           PIC X(80) VALUE "All permitted accounts have been created, please come back later.".
        01 MSG-USERNAME-EXISTS         PIC X(64) VALUE "Username already exists. Please try a different one.".
        01 MSG-ENTER-NEW-USER          PIC X(64) VALUE "Please enter your username:".
@@ -260,7 +260,7 @@
                MOVE MSG-ACCOUNT-LIMIT TO WS-MSG PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
            END-IF
-           
+
            *> Prompt for new username
            PERFORM UNTIL WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND OR EOF-IN
                MOVE MSG-ENTER-NEW-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -290,27 +290,27 @@
                MOVE MSG-ENTER-NEW-PASS TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEW-PASSWORD
-               
+
                IF EOF-IN
                    EXIT PARAGRAPH
                END-IF
-               
+
                PERFORM VALIDATE-PASSWORD
 
                IF PASS-INVALID
                    MOVE WS-PASSWORD-ERROR TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-IF
            END-PERFORM
-           
+
            IF EOF-IN
                EXIT PARAGRAPH
            END-IF
-           
+
            *> SAVE NEW ACCOUNT - only if we have a valid password
            IF WS-NEW-PASSWORD = SPACES
                EXIT PARAGRAPH
            END-IF
-           
+
            ADD 1 TO WS-USERS-COUNT
            MOVE WS-NEW-USERNAME TO WS-TBL-USERNAME(WS-USERS-COUNT)
            MOVE WS-NEW-PASSWORD TO WS-TBL-PASSWORD(WS-USERS-COUNT)
@@ -320,7 +320,7 @@
            MOVE SPACES TO USER-REC WS-USER-FILE-USERNAME WS-USER-FILE-PASSWORD
            MOVE FUNCTION TRIM(WS-NEW-USERNAME) TO WS-USER-FILE-USERNAME
            MOVE FUNCTION TRIM(WS-NEW-PASSWORD) TO WS-USER-FILE-PASSWORD
-           STRING WS-USER-FILE-USERNAME DELIMITED BY SIZE 
+           STRING WS-USER-FILE-USERNAME DELIMITED BY SIZE
                    "|" DELIMITED BY SIZE
                    WS-USER-FILE-PASSWORD DELIMITED BY SIZE INTO USER-REC
            END-STRING
@@ -473,7 +473,7 @@
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-SKILL-CHOICE
            END-READ
            EXIT.
-          
+
        VALIDATION-SECTION.
        CHECK-CREDENTIALS.
            *> Scan in-memory users table for an exact, case-sensitive match
