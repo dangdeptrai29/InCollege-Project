@@ -61,9 +61,9 @@
        01  MSG-SUCCESS                PIC X(64)  VALUE "You have successfully logged in.".
        01  MSG-FAILURE                PIC X(64)  VALUE "Incorrect username/password, please try again.".
        01  MSG-WELCOME                PIC X(64)  VALUE "Welcome to InCollege!".
-       01  MSG-LOGIN                  PIC X(32)  VALUE "1. Login".
-       01  MSG-CREATE                 PIC X(32)  VALUE "2. Create Account".
-       01  MSG-ENTER-CHOICE           PIC X(19)  VALUE "Enter Your Choice: ".
+       01  MSG-LOGIN                  PIC X(32)  VALUE "Log In".
+       01  MSG-CREATE                 PIC X(32)  VALUE "Create New Account".
+       01  MSG-ENTER-CHOICE           PIC X(19)  VALUE "Enter your choice: ".
        01  MSG-WELCOME-PFX            PIC X(9)   VALUE "Welcome, ".
        01  MSG-ENTER-USER             PIC X(64)  VALUE "Please enter your username:".
        01  MSG-ENTER-PASS             PIC X(64)  VALUE "Please enter your password:".
@@ -119,7 +119,7 @@
        01  WS-LOGGED-CHOICE           PIC X(8) VALUE SPACES.
        01  WS-SKILL-CHOICE            PIC X(8) VALUE SPACES.
 
-       01  MSG-MENU-JOB               PIC X(32) VALUE "Search for a new job".
+       01  MSG-MENU-JOB               PIC X(32) VALUE "Search for a job".
        01  MSG-MENU-FIND              PIC X(32) VALUE "Find someone you know".
        01  MSG-MENU-SKILL             PIC X(32) VALUE "Learn a new skill".
        01  MSG-ENTER-CHOICE2          PIC X(19) VALUE "Enter your choice: ".
@@ -129,7 +129,7 @@
        01  MSG-SKILL3                 PIC X(32) VALUE "Skill 3".
        01  MSG-SKILL4                 PIC X(32) VALUE "Skill 4".
        01  MSG-SKILL5                 PIC X(32) VALUE "Skill 5".
-       01  MSG-SKILL6                 PIC X(32) VALUE "Go back".
+       01  MSG-SKILL6                 PIC X(32) VALUE "Go Back".
        01  MSG-ENTER-SKILL            PIC X(19) VALUE "Enter your choice: ".
        01  MSG-SKILL-UNDER            PIC X(64) VALUE "This skill is under construction.".
 
@@ -168,12 +168,12 @@
               EXIT PARAGRAPH
            END-IF
            *> Echo the choice value for verification
-           MOVE SPACES TO WS-MSG
-           STRING MSG-ENTER-CHOICE DELIMITED BY SIZE
-                  WS-CHOICE        DELIMITED BY SIZE
-                  INTO WS-MSG
-           END-STRING
-           PERFORM DISPLAY-AND-LOG
+      *>     MOVE SPACES TO WS-MSG
+      *>     STRING MSG-ENTER-CHOICE DELIMITED BY SIZE
+      *>            WS-CHOICE        DELIMITED BY SIZE
+      *>            INTO WS-MSG
+      *>     END-STRING
+      *>     PERFORM DISPLAY-AND-LOG
            EVALUATE WS-CHOICE
              WHEN '1'
                PERFORM LOGIN
@@ -209,10 +209,12 @@
                  *> Print personalized welcome
                  MOVE SPACES TO WS-MSG
                  STRING MSG-WELCOME-PFX DELIMITED BY SIZE
-                        WS-USERNAME     DELIMITED BY SIZE
+                        FUNCTION TRIM(WS-USERNAME) DELIMITED BY SIZE
+                        "!"             DELIMITED BY SIZE
                         INTO WS-MSG
                  END-STRING
                  PERFORM DISPLAY-AND-LOG
+                 PERFORM LOGGED-IN-MENU
                  EXIT PERFORM
               ELSE
                  MOVE MSG-FAILURE TO WS-MSG
@@ -392,8 +394,8 @@
        LOGGED-IN-SECTION.
        LOGGED-IN-MENU.
            PERFORM UNTIL EOF-IN
-               MOVE MSG-MENU-FIND TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-MENU-JOB TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-FIND TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-MENU-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-ENTER-CHOICE2 TO WS-MSG PERFORM DISPLAY-AND-LOG
 
@@ -406,15 +408,15 @@
                EVALUATE WS-LOGGED-CHOICE
                    WHEN '1'
                        MOVE SPACES TO WS-MSG
-                       STRING "Find someone you know" DELIMITED BY SIZE
-                           " is under construction" DELIMITED BY SIZE
+                       STRING "Job search/internship" DELIMITED BY SIZE
+                           " is under construction." DELIMITED BY SIZE
                            INTO WS-MSG
                        END-STRING
                        PERFORM DISPLAY-AND-LOG
                    WHEN '2'
                        MOVE SPACES TO WS-MSG
-                       STRING "Search for a new job" DELIMITED BY SIZE
-                           " is under construction" DELIMITED BY SIZE
+                       STRING "Find someone you know" DELIMITED BY SIZE
+                           " is under construction." DELIMITED BY SIZE
                            INTO WS-MSG
                        END-STRING
                        PERFORM DISPLAY-AND-LOG
@@ -438,6 +440,7 @@
 
        SKILL-MENU.
            PERFORM UNTIL WS-SKILL-CHOICE = '6' OR EOF-IN
+               MOVE "Learn a new skill:" TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL1 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL3 TO WS-MSG PERFORM DISPLAY-AND-LOG
