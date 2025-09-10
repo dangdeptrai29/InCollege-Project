@@ -16,7 +16,5 @@ data/users.txt
 .vscode
 
 .DS_Store
-incollege
 
-.devcontainer
-.vscode
+temp/
