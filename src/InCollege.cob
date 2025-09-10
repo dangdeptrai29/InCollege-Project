@@ -394,11 +394,7 @@
            EXIT.
        READ-LOGGED-CHOICE.
            MOVE SPACES TO WS-LOGGED-CHOICE
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-LOGGED-CHOICE
-           END-READ
+           ACCEPT WS-LOGGED-CHOICE
            EXIT.
 
        SKILL-MENU.
@@ -424,11 +420,7 @@
            EXIT.
        READ-SKILL-CHOICE.
            MOVE SPACES TO WS-SKILL-CHOICE
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-SKILL-CHOICE
-           END-READ
+           ACCEPT WS-SKILL-CHOICE
            EXIT.
           
        VALIDATION-SECTION.
