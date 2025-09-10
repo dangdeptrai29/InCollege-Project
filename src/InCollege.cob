@@ -114,6 +114,24 @@
        01 MSG-ENTER-NEW-PASS          PIC X(64) VALUE "Enter new password:".
        01 MSG-ACCOUNT-SUCCESS         PIC X(64) VALUE "Account created successfully.".
 
+       01  WS-LOGGED-CHOICE           PIC X(8) VALUE SPACES.
+       01  WS-SKILL-CHOICE            PIC X(8) VALUE SPACES.
+
+       01  MSG-MENU-JOB               PIC X(32) VALUE "Search for a new job".
+       01  MSG-MENU-FIND              PIC X(32) VALUE "Find someone you know".
+       01  MSG-MENU-SKILL             PIC X(32) VALUE "Learn a new skill".
+       01  MSG-ENTER-CHOICE2          PIC X(19) VALUE "Enter your choice: ".
+
+       01  MSG-SKILL1                 PIC X(32) VALUE "Skill 1".
+       01  MSG-SKILL2                 PIC X(32) VALUE "Skill 2".
+       01  MSG-SKILL3                 PIC X(32) VALUE "Skill 3".
+       01  MSG-SKILL4                 PIC X(32) VALUE "Skill 4".
+       01  MSG-SKILL5                 PIC X(32) VALUE "Skill 5".
+       01  MSG-SKILL6                 PIC X(32) VALUE "Go back".
+       01  MSG-ENTER-SKILL            PIC X(19) VALUE "Enter your choice: ".
+       01  MSG-SKILL-UNDER            PIC X(64) VALUE "This skill is under construction.".
+
+
        PROCEDURE DIVISION.
        MAIN-SECTION.
            PERFORM INIT-FILES
@@ -193,6 +211,9 @@
                         INTO WS-MSG
                  END-STRING
                  PERFORM DISPLAY-AND-LOG
+
+                 PERFORM LOGGED-IN-MENU
+
                  EXIT PERFORM
               ELSE
                  MOVE MSG-FAILURE TO WS-MSG
@@ -243,6 +264,7 @@
            PERFORM UNTIL WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND
                MOVE MSG-ENTER-NEW-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
                PERFORM READ-NEW-USERNAME
+
                *> CHECK UNIQUENESS
                SET MATCH-NOT-FOUND TO TRUE
                PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-USERS-COUNT OR MATCH-FOUND
@@ -257,14 +279,14 @@
            END-PERFORM
 
            *> PROMPT FOR NEW PASSWORD WITH VALIDATION
-           PERFORM UNTIL WS-PASSWORD-INVALID = 'N'
-               MOVE MSG-ENTER-NEW-PASS TO WS-MSG
-               PERFORM DISPLAY-AND-LOG
+           PERFORM UNTIL PASS-VALID
+               MOVE MSG-ENTER-NEW-PASS TO WS-MSG PERFORM DISPLAY-AND-LOG
+
                PERFORM READ-NEW-PASSWORD
                PERFORM VALIDATE-PASSWORD
-               IF WS-PASSWORD-INVALID = 'Y'
-                   MOVE WS-PASSWORD-ERROR TO WS-MSG
-                   PERFORM DISPLAY-AND-LOG
+
+               IF PASS-INVALID
+                   MOVE WS-PASSWORD-ERROR TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-IF
            END-PERFORM
            
@@ -275,14 +297,14 @@
 
            *> UPDATE USERS.TXT
            OPEN EXTEND USERS-FILE
-           MOVE WS-NEW-USERNAME TO USER-REC
-           STRING WS-NEW-USERNAME DELIMITED BY SIZE "|" WS-NEW-PASSWORD DELIMITED BY SIZE INTO USER-REC
+           STRING WS-NEW-USERNAME DELIMITED BY SIZE 
+                   "|" DELIMITED BY SIZE
+                   WS-NEW-PASSWORD DELIMITED BY SIZE INTO USER-REC
            END-STRING
            WRITE USER-REC
            CLOSE USERS-FILE
 
-           MOVE MSG-ACCOUNT-SUCCESS TO WS-MSG
-           PERFORM DISPLAY-AND-LOG
+           MOVE MSG-ACCOUNT-SUCCESS TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
 
        READ-NEW-USERNAME.
@@ -304,7 +326,7 @@
            EXIT.
 
        VALIDATE-PASSWORD.
-           MOVE 'N' TO WS-PASSWORD-INVALID
+           SET PASS-VALID TO TRUE
            MOVE SPACES TO WS-PASSWORD-ERROR
 
            *> Check length
@@ -336,7 +358,79 @@
            END-IF
            EXIT.
 
+       LOGGED-IN-SECTION.
+       LOGGED-IN-MENU.
+           PERFORM FOREVER
+               MOVE MSG-MENU-FIND TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-JOB TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-ENTER-CHOICE2 TO WS-MSG PERFORM DISPLAY-AND-LOG
 
+               PERFORM READ-LOGGED-CHOICE
+
+               EVALUATE WS-LOGGED-CHOICE
+                   WHEN '1'
+                       MOVE SPACES TO WS-MSG
+                       STRING "Find someone you know" DELIMITED BY SIZE
+                           " is under construction" DELIMITED BY SIZE
+                           INTO WS-MSG
+                       END-STRING
+                       PERFORM DISPLAY-AND-LOG
+                   WHEN '2'
+                       MOVE SPACES TO WS-MSG
+                       STRING "Search for a new job" DELIMITED BY SIZE
+                           " is under construction" DELIMITED BY SIZE
+                           INTO WS-MSG
+                       END-STRING
+                       PERFORM DISPLAY-AND-LOG
+
+                   WHEN '3'
+                       PERFORM SKILL-MENU
+
+                   WHEN OTHER
+                       MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-EVALUATE
+           END-PERFORM
+           EXIT.
+       READ-LOGGED-CHOICE.
+           MOVE SPACES TO WS-LOGGED-CHOICE
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-LOGGED-CHOICE
+           END-READ
+           EXIT.
+
+       SKILL-MENU.
+           PERFORM UNTIL WS-SKILL-CHOICE = '6'
+               MOVE MSG-SKILL1 TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-SKILL3 TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-SKILL4 TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-SKILL5 TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-ENTER-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+               PERFORM READ-SKILL-CHOICE
+
+               EVALUATE WS-SKILL-CHOICE
+                   WHEN '1' THRU '5'
+                       MOVE MSG-SKILL-UNDER TO WS-MSG PERFORM DISPLAY-AND-LOG
+                   WHEN '6'
+                       PERFORM LOGGED-IN-MENU
+                   WHEN OTHER
+                       MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-EVALUATE
+           END-PERFORM
+           EXIT.
+       READ-SKILL-CHOICE.
+           MOVE SPACES TO WS-SKILL-CHOICE
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-SKILL-CHOICE
+           END-READ
+           EXIT.
+          
        VALIDATION-SECTION.
        CHECK-CREDENTIALS.
            *> Scan in-memory users table for an exact, case-sensitive match
