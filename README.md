@@ -1,205 +1,53 @@
-# InCollege Project – Week 3 Deliverable
+# InCollege Project – Week 2 Deliverable
 
 ## Description
-This repository contains the Week 3 deliverable for the InCollege Project.  
-The objective of this milestone is to implement the **core authentication system** and simulate the initial user navigation menu in COBOL.  
+
+This repository contains the Week 2 deliverable for the InCollege Project.  
+The objective of this milestone is to implement the **personal profiles management** functionality in COBOL. This is a crucial step for users to personalize their presence and eventually connect with others effectively
 
 The program provides the following functionality:
-- **User Registration**: New users can create an account (up to 5 accounts).  
-  - Passwords must be 8–12 characters long and include at least one capital letter, one digit, and one special character.  
-  - Accounts are persisted in a file and automatically reloaded when the program restarts.  
-  - On the 6th account attempt, the system displays:  
-    `"All permitted accounts have been created, please come back later."`  
 
-- **User Login**: Returning users can log in using existing credentials.  
-  - Successful login → `"You have successfully logged in."`  
-  - Failed login → `"Incorrect username/password, please try again."` (unlimited attempts allowed).  
+- **Menu Navigation**: After logging in, users have option to create/view/edit their personal profile.
 
-- **Post-Login Navigation**:  
-  - Options presented: **Search for a job**, **Find someone you know**, **Learn a new skill**.  
-  - Job Search & Find Someone → `"Under construction"` message.  
-  - Learn a new skill → Presents 5 skills to choose from (all return `"Under construction"`).  
-  - Includes option to return to main menu.  
+- **Profile Creation**: Users can create a personal profile with basic fields: First Name, Last Name, Major, University, Graduation Year. The profile also includes optional sections: About Me, Experience, Education.
 
-- **Input/Output Handling**:  
-  - All input (username, password, menu selections) is read from an input file.  
-  - All output is displayed on the screen **and** written to an output file for verification.  
-  - Output file must exactly match console output.  
+- **Profile Viewing**: Users can view their complete profile information in a formatted manner.
+
+- **Profile Editing**: Users can edit any field in their profile. The program validates inputs (e.g., email format, graduation year range).
+
+- **Data Persistence**: Profiles are saved to `data/profiles.txt` in a structured format. On startup, existing profiles are loaded into memory. User's profile must be linked to their account created in Week 1 (`data/users.txt`).
 
 This milestone also includes tester responsibilities:
-- Development of comprehensive test input files (positive, negative, edge cases).  
-- Verification that outputs in console and output file match exactly.  
-- Logging bugs in Jira when discrepancies are found.  
 
+- Development of comprehensive test input/output files (positive, negative, edge cases). All cases are created/stored in `tests/` directory with pattern `Input_<id>.txt` and `Output_<id>.txt`.
+- Verification that outputs in console and output file match exactly.
+- Logging bugs in Jira when discrepancies are found.
 
-## Instruction
-To run Cobol, first install a COBOL compiler. Common choice: GnuCOBOL (open-cobol), available via package managers.
+## Installation
+
+1. To run Cobol, first install a COBOL compiler. Common choice: GnuCOBOL (open-cobol), available via package managers.
+
 - Linux/macOS: `brew install gnu-cobol` or `apt-get install open-cobol`
 - Windows: GnuCOBOL binaries exist, or run inside WSL
 
-Verify installation:
+2. Verify installation:
+
 - `cobc -v`
 
-## Docs
-- Project Breakdown (source spec): `docs/project-breakdown.md`
-- Architecture (sections/paragraphs layout): `docs/epic1/architecture.md`
-- Login – Part 1 details: `docs/epic1/login-part-1.md`
+3. Compile the program:
 
-Architecture is the source of truth for structure and ownership in Epic 1. See Jira mapping for tickets linked to each architecture section: `docs/jira/epic1.md`.
-
-## Testing (High-Level)
-This project is file‑driven per spec: all input comes from `io/InCollege-Input.txt` and every printed line is mirrored to `io/InCollege-Output.txt`. 
-
-Quickly create inputs:
-- Success input: `bash scripts/make_login_inputs.sh success testuser 'Password1!'`
-- 4 failures then success: `bash scripts/make_login_inputs.sh failure-4-then-success testuser 'Password1!'`
-
-Manual run (success):
-1) Build: `cobc -x src/InCollege.cob -o incollege`
-2) `printf '1\n%s\n%s\n' 'testuser' 'Password1!' > io/InCollege-Input.txt`
-3) `: > io/InCollege-Output.txt && ./incollege`
-4) Expect: menu, `Enter Your Choice: 1`, prompts, success, and `Welcome, testuser`
-
-More detailed flows: `docs/epic1/login-part-1.md`
-
-Notes
-- Multiple attempts in one run: add more username/password pairs (two lines per attempt) to `io/InCollege-Input.txt`. The program tries each pair until a success or end of file.
-- Output overwrite vs append: The program currently overwrites `io/InCollege-Output.txt` each run for deterministic testing. If you prefer appending runs with a separator, say the word and we can switch to `OPEN EXTEND` and add a run header printed to both console and file.
-
-Troubleshooting
-- Seeing “Incorrect username/password…” when you expect success? Verify:
-- `io/InCollege-Input.txt` contains exactly the username on one line and the password on the next.
-  - `data/users.txt` still has the matching `username|password` (it should not contain any commands or unrelated text).
-- Warning “implicit CLOSE of USERS-FILE”: This used to happen when the user file reached EOF and we conditionally skipped a CLOSE. The program now tracks the open state and closes the file explicitly; the warning should no longer appear.
-
-File Roles
-- `data/users.txt`: canonical, writable user store (git‑ignored). Format: `username|password`. Created/updated by the app when accounts are added.
-- `data/users.examples.txt`: example seed checked into git. Used as a fallback if `users.txt` is missing or empty.
-- `io/InCollege-Input.txt`: test input for login attempts. Each attempt is two lines: first the username, second the password.
-- `io/InCollege-Output.txt`: program output mirror. Overwritten each run for clean comparisons.
-
-Users file: example vs. real
-- Prefer `data/users.txt` for real runs; it is ignored by git to avoid leaking local credentials.
-- If `data/users.txt` is missing or empty, the program falls back to `data/users.examples.txt` for convenience (contains `testuser|Password1!`).
-- To start with the example as your real data, copy it once: `cp data/users.examples.txt data/users.txt`.
-
-zsh Tips
-- zsh expands `!` even inside double quotes. Use one of:
-  - Single quotes: `printf '%s\n%s\n' 'testuser' 'Password1!' > io/InCollege-Input.txt`
-  - Escape the exclamation: `Password1\!`
-  - Or temporarily disable history expansion: `setopt NO_BANG_HIST` (re-enable with `setopt BANG_HIST`).
-
-## Epic 1 – Detailed Test Guide
-
-This section provides step‑by‑step instructions to verify Epic 1 requirements end‑to‑end using file‑driven tests.
-
-Required tools
-- GnuCOBOL `cobc` in PATH (`cobc -v` shows a version).
-
-Build once
 - `cobc -x src/InCollege.cob -o incollege`
 
-Input/Output files
-- Input: `io/InCollege-Input.txt` (all inputs are read from this file in order)
-- Output: `io/InCollege-Output.txt` (the program mirrors every printed line here)
+4. Run the program:
 
-Reset state between tests
-- Clear output file: `: > io/InCollege-Output.txt`
-- Seed or reset users as needed:
-  - Start fresh: `: > data/users.txt`
-  - Use example: `cp data/users.examples.txt data/users.txt`
+- Command: `./incollege`
 
-Requirement checklist (what you will verify)
-- File‑driven I/O only; no interactive prompts block execution.
-- Console output exactly matches `io/InCollege-Output.txt`.
-- Login prompts/messages and success/failure flows.
-- Create account: unique username, max 5 accounts, password policy:
-  - 8–12 characters, at least 1 uppercase, 1 digit, 1 special from `!@#$%^&*-_+`.
-- Persistence to `data/users.txt` in format `username|password`.
-- Post‑login menu renders 3 options; skill menu prints “under construction”.
+There are 2 modes of operation:
 
-Scenarios
-- Login — Success
-  - Prep: `printf 'testuser|Password1!\n' > data/users.txt`
-  - Input: `printf '1\ntestuser\nPassword1!\n' > io/InCollege-Input.txt`
-  - Run: `: > io/InCollege-Output.txt && ./incollege`
-  - Expect: “Enter Your Choice: 1”, prompts, “You have successfully logged in.”, “Welcome, testuser”.
+- **Interactive**: The program reads directly from keyboard and writes to console.
+- **File-driven** (per spec): All input comes from `io/InCollege-Input.txt` and every printed line is mirrored to `io/InCollege-Output.txt`. This mode enables deterministic testing.
 
-- Login — Four failures then success
-  - Input:
-    - `bash scripts/make_login_inputs.sh failure-4-then-success testuser 'Password1!'`
-  - Run: `: > io/InCollege-Output.txt && ./incollege`
-  - Expect: 4 repetitions of failure message, then success and welcome.
+## Docs
 
-- Create — Success
-  - Prep users (optional seed): `printf 'seed|Password1!\n' > data/users.txt`
-  - Input: `bash scripts/make_create_inputs.sh success newuser 'Password1!'`
-  - Run: `: > io/InCollege-Output.txt && ./incollege`
-  - Expect: username + password prompts, then “Account created successfully.”
-  - Verify: `tail -n1 data/users.txt` shows `newuser|Password1!`
-
-- Create — Duplicate username then success
-  - Ensure `data/users.txt` contains the duplicate (e.g., `testuser|Password1!`)
-  - Input: `bash scripts/make_create_inputs.sh duplicate-then-success testuser another 'Password1!'`
-  - Run: `: > io/InCollege-Output.txt && ./incollege`
-  - Expect: duplicate warning followed by prompts again and then success.
-
-- Create — Invalid passwords then success
-  - Input: `bash scripts/make_create_inputs.sh invalid-passwords-then-success userx`
-  - Run: `: > io/InCollege-Output.txt && ./incollege`
-  - Expect re‑prompts with specific messages in this set (order depends on the bad value):
-    - “Password must be 8–12 characters.”
-    - “Password must contain at least one uppercase letter.”
-    - “Password must contain at least one digit.”
-    - “Password must contain at least one special character (!@#$%^&*?-_+).”
-  - Final line: “Account created successfully.”
-  - Verify: `grep '^userx|ValidPass1!' data/users.txt`
-
-- Create — Capacity reached (5 users)
-  - Prep exactly 5 users:
-    - `printf 'u1|Password1!\nu2|Password1!\nu3|Password1!\nu4|Password1!\nu5|Password1!\n' > data/users.txt`
-  - Input: `bash scripts/make_create_inputs.sh capacity extra 'Password1!'`
-  - Run: `: > io/InCollege-Output.txt && ./incollege`
-  - Expect: “All permitted accounts have been created, please come back later.”
-  - Verify: `wc -l data/users.txt` still `5`
-
-- Post‑login menu and skills (file‑driven)
-  - Input (login + menu ‘3’ → skill ‘1’ → EOF):
-    - `printf '1\ntestuser\nPassword1!\n3\n1\n' > io/InCollege-Input.txt`
-  - Run: `: > io/InCollege-Output.txt && ./incollege`
-  - Expect after welcome: menu lines, then skill list, then “This skill is under construction.”
-  - Note: If `data/users.txt` is empty, the program auto‑loads `data/users.examples.txt` which contains `testuser|Password1!`.
-
-Requirement-to-test mapping
-- Create account (new user, persisted):
-  - “As a new user, I want to create an InCollege account…”
-  - Test: Create — Success (see above). Verify `data/users.txt` shows `username|password`; then login with that user to confirm persistence.
-- Login (returning user):
-  - “As a returning user, I want to log in…”
-  - Test: Login — Success (seed user or rely on `users.examples`).
-- Persistence across runs:
-  - “As a user, I want my account information to be saved…”
-  - Test: Create — Success, then run Login — Success with the created credentials in a new run.
-- Account capacity limit:
-  - “As a user, I want to be informed when I've attempted to create too many accounts.”
-  - Test: Create — Capacity reached (prepare 5 users, then attempt one more).
-- Unsuccessful login notification:
-  - “As a user, I want to be notified if my login attempt is unsuccessful.”
-  - Test: Login — Four failures then success (the first four show the failure message).
-- Post-login initial navigation options:
-  - “As a logged-in user, I want to see initial navigation options (Job Search, Find Someone, Learn Skill).”
-  - Test: Login — Success; observe the three menu items.
-- Under construction messages:
-  - “As a logged-in user, I want to see 'under construction' messages for undeveloped features.”
-  - Test: From the logged-in menu, choose 1 or 2; observe the message; or choose Learn Skill → 1..5 to see the skill under-construction message.
-- Learn skill list and back option:
-  - “As a logged-in user, I want to be able to select from a list of skills or return to the main menu.”
-  - Test: Post‑login menu and skills (file‑driven). Provide skill ‘6’ to go back if desired.
-
-Console vs Output file verification
-- The program writes identical lines to console and `io/InCollege-Output.txt`. The test runner `scripts/test_login.sh` asserts this automatically. For manual checks:
-  - `diff -u <(cat io/InCollege-Output.txt) <(./incollege | cat)` (or visually compare runs)
-
-Tips
-- Use single quotes around passwords with `!` in zsh: `'Password1!'`.
-- Each run consumes the input lines it needs; to test multiple flows, write the corresponding sequence of lines to `io/InCollege-Input.txt` and execute once, or run the program multiple times with different input files.
+- Project Breakdown (source spec): `docs/epic2/project-breakdown.md`
+- Architecture (sections/paragraphs layout): `docs/epic2/architecture.md`
