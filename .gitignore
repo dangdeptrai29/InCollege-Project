@@ -4,10 +4,6 @@
 # Build artifact
 incollege
 
-# Test IO files
-io/InCollege_Output.txt
-# Optionally ignore input file too if it's generated for tests
-# io/InCollege_Input.txt
 
 # Local users data (real or local state) – commit only example
 data/users.txt
@@ -16,7 +12,5 @@ data/users.txt
 .vscode
 
 .DS_Store
-incollege
 
-.devcontainer
-.vscode
+temp/

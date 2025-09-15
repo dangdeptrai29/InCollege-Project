@@ -12,7 +12,7 @@
            SELECT INPUT-FILE ASSIGN TO "io/InCollege-Input.txt"
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-IN-STATUS.
-           SELECT OUTPUT-FILE ASSIGN TO "io/InCollege_Output.txt"
+           SELECT OUTPUT-FILE ASSIGN TO "io/InCollege-Output.txt"
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-OUT-STATUS.
            SELECT USERS-FILE ASSIGN TO "data/users.txt"
@@ -61,9 +61,9 @@
        01  MSG-SUCCESS                PIC X(64)  VALUE "You have successfully logged in.".
        01  MSG-FAILURE                PIC X(64)  VALUE "Incorrect username/password, please try again.".
        01  MSG-WELCOME                PIC X(64)  VALUE "Welcome to InCollege!".
-       01  MSG-LOGIN                  PIC X(32)  VALUE "1. Login".
-       01  MSG-CREATE                 PIC X(32)  VALUE "2. Create Account".
-       01  MSG-ENTER-CHOICE           PIC X(19)  VALUE "Enter Your Choice: ".
+       01  MSG-LOGIN                  PIC X(32)  VALUE "Log In".
+       01  MSG-CREATE                 PIC X(32)  VALUE "Create New Account".
+       01  MSG-ENTER-CHOICE           PIC X(19)  VALUE "Enter your choice: ".
        01  MSG-WELCOME-PFX            PIC X(9)   VALUE "Welcome, ".
        01  MSG-ENTER-USER             PIC X(64)  VALUE "Please enter your username:".
        01  MSG-ENTER-PASS             PIC X(64)  VALUE "Please enter your password:".
@@ -106,18 +106,20 @@
        01  WS-DIGIT-COUNT             PIC 9(4) VALUE 0.
        01  WS-SPECIAL-COUNT           PIC 9(4) VALUE 0.
        01  WS-SPECIAL-CHARS           PIC X(20) VALUE "!@#$%^&*-_+".
+       01  WS-CHAR                    PIC X     VALUE SPACE.
+       01  WS-TMP-COUNT               PIC 9(4)  VALUE 0.
 
               *> Message for account creation
-       01 MSG-ACCOUNT-LIMIT           PIC X(64) VALUE "All permitted accounts have been created.".
+       01 MSG-ACCOUNT-LIMIT           PIC X(80) VALUE "All permitted accounts have been created, please come back later.".
        01 MSG-USERNAME-EXISTS         PIC X(64) VALUE "Username already exists. Please try a different one.".
-       01 MSG-ENTER-NEW-USER          PIC X(64) VALUE "Enter new username:".
-       01 MSG-ENTER-NEW-PASS          PIC X(64) VALUE "Enter new password:".
+       01 MSG-ENTER-NEW-USER          PIC X(64) VALUE "Please enter your username:".
+       01 MSG-ENTER-NEW-PASS          PIC X(64) VALUE "Please enter your password:".
        01 MSG-ACCOUNT-SUCCESS         PIC X(64) VALUE "Account created successfully.".
 
        01  WS-LOGGED-CHOICE           PIC X(8) VALUE SPACES.
        01  WS-SKILL-CHOICE            PIC X(8) VALUE SPACES.
 
-       01  MSG-MENU-JOB               PIC X(32) VALUE "Search for a new job".
+       01  MSG-MENU-JOB               PIC X(32) VALUE "Search for a job".
        01  MSG-MENU-FIND              PIC X(32) VALUE "Find someone you know".
        01  MSG-MENU-SKILL             PIC X(32) VALUE "Learn a new skill".
        01  MSG-ENTER-CHOICE2          PIC X(19) VALUE "Enter your choice: ".
@@ -127,7 +129,7 @@
        01  MSG-SKILL3                 PIC X(32) VALUE "Skill 3".
        01  MSG-SKILL4                 PIC X(32) VALUE "Skill 4".
        01  MSG-SKILL5                 PIC X(32) VALUE "Skill 5".
-       01  MSG-SKILL6                 PIC X(32) VALUE "Go back".
+       01  MSG-SKILL6                 PIC X(32) VALUE "Go Back".
        01  MSG-ENTER-SKILL            PIC X(19) VALUE "Enter your choice: ".
        01  MSG-SKILL-UNDER            PIC X(64) VALUE "This skill is under construction.".
 
@@ -166,12 +168,12 @@
               EXIT PARAGRAPH
            END-IF
            *> Echo the choice value for verification
-           MOVE SPACES TO WS-MSG
-           STRING MSG-ENTER-CHOICE DELIMITED BY SIZE
-                  WS-CHOICE        DELIMITED BY SIZE
-                  INTO WS-MSG
-           END-STRING
-           PERFORM DISPLAY-AND-LOG
+      *>     MOVE SPACES TO WS-MSG
+      *>     STRING MSG-ENTER-CHOICE DELIMITED BY SIZE
+      *>            WS-CHOICE        DELIMITED BY SIZE
+      *>            INTO WS-MSG
+      *>     END-STRING
+      *>     PERFORM DISPLAY-AND-LOG
            EVALUATE WS-CHOICE
              WHEN '1'
                PERFORM LOGIN
@@ -207,13 +209,12 @@
                  *> Print personalized welcome
                  MOVE SPACES TO WS-MSG
                  STRING MSG-WELCOME-PFX DELIMITED BY SIZE
-                        WS-USERNAME     DELIMITED BY SIZE
+                        FUNCTION TRIM(WS-USERNAME) DELIMITED BY SIZE
+                        "!"             DELIMITED BY SIZE
                         INTO WS-MSG
                  END-STRING
                  PERFORM DISPLAY-AND-LOG
-
                  PERFORM LOGGED-IN-MENU
-
                  EXIT PERFORM
               ELSE
                  MOVE MSG-FAILURE TO WS-MSG
@@ -261,9 +262,13 @@
            END-IF
 
            *> Prompt for new username
-           PERFORM UNTIL WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND
+           PERFORM UNTIL WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND OR EOF-IN
                MOVE MSG-ENTER-NEW-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
                PERFORM READ-NEW-USERNAME
+
+               IF EOF-IN
+                   EXIT PARAGRAPH
+               END-IF
 
                *> CHECK UNIQUENESS
                SET MATCH-NOT-FOUND TO TRUE
@@ -279,10 +284,17 @@
            END-PERFORM
 
            *> PROMPT FOR NEW PASSWORD WITH VALIDATION
-           PERFORM UNTIL PASS-VALID
+           SET PASS-INVALID TO TRUE
+           MOVE SPACES TO WS-NEW-PASSWORD
+           PERFORM UNTIL PASS-VALID OR EOF-IN
                MOVE MSG-ENTER-NEW-PASS TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEW-PASSWORD
+
+               IF EOF-IN
+                   EXIT PARAGRAPH
+               END-IF
+
                PERFORM VALIDATE-PASSWORD
 
                IF PASS-INVALID
@@ -290,16 +302,27 @@
                END-IF
            END-PERFORM
 
-           *> SAVE NEW ACCOUNT
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+
+           *> SAVE NEW ACCOUNT - only if we have a valid password
+           IF WS-NEW-PASSWORD = SPACES
+               EXIT PARAGRAPH
+           END-IF
+
            ADD 1 TO WS-USERS-COUNT
            MOVE WS-NEW-USERNAME TO WS-TBL-USERNAME(WS-USERS-COUNT)
            MOVE WS-NEW-PASSWORD TO WS-TBL-PASSWORD(WS-USERS-COUNT)
 
            *> UPDATE USERS.TXT
            OPEN EXTEND USERS-FILE
-           STRING WS-NEW-USERNAME DELIMITED BY SIZE 
+           MOVE SPACES TO USER-REC WS-USER-FILE-USERNAME WS-USER-FILE-PASSWORD
+           MOVE FUNCTION TRIM(WS-NEW-USERNAME) TO WS-USER-FILE-USERNAME
+           MOVE FUNCTION TRIM(WS-NEW-PASSWORD) TO WS-USER-FILE-PASSWORD
+           STRING WS-USER-FILE-USERNAME DELIMITED BY SIZE
                    "|" DELIMITED BY SIZE
-                   WS-NEW-PASSWORD DELIMITED BY SIZE INTO USER-REC
+                   WS-USER-FILE-PASSWORD DELIMITED BY SIZE INTO USER-REC
            END-STRING
            WRITE USER-REC
            CLOSE USERS-FILE
@@ -328,30 +351,40 @@
        VALIDATE-PASSWORD.
            SET PASS-VALID TO TRUE
            MOVE SPACES TO WS-PASSWORD-ERROR
+           MOVE 0 TO WS-UPPER-COUNT WS-DIGIT-COUNT WS-SPECIAL-COUNT
 
            *> Check length
-           MOVE FUNCTION LENGTH(WS-NEW-PASSWORD) TO WS-PASS-LEN
+           MOVE FUNCTION LENGTH(FUNCTION TRIM(WS-NEW-PASSWORD)) TO WS-PASS-LEN
            IF WS-PASS-LEN < 8 OR WS-PASS-LEN > 12
                SET PASS-INVALID TO TRUE
                MOVE "Password must be 8–12 characters." TO WS-PASSWORD-ERROR
            END-IF
 
-           *> Count uppercase letters
-           INSPECT WS-NEW-PASSWORD TALLYING WS-UPPER-COUNT FOR ALL 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+           *> Character category checks (scan once)
+           PERFORM VARYING WS-I FROM 1 BY 1
+               UNTIL WS-I > FUNCTION LENGTH(FUNCTION TRIM(WS-NEW-PASSWORD))
+               MOVE WS-NEW-PASSWORD(WS-I:1) TO WS-CHAR
+               IF WS-CHAR >= 'A' AND WS-CHAR <= 'Z'
+                   ADD 1 TO WS-UPPER-COUNT
+               END-IF
+               IF WS-CHAR >= '0' AND WS-CHAR <= '9'
+                   ADD 1 TO WS-DIGIT-COUNT
+               END-IF
+               MOVE 0 TO WS-TMP-COUNT
+               INSPECT WS-SPECIAL-CHARS TALLYING WS-TMP-COUNT FOR ALL WS-CHAR
+               IF WS-TMP-COUNT > 0
+                   ADD 1 TO WS-SPECIAL-COUNT
+               END-IF
+           END-PERFORM
+
            IF WS-UPPER-COUNT = 0
                SET PASS-INVALID TO TRUE
                MOVE "Password must contain at least one uppercase letter." TO WS-PASSWORD-ERROR
            END-IF
-
-           *> Count digits
-           INSPECT WS-NEW-PASSWORD TALLYING WS-DIGIT-COUNT FOR ALL '0123456789'
            IF WS-DIGIT-COUNT = 0
                SET PASS-INVALID TO TRUE
                MOVE "Password must contain at least one digit." TO WS-PASSWORD-ERROR
            END-IF
-
-           *> Count special characters
-           INSPECT WS-NEW-PASSWORD TALLYING WS-SPECIAL-COUNT FOR ALL WS-SPECIAL-CHARS
            IF WS-SPECIAL-COUNT = 0
                SET PASS-INVALID TO TRUE
                MOVE "Password must contain at least one special character (!@#$%^&*?-_+)." TO WS-PASSWORD-ERROR
@@ -360,26 +393,30 @@
 
        LOGGED-IN-SECTION.
        LOGGED-IN-MENU.
-           PERFORM FOREVER
-               MOVE MSG-MENU-FIND TO WS-MSG PERFORM DISPLAY-AND-LOG
+           PERFORM UNTIL EOF-IN
                MOVE MSG-MENU-JOB TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-FIND TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-MENU-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-ENTER-CHOICE2 TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-LOGGED-CHOICE
 
+               IF EOF-IN
+                   EXIT PERFORM
+               END-IF
+
                EVALUATE WS-LOGGED-CHOICE
                    WHEN '1'
                        MOVE SPACES TO WS-MSG
-                       STRING "Find someone you know" DELIMITED BY SIZE
-                           " is under construction" DELIMITED BY SIZE
+                       STRING "Job search/internship" DELIMITED BY SIZE
+                           " is under construction." DELIMITED BY SIZE
                            INTO WS-MSG
                        END-STRING
                        PERFORM DISPLAY-AND-LOG
                    WHEN '2'
                        MOVE SPACES TO WS-MSG
-                       STRING "Search for a new job" DELIMITED BY SIZE
-                           " is under construction" DELIMITED BY SIZE
+                       STRING "Find someone you know" DELIMITED BY SIZE
+                           " is under construction." DELIMITED BY SIZE
                            INTO WS-MSG
                        END-STRING
                        PERFORM DISPLAY-AND-LOG
@@ -394,25 +431,35 @@
            EXIT.
        READ-LOGGED-CHOICE.
            MOVE SPACES TO WS-LOGGED-CHOICE
-           ACCEPT WS-LOGGED-CHOICE
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-LOGGED-CHOICE
+           END-READ
            EXIT.
 
        SKILL-MENU.
-           PERFORM UNTIL WS-SKILL-CHOICE = '6'
+           PERFORM UNTIL WS-SKILL-CHOICE = '6' OR EOF-IN
+               MOVE "Learn a new skill:" TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL1 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL3 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL4 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL5 TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-SKILL6 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-ENTER-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-SKILL-CHOICE
+
+               IF EOF-IN
+                   EXIT PERFORM
+               END-IF
 
                EVALUATE WS-SKILL-CHOICE
                    WHEN '1' THRU '5'
                        MOVE MSG-SKILL-UNDER TO WS-MSG PERFORM DISPLAY-AND-LOG
                    WHEN '6'
-                       PERFORM LOGGED-IN-MENU
+                       EXIT PERFORM
                    WHEN OTHER
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
@@ -420,9 +467,13 @@
            EXIT.
        READ-SKILL-CHOICE.
            MOVE SPACES TO WS-SKILL-CHOICE
-           ACCEPT WS-SKILL-CHOICE
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-SKILL-CHOICE
+           END-READ
            EXIT.
-          
+
        VALIDATION-SECTION.
        CHECK-CREDENTIALS.
            *> Scan in-memory users table for an exact, case-sensitive match
@@ -453,18 +504,20 @@
            EXIT.
 
        INIT-LOAD-ACCOUNTS.
-           *> Prefer real users.txt; fall back to users.examples.txt for testing
+           *> Prefer real users.txt; if missing OR empty, fall back to users.examples.txt
            OPEN INPUT USERS-FILE
            IF WS-USR-STATUS = "00"
               PERFORM LOAD-ACCOUNTS-FROM-USERS
               CLOSE USERS-FILE
-              EXIT PARAGRAPH
            END-IF
 
-           OPEN INPUT USERS-EXAMPLE-FILE
-           IF WS-UEX-STATUS = "00"
-              PERFORM LOAD-ACCOUNTS-FROM-EXAMPLE
-              CLOSE USERS-EXAMPLE-FILE
+           *> If nothing loaded, try examples
+           IF WS-USERS-COUNT = 0
+              OPEN INPUT USERS-EXAMPLE-FILE
+              IF WS-UEX-STATUS = "00"
+                 PERFORM LOAD-ACCOUNTS-FROM-EXAMPLE
+                 CLOSE USERS-EXAMPLE-FILE
+              END-IF
            END-IF
            EXIT.
 
