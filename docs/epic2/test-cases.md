@@ -6,12 +6,12 @@ Validate the end-to-end functionality of user profile management as defined in E
 ## How to Run
 - Set SELECT INPUT-FILE in your COBOL program to point to the master input file for this test plan.
 - Compile and run the program.
-- Review `io/InCollege-Output.txt` and compare it against the detailed expected outcomes below.
+- Review `io/Output_</id>.txt` and compare it against the detailed expected outcomes below.
 
 ## Test Matrix (Overview)
 
-| # | Type | Description | Input File(s) |
-|---------|------|-------------|---------------|
+| #ID | Type | Description | Input File(s) |
+|-----|------|-------------|---------------|
 | 10 | Positive | Verifies a user can create a complete profile with all required and multiple optional fields. | input_10.txt |
 | 11 | Positive | Confirms that profile data is saved and persists across separate application runs. | input_10.txt, input_11.txt |
 | 12 | Positive | Ensures a user can successfully edit an existing profile and that the changes are saved correctly. | input_12.txt |
