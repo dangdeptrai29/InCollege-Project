@@ -1,0 +1,16 @@
+1
+testuser
+Password1!
+1
+ValidFN
+# Attempt 1: Blank Last Name (should be rejected)
+
+# Attempt 2: Valid Last Name
+Tester
+University of South Florida
+Software Testing
+2027
+My profile was created after a validation check.
+DONE
+DONE
+2

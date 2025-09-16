@@ -1,0 +1,26 @@
+1
+testuser
+Password1!
+1
+Ed
+Itor
+University of South Florida
+Marketing
+2024
+This is the original bio.
+DONE
+DONE
+1
+Ed
+Itor
+University of South Florida
+Digital Marketing
+2024
+This is the updated bio after editing.
+Social Media Intern
+Ad Agency
+Summer 2023
+Managed three client social media accounts.
+DONE
+DONE
+2

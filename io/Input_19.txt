@@ -1,0 +1,18 @@
+1
+testuser
+Password1!
+1
+Sub
+Field
+University of South Florida
+Data Entry
+2026
+This bio is complete.
+Data Clerk
+Office Corp
+2024
+# Blank optional description for this experience
+
+DONE
+DONE
+2

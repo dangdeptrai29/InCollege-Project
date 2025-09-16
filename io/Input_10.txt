@@ -1,0 +1,12 @@
+1
+testuser
+Password1!
+1
+Percy
+Sist
+University of South Florida
+Data Science
+2026
+This data should remain after the program closes.
+DONE
+DONE

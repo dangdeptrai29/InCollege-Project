@@ -1,0 +1,9 @@
+1
+TestUser
+P@ssword1!
+# Attempt 1: Invalid numeric choice
+5
+# Attempt 2: Invalid text choice
+abc
+# Attempt 3: Valid choice to view profile and exit
+2
