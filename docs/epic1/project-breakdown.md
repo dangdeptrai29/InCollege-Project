@@ -26,14 +26,14 @@ Break COBOL code into logical, reusable sections:
 ---
 
 ### 2. Input File Handling
-- All user input comes from `io/InCollege_Input.txt`
+- All user input comes from `io/InCollege-Input.txt`
 - Input lines are consumed sequentially (username, password, menu selections)
 - Supports scripting different test scenarios by rewriting the input file
 
 ---
 
 ### 3. Output File Handling
-- All messages printed to console must also be written identically to `io/InCollege_Output.txt`
+- All messages printed to console must also be written identically to `io/InCollege-Output.txt`
 - **One helper only** (`DISPLAY-AND-LOG`) — no raw `DISPLAY` allowed
 - Output must match the sample transcripts exactly (including punctuation and order)
 

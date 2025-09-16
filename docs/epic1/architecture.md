@@ -4,7 +4,7 @@ This milestone uses a single COBOL program organized into Sections and Paragraph
 
 Sections and key paragraphs
 - INITIALIZATION-SECTION
-  - `INIT-FILES`: Open `io/InCollege_Input.txt` and `io/InCollege_Output.txt`; open/create `data/users.txt`; call `INIT-LOAD-ACCOUNTS`.
+  - `INIT-FILES`: Open `io/InCollege-Input.txt` and `io/InCollege-Output.txt`; open/create `data/users.txt`; call `INIT-LOAD-ACCOUNTS`.
   - `INIT-LOAD-ACCOUNTS`: Load existing accounts from `data/users.txt` into an in‑memory table; set `USER-COUNT`. If missing, create the file (empty) or use a fallback example.
 - MENU-SECTION
   - `RUN-APP`: Show base menu (Login, Create Account, Exit) using `DISPLAY-AND-LOG`; route by choice; loop until Exit/EOF.
@@ -22,8 +22,8 @@ Sections and key paragraphs
 - PARSING-SECTION
   - `PARSE-USER-REC`: Split lines formatted `username|password` into fields; trim spaces.
 - IO-SECTION
-  - `DISPLAY-AND-LOG`: The only output path. Writes the exact same text to console and `io/InCollege_Output.txt`.
-  - `READ-NEXT-INPUT-LINE`: Read the next line from `io/InCollege_Input.txt` in sequence. Convenience wrappers: `READ-CHOICE`, `READ-USERNAME`, `READ-PASSWORD` call this.
+  - `DISPLAY-AND-LOG`: The only output path. Writes the exact same text to console and `io/InCollege-Output.txt`.
+  - `READ-NEXT-INPUT-LINE`: Read the next line from `io/InCollege-Input.txt` in sequence. Convenience wrappers: `READ-CHOICE`, `READ-USERNAME`, `READ-PASSWORD` call this.
 
 Data layout and limits
 - `MAX-USERS` = 5; `USER-COUNT` tracks current accounts.
@@ -33,7 +33,7 @@ Data layout and limits
 Conventions and rules
 - All messages must go through `DISPLAY-AND-LOG`; no direct DISPLAY elsewhere.
 - Output must match sample transcripts exactly (text, punctuation, order).
-- Input is fully file‑driven from `io/InCollege_Input.txt` to enable deterministic tests.
+- Input is fully file‑driven from `io/InCollege-Input.txt` to enable deterministic tests.
 
 User flows (aligned with spec)
 - Create Account: check limit → username (unique) → password (validate) → persist and confirm → back to main menu.
@@ -42,7 +42,7 @@ User flows (aligned with spec)
 
 Deliverables mapping
 - Program: `InCollege.cob` (single program with sections above).
-- Input/Output: `io/InCollege_Input.txt`, `io/InCollege_Output.txt`.
+- Input/Output: `io/InCollege-Input.txt`, `io/InCollege-Output.txt`.
 - Persistence: `data/users.txt`.
 - Samples/Tests: sample output transcript and test input files per scenarios.
 

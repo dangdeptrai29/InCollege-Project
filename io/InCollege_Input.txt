@@ -1,6 +1,0 @@
-1
-baduser1
-Wrongpass
-testuser
-Password1!
-1
