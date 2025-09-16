@@ -7,10 +7,7 @@ Malist
 University of South Florida
 General Studies
 2028
-# Blank "About Me"
 
-# Immediately "DONE" for Experience
 DONE
-# Immediately "DONE" for Education
 DONE
 2

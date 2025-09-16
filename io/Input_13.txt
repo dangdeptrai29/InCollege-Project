@@ -3,9 +3,7 @@ testuser
 Password1!
 1
 ValidFN
-# Attempt 1: Blank Last Name (should be rejected)
 
-# Attempt 2: Valid Last Name
 Tester
 University of South Florida
 Software Testing

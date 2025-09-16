@@ -6,11 +6,8 @@ Val
 Idate
 University of South Florida
 Mathematics
-# Attempt 1: Non-numeric (should be rejected)
 InvalidYear
-# Attempt 2: Unreasonable range (should be rejected)
 180
-# Attempt 3: Valid year
 2025
 This profile was created after correcting the year.
 DONE

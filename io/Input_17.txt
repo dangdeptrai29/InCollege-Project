@@ -8,30 +8,24 @@ University of South Florida
 Everything
 2023
 I do it all.
-# Experience 1
 Title1
 Company1
 Date1
 Desc1
-# Experience 2
 Title2
 Company2
 Date2
 Desc2
-# Experience 3
 Title3
 Company3
 Date3
 Desc3
-# Education 1
 Degree1
 Uni1
 Years1
-# Education 2
 Degree2
 Uni2
 Years2
-# Education 3
 Degree3
 Uni3
 Years3
