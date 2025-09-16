@@ -25,7 +25,7 @@
                 ORGANIZATION IS LINE SEQUENTIAL
                 FILE STATUS IS WS-PROF-STATUS.
 
-               
+
 
        DATA DIVISION.
        FILE SECTION.
@@ -145,8 +145,8 @@
        01  WS-SPECIAL-CHARS           PIC X(20) VALUE "!@#$%^&*-_+".
        01  WS-CHAR                    PIC X     VALUE SPACE.
        01  WS-TMP-COUNT               PIC 9(4)  VALUE 0.
-       
-       
+
+
        01  WS-PROF-USER               PIC X(128) VALUE SPACES.
        01  WS-PROF-FIRST-IN           PIC X(64)  VALUE SPACES.
        01  WS-PROF-LAST-IN            PIC X(64)  VALUE SPACES.
@@ -201,7 +201,7 @@
        01  MSG-ENTER-SKILL            PIC X(19) VALUE "Enter your choice: ".
        01  MSG-SKILL-UNDER            PIC X(64) VALUE "This skill is under construction.".
 
-            *> message for profiles 
+            *> message for profiles
        01  MSG-MENU-PROF-EDIT         PIC X(32) VALUE "1. Create/Edit My Profile".
        01  MSG-MENU-PROF-VIEW         PIC X(32) VALUE "2. View My Profile".
        01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "3. Search for User".
@@ -711,8 +711,8 @@
            END-PERFORM
            CLOSE PROFILES-FILE
            EXIT.
-        
-        
+
+
         FIND-PROFILE-BY-USERNAME.
            SET PROFILE-NOT-FOUND TO TRUE
            MOVE 0 TO WS-PROFILE-IDX
@@ -954,5 +954,5 @@
            DISPLAY FUNCTION TRIM(WS-MSG)
            EXIT.
 
-        
+
 
