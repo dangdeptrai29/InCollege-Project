@@ -122,6 +122,9 @@
        01  MSG-MENU-JOB               PIC X(32) VALUE "Search for a job".
        01  MSG-MENU-FIND              PIC X(32) VALUE "Find someone you know".
        01  MSG-MENU-SKILL             PIC X(32) VALUE "Learn a new skill".
+       *> For CREATE/ADD PROFILES
+       01  MSG-MENU-PROFILE           PIC X(32) VALUE "Create/Edit my profile".
+
        01  MSG-ENTER-CHOICE2          PIC X(19) VALUE "Enter your choice: ".
 
        01  MSG-SKILL1                 PIC X(32) VALUE "Skill 1".
@@ -132,6 +135,38 @@
        01  MSG-SKILL6                 PIC X(32) VALUE "Go Back".
        01  MSG-ENTER-SKILL            PIC X(19) VALUE "Enter your choice: ".
        01  MSG-SKILL-UNDER            PIC X(64) VALUE "This skill is under construction.".
+
+       *> Message for ABOUT ME
+       01  MSG-ABOUT-ME               PIC X(80) VALUE "Add about me (optional, blank line to skip): "
+       01  WS-ABOUT-ME                PIC X(200).
+
+       *> Experiences
+       01  MSG-ADD-EXP                PIC X(90) VALUE "Add experiences (optional, max 3 entries, DONE to skip)".
+       01  WS-EXP-CHOICE              PIC X(20).
+       01  WS-EXPERIENCE
+           05 WS-EXP-COUNT            PIC 9 VALUE 0.
+           05 WS-EXP-ENTRY OCCURS 3 TIMES.
+               10 WS-EXP-TITLE        PIC X(50).
+               10 WS-EXP-COMPANY      PIC X(50).
+               10 WS-EXP-DATES        PIC X(50).
+               10 WS-EXP-DESC         PIC X(100).
+       01  WS-TITLE-INPUT             PIC X(50).
+       01  WS-COMPANY-INPUT           PIC X(50).
+       01  WS-DATES-INPUT             PIC X(50).
+       01  WS-DESC-INPUT              PIC X(100).
+
+       *> Education
+       01  MSG-ADD-EDUCATION          PIC X(90) VALUE "Add Education (optional, max 3 entries, DONE to skip)".
+       01  WS-EDU-CHOICE              PIC X(20).
+       01  WS-EDUCATION
+           05 WS-EDU-COUNT            PIC 9 VALUE 0.
+           05 WS-EDU-ENTRY OCCURS 3 TIMES.
+               10 WS-EDU-DEGREE       PIC X(50).
+               10 WS-EDU-SCHOOL       PIC X(50).
+               10 WS-EDU-YEARS        PIC X(20).
+       01  WS-DEGREE-INPUT            PIC X(50).
+       01  WS-SCHOOL-INPUT            PIC X(50).
+       01  WS-YEARS-INPUT             PIC X(20).
 
 
        PROCEDURE DIVISION.
@@ -397,7 +432,12 @@
                MOVE MSG-MENU-JOB TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-MENU-FIND TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-MENU-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+               *> This goes to Create/Edit My Profile
+               MOVE MSG-MENU-PROFILE TO WS-MSG PERFORM DISPLAY-AND-LOG
+               
                MOVE MSG-ENTER-CHOICE2 TO WS-MSG PERFORM DISPLAY-AND-LOG
+               
 
                PERFORM READ-LOGGED-CHOICE
 
@@ -423,6 +463,10 @@
 
                    WHEN '3'
                        PERFORM SKILL-MENU
+
+                   *>CURRENTLY 4 HOLDS: CREATE/EDIT PROFILE
+                   WHEN '4'
+                       PERFORM CREATE-EDIT-PROFILE
 
                    WHEN OTHER
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -473,6 +517,252 @@
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-SKILL-CHOICE
            END-READ
            EXIT.
+
+       CREATE-EDIT-PROFILE-SECTION.
+       CREATE-EDIT-PROFILE.
+           MOVE MSG-ABOUT-ME TO WS-MSG PERFORM DISPLAY-AND-LOG
+           PERFORM READ-ABOUT-ME
+               
+           IF EOF-IN
+               EXIT PERFORM
+           END-IF
+               
+           *> IF BLANK LINE, SKIP
+           PERFORM ADD-EXPERIENCE
+           EXIT.
+                       
+
+       READ-ABOUT-ME.
+           MOVE SPACES TO WS-ABOUT-ME
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-ABOUT-ME
+           END-READ
+           EXIT.   
+
+       ADD-EXPERIENCE.
+       *> RESET COUNT TO 0
+           MOVE 0 TO WS-EXP-COUNT
+
+           PERFORM UNTIL WS-EXP-COUNT >= 3 OR WS-EXP-CHOICE = "DONE" OR EOF-IN
+               MOVE MSG-ADD-EXP TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-EXP-CHOICE
+
+               IF EOF-IN
+                   EXIT PERFORM
+               END-IF
+
+               IF WS-EXP-CHOICE = "DONE"
+                   EXIT PERFORM
+               ELSE
+                   ADD 1 TO WS-EXP-COUNT
+
+                   *>TITLE
+                   STRING "Experience #" WS-EXP-COUNT " - Title: " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-TITLE
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-TITLE-INPUT TO WS-EXP-TITLE(WS-EXP-COUNT)
+
+                   *>COMPANY/ORG
+                   STRING "Experience #" WS-EXP-COUNT " - Company/Organization: " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-COMPANY
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-COMPANY-INPUT TO WS-EXP-COMPANY(WS-EXP-COUNT)
+
+                   *>DATE
+                   STRING "Experience #" WS-EXP-COUNT " - Dates (e.g., Summer 2024): " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-DATES
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-DATES-INPUT TO WS-EXP-DATES(WS-EXP-COUNT)
+
+                   *>DESCRIPTION
+                   STRING "Experience #" WS-EXP-COUNT " - Description (max 100 chars, blank to skip): " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-DESCRIPTION
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   IF WS-DESC-INPUT NOT = SPACES
+                       MOVE WS-DESC-INPUT TO WS-EXP-DESC(WS-EXP-COUNT)
+                   END-IF
+              END-IF
+           END PERFORM
+                   
+           PERFORM ADD-EDUCATION
+           EXIT.
+
+       READ-EXP-CHOICE.
+           MOVE SPACES TO WS-EXP-CHOICE
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-EXP-CHOICE
+           END-READ
+           EXIT.
+           
+       READ-TITLE.
+           MOVE SPACES TO WS-TITLE-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-TITLE-INPUT
+           END-READ
+           EXIT.
+
+       READ-COMPANY.
+           MOVE SPACES TO WS-COMPANY-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-COMPANY-INPUT
+           END-READ
+           EXIT.
+
+       READ-DATES.
+           MOVE SPACES TO WS-DATES-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-DATES-INPUT
+           END-READ
+           EXIT.
+
+       READ-DESCRIPTION.
+           MOVE SPACES TO WS-DESC-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-DESC-INPUT
+           END-READ
+           EXIT.
+
+       ADD-EDUCATION.
+           MOVE 0 TO WS-EDU-COUNT
+
+           PERFORM UNTIL WS-EDU-COUNT >= 3 OR WS-EDU-CHOICE = "DONE" OR EOF-IN
+               MOVE MSG-ADD-EDUCATION TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-EDU-CHOICE
+
+               IF EOF-IN
+                   EXIT PERFORM
+               END-IF
+
+               IF WS-EDU-CHOICE = "DONE"
+                   EXIT PERFORM
+               ELSE
+                   ADD 1 TO WS-EDU-COUNT
+
+                   *>Degree
+                   STRING "Education #" WS-EDU-COUNT " - Degree: " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-DEGREE
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-DEGREE-INPUT TO WS-EDU-DEGREE(WS-EDU-COUNT)
+
+                   *>Uni/College
+                   STRING "Education #" WS-EDU-COUNT " - University/College: " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-UNI
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-SCHOOL-INPUT TO WS-EDU-SCHOOL(WS-EDU-COUNT)
+
+                   *>Years attended
+                   STRING "Education #" WS-EDU-COUNT " - Years Attended (e.g., 2023-2025): " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-YEAR
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-YEARS-INPUT TO WS-EDU-YEARS(WS-EDU-COUNT)
+      
+               END-IF
+           END PERFORM
+
+       READ-EDU-CHOICE.
+           MOVE SPACES TO WS-EDU-CHOICE
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-EDU-CHOICE
+           END-READ
+           EXIT.
+
+       READ-DEGREE.
+           MOVE SPACES TO WS-DEGREE-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-DEGREE-INPUT
+           END-READ
+           EXIT.
+
+       READ-UNI.
+           MOVE SPACES TO WS-SCHOOL-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-SCHOOL-INPUT
+           END-READ
+           EXIT.
+
+       READ-YEAR.
+           MOVE SPACES TO WS-YEARS-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-YEARS-INPUT
+           END-READ
+           EXIT.
+
 
        VALIDATION-SECTION.
        CHECK-CREDENTIALS.
