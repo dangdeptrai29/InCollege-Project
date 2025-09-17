@@ -235,8 +235,8 @@
        *> Experiences
        01  MSG-ADD-EXP                PIC X(90) VALUE "Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):".
        01  WS-EXP-CHOICE              PIC X(20).
-       01  WS-EXPERIENCE.
-           05 WS-EXP-COUNT            PIC 9 VALUE 0.
+       01  WS-EXPERIENCE
+           05 WS-EXP-COUNT            PIC 9.
            05 WS-EXP-ENTRY OCCURS 3 TIMES.
                10 WS-EXP-TITLE        PIC X(50).
                10 WS-EXP-COMPANY      PIC X(50).
@@ -250,8 +250,8 @@
        *> Education
        01  MSG-ADD-EDUCATION          PIC X(90) VALUE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):".
        01  WS-EDU-CHOICE              PIC X(20).
-       01  WS-EDUCATION.
-           05 WS-EDU-COUNT            PIC 9 VALUE 0.
+       01  WS-EDUCATION
+           05 WS-EDU-COUNT            PIC 9.
            05 WS-EDU-ENTRY OCCURS 3 TIMES.
                10 WS-EDU-DEGREE       PIC X(50).
                10 WS-EDU-SCHOOL       PIC X(50).
@@ -1047,9 +1047,6 @@
            *> ABOUT ME
            MOVE MSG-ABOUT-ME TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM READ-PROFILE-ABOUT
-           IF EOF-IN
-               EXIT PARAGRAPH
-           END-IF
 
            PERFORM ADD-EXPERIENCE
            PERFORM ADD-EDUCATION
