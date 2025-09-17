@@ -116,6 +116,12 @@
                10  WS-PROF-MAJOR      PIC X(128).
                10  WS-PROF-GYEAR      PIC X(4).      *> YYYY, may be SPACES
 
+               10  WS-PROF-ABOUT      PIC X(200).
+
+               10  WS-PROF-EXPERIENCES PIC X(512).  *> Serialized string for experiences
+               10  WS-PROF-EDUCATIONS  PIC X(512). *> Serialized string for education
+
+
 
        01  WS-I                       PIC 9(4) VALUE 0.
 
@@ -221,6 +227,39 @@
        01  MSG-YEAR-INVALID           PIC X(80) VALUE "Graduation year must be 1900–2100 and 4 digits.".
        01  MSG-PROFILE-SAVED-OK       PIC X(64) VALUE "Profile saved successfully!".
        01  MSG-PROFILE-NOT-FOUND      PIC X(64) VALUE "No profile found. Please create your profile first.".
+
+
+       *> Message for ABOUT ME
+       01  MSG-ABOUT-ME               PIC X(80) VALUE "Enter About Me (optional, max 200 chars, enter blank line to skip):".
+       01  WS-ABOUT-ME                PIC X(200).
+       *> Experiences
+       01  MSG-ADD-EXP                PIC X(90) VALUE "Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):".
+       01  WS-EXP-CHOICE              PIC X(20).
+       01  WS-EXPERIENCE
+           05 WS-EXP-COUNT            PIC 9 VALUE 0.
+           05 WS-EXP-ENTRY OCCURS 3 TIMES.
+               10 WS-EXP-TITLE        PIC X(50).
+               10 WS-EXP-COMPANY      PIC X(50).
+               10 WS-EXP-DATES        PIC X(50).
+               10 WS-EXP-DESC         PIC X(100).
+       01  WS-TITLE-INPUT             PIC X(50).
+       01  WS-COMPANY-INPUT           PIC X(50).
+       01  WS-DATES-INPUT             PIC X(50).
+       01  WS-DESC-INPUT              PIC X(100).
+
+       *> Education
+       01  MSG-ADD-EDUCATION          PIC X(90) VALUE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):".
+       01  WS-EDU-CHOICE              PIC X(20).
+       01  WS-EDUCATION
+           05 WS-EDU-COUNT            PIC 9 VALUE 0.
+           05 WS-EDU-ENTRY OCCURS 3 TIMES.
+               10 WS-EDU-DEGREE       PIC X(50).
+               10 WS-EDU-SCHOOL       PIC X(50).
+               10 WS-EDU-YEARS        PIC X(20).
+       01  WS-DEGREE-INPUT            PIC X(50).
+       01  WS-SCHOOL-INPUT            PIC X(50).
+       01  WS-YEARS-INPUT             PIC X(20).
+
 
 
        PROCEDURE DIVISION.
@@ -663,7 +702,7 @@
            EXIT.
 
        PARSE-PROFILE-REC.
-           *> Format: username|first|last|univ|major|gyear
+           *> Format: username|first|last|univ|major|gyear|about|experiences|educations
            UNSTRING PROFILE-REC DELIMITED BY '|'
                INTO WS-PROF-USER
                     WS-PROF-FIRST-IN
@@ -671,6 +710,9 @@
                     WS-PROF-UNIV-IN
                     WS-PROF-MAJOR-IN
                     WS-PROF-GYEAR-IN
+                    WS-PROF-ABOUT-IN
+                    WS-EXPS-STR
+                    WS-EDUS-STR
            END-UNSTRING
 
            IF WS-PROF-USER = SPACES
@@ -685,6 +727,9 @@
               MOVE FUNCTION TRIM(WS-PROF-UNIV-IN)  TO WS-PROF-UNIV(WS-PROFILES-COUNT)
               MOVE FUNCTION TRIM(WS-PROF-MAJOR-IN) TO WS-PROF-MAJOR(WS-PROFILES-COUNT)
               MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN) TO WS-PROF-GYEAR(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-PROF-ABOUT-IN) TO WS-PROF-ABOUT(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-EXPS-STR)      TO WS-PROF-EXPERIENCES(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-EDUS-STR)      TO WS-PROF-EDUCATIONS(WS-PROFILES-COUNT)
            END-IF
            EXIT.
 
@@ -704,6 +749,12 @@
                 FUNCTION TRIM(WS-PROF-MAJOR(WS-I))    DELIMITED BY SIZE
                 "|" DELIMITED BY SIZE
                 FUNCTION TRIM(WS-PROF-GYEAR(WS-I))    DELIMITED BY SIZE
+                "|" DELIMITED BY SIZE
+                FUNCTION TRIM(WS-PROF-ABOUT(WS-I))    DELIMITED BY SIZE
+                "|" DELIMITED BY SIZE
+                FUNCTION TRIM(WS-PROF-EXPERIENCES(WS-I))    DELIMITED BY SIZE
+                "|" DELIMITED BY SIZE
+                FUNCTION TRIM(WS-PROF-EDUCATIONS(WS-I))    DELIMITED BY SIZE
                 INTO PROFILE-REC
             END-STRING
 
@@ -750,8 +801,194 @@
            END-IF
            EXIT.
 
+
+       SERIALIZATION-SECTION.
+       SERIALIZE-EXPERIENCE.
+       *> Convert to WS-EXPERIENCE table into a single string for saving.
+       *> Format: Title~Company~Dates~Desc|Title~Company~Dates~Desc
+           INITIALIZE WS-EXPS-STR
+           MOVE 1 to WS-J
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-EXP-COUNT
+               IF WS-I > 1
+                   STRING "|" DELIMITED BY SIZE
+                       INTO WS-EXPS-STR
+                       WITH POINTER WS-J
+                   END-STRING
+               END-IF
+
+               STRING FUNCTION TRIM(WS-EXP-TITLE(WS-I)) DELIMITED BY SIZE
+                      "~" DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-EXP-COMPANY(WS-I)) DELIMITED BY SIZE
+                      "~" DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-EXP-DATES(WS-I)) DELIMITED BY SIZE
+                      "~" DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-EXP-DESC(WS-I)) DELIMITED BY SIZE
+                      INTO WS-EXPS-STR
+                      WITH POINTER WS-J
+                END-STRING
+           END-PERFORM
+           EXIT.
+
+       SERIALIZE-EDUCATION.
+       *> Converts the WS-EDUCATION table into a single string for saving.
+       *> Format: Degree~School~Years|Degree~School~Years
+           INITIALIZE WS-EDUS-STR.
+           MOVE 1 to WS-J
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-EDU-COUNT
+               IF WS-I > 1
+                   STRING "|" DELIMITED BY SIZE
+                       INTO WS-EDUS-STR
+                       WITH POINTER WS-J
+                   END-STRING
+               END-IF
+               STRING FUNCTION TRIM(WS-EDU-DEGREE(WS-I)) DELIMITED BY SIZE
+                      "~" DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-EDU-SCHOOL(WS-I)) DELIMITED BY SIZE
+                      "~" DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-EDU-YEARS(WS-I))  DELIMITED BY SIZE
+                      INTO WS-EDUS-STR
+                      WITH POINTER WS-J
+               END-STRING
+           END-PERFORM.
+           EXIT.
+
+       DISPLAY-EXPERIENCES.
+           MOVE SPACES TO WS-MSG.
+           STRING "Experience:" DELIMITED BY SIZE INTO WS-MSG.
+           PERFORM DISPLAY-AND-LOG.
+
+           IF WS-EXPS-STR = SPACES
+               MOVE "  (None)" TO WS-MSG PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF.
+
+           MOVE 1 TO WS-J.
+           PERFORM UNTIL WS-J > FUNCTION LENGTH(FUNCTION TRIM(WS-EXPS-STR))
+               INITIALIZE WS-ENTRY
+               UNSTRING WS-EXPS-STR DELIMITED BY "|"
+                   INTO WS-ENTRY
+                   WITH POINTER WS-J
+               END-UNSTRING
+
+               INITIALIZE WS-T1 WS-T2 WS-T3 WS-T4
+               UNSTRING WS-ENTRY DELIMITED BY "~"
+                   INTO WS-T1 WS-T2 WS-T3 WS-T4
+               END-UNSTRING
+
+               MOVE SPACES TO WS-MSG
+               STRING "    Title: " FUNCTION TRIM(WS-T1) INTO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    Company: " FUNCTION TRIM(WS-T2) INTO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    Dates: " FUNCTION TRIM(WS-T3) INTO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    Description: " FUNCTION TRIM(WS-T4) INTO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+           END-PERFORM.
+           EXIT.
+
+       DISPLAY-EDUCATION.
+           MOVE SPACES TO WS-MSG.
+           STRING "Education:" DELIMITED BY SIZE INTO WS-MSG.
+           PERFORM DISPLAY-AND-LOG.
+
+           IF WS-EDUS-STR = SPACES
+               MOVE "  (None)" TO WS-MSG PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF.
+
+           MOVE 1 TO WS-J.
+           PERFORM UNTIL WS-J > FUNCTION LENGTH(FUNCTION TRIM(WS-EDUS-STR))
+               INITIALIZE WS-ENTRY
+               UNSTRING WS-EDUS-STR DELIMITED BY "|"
+                   INTO WS-ENTRY
+                   WITH POINTER WS-J
+               END-UNSTRING
+
+               INITIALIZE WS-T1 WS-T2 WS-T3
+               UNSTRING WS-ENTRY DELIMITED BY "~"
+                   INTO WS-T1 WS-T2 WS-T3
+               END-UNSTRING
+
+               MOVE SPACES TO WS-MSG
+               STRING "    Degree: " FUNCTION TRIM(WS-T1) INTO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    University: " FUNCTION TRIM(WS-T2) INTO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    Years: " FUNCTION TRIM(WS-T3) INTO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+           END-PERFORM.
+           EXIT.
+
+       DESERIALIZE-EXPERIENCE.
+       *> Converts the saved string back into the WS-EXPERIENCE table.
+           MOVE 0 TO WS-EXP-COUNT.
+           MOVE WS-PROF-EXPERIENCES(WS-PROFILE-IDX) TO WS-EXPS-STR.
+           IF WS-EXPS-STR = SPACES
+               EXIT PARAGRAPH
+           END-IF.
+
+           MOVE 1 TO WS-J.
+           PERFORM UNTIL WS-J > FUNCTION LENGTH(FUNCTION TRIM(WS-EXPS-STR))
+               ADD 1 TO WS-EXP-COUNT
+               INITIALIZE WS-ENTRY
+               UNSTRING WS-EXPS-STR DELIMITED BY "|"
+                   INTO WS-ENTRY
+                   WITH POINTER WS-J
+               END-UNSTRING
+
+               INITIALIZE WS-T1 WS-T2 WS-T3 WS-T4
+               UNSTRING WS-ENTRY DELIMITED BY "~"
+                   INTO WS-T1 WS-T2 WS-T3 WS-T4
+               END-UNSTRING
+
+               MOVE WS-T1 TO WS-EXP-TITLE(WS-EXP-COUNT)
+               MOVE WS-T2 TO WS-EXP-COMPANY(WS-EXP-COUNT)
+               MOVE WS-T3 TO WS-EXP-DATES(WS-EXP-COUNT)
+               MOVE WS-T4 TO WS-EXP-DESC(WS-EXP-COUNT)
+           END-PERFORM.
+           EXIT.
+       
+       DESERIALIZE-EDUCATION.
+      *> Converts the saved string back into the WS-EDUCATION table.
+           MOVE 0 TO WS-EDU-COUNT.
+           MOVE WS-PROF-EDUCATIONS(WS-PROFILE-IDX) TO WS-EDUS-STR.
+           IF WS-EDUS-STR = SPACES
+               EXIT PARAGRAPH
+           END-IF.
+
+           MOVE 1 TO WS-J.
+           PERFORM UNTIL WS-J > FUNCTION LENGTH(FUNCTION TRIM(WS-EDUS-STR))
+               ADD 1 TO WS-EDU-COUNT
+               INITIALIZE WS-ENTRY
+               UNSTRING WS-EDUS-STR DELIMITED BY "|"
+                   INTO WS-ENTRY
+                   WITH POINTER WS-J
+               END-UNSTRING
+
+               INITIALIZE WS-T1 WS-T2 WS-T3
+               UNSTRING WS-ENTRY DELIMITED BY "~"
+                   INTO WS-T1 WS-T2 WS-T3
+               END-UNSTRING
+
+               MOVE WS-T1 TO WS-EDU-DEGREE(WS-EDU-COUNT)
+               MOVE WS-T2 TO WS-EDU-SCHOOL(WS-EDU-COUNT)
+               MOVE WS-T3 TO WS-EDU-YEARS(WS-EDU-COUNT)
+           END-PERFORM.
+           EXIT.
+
        PROFILE-SECTION.
-              CREATE-OR-EDIT-PROFILE.
+           CREATE-OR-EDIT-PROFILE.
            IF FUNCTION TRIM(WS-CURRENT-USERNAME) = SPACES
               MOVE "Internal error: no logged-in user." TO WS-MSG PERFORM DISPLAY-AND-LOG
               EXIT PARAGRAPH
@@ -807,6 +1044,18 @@
                END-IF
            END-PERFORM
 
+           *> ABOUT ME
+           MOVE MSG-ABOUT-ME TO WS-MSG PERFORM DISPLAY-AND-LOG
+           PERFORM READ-PROFILE-ABOUT
+           IF EOF-IN
+               EXIT PERFORM
+           END-IF
+           
+           PERFORM ADD-EXPERIENCE
+           PERFORM ADD-EDUCATION
+
+           PERFORM SERIALIZE-EXPERIENCE
+           PERFORM SERIALIZE-EDUCATION
 
            PERFORM FIND-PROFILE-BY-USERNAME
            IF PROFILE-FOUND
@@ -815,6 +1064,10 @@
               MOVE FUNCTION TRIM(WS-PROF-UNIV-IN)  TO WS-PROF-UNIV(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-MAJOR-IN) TO WS-PROF-MAJOR(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN) TO WS-PROF-GYEAR(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-PROF-ABOUT-IN) TO WS-PROF-ABOUT(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-EXPS-STR)      TO WS-PROF-EXPERIENCES(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-EDUS-STR)      TO WS-PROF-EDUCATIONS(WS-PROFILE-IDX)
+
            ELSE
               ADD 1 TO WS-PROFILES-COUNT
               MOVE WS-PROFILES-COUNT TO WS-PROFILE-IDX
@@ -824,6 +1077,9 @@
               MOVE FUNCTION TRIM(WS-PROF-UNIV-IN)     TO WS-PROF-UNIV(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-MAJOR-IN)    TO WS-PROF-MAJOR(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN)    TO WS-PROF-GYEAR(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-PROF-ABOUT-IN) TO WS-PROF-ABOUT(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-EXPS-STR)      TO WS-PROF-EXPERIENCES(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-EDUS-STR)      TO WS-PROF-EDUCATIONS(WS-PROFILE-IDX)
            END-IF
 
            PERFORM SAVE-PROFILES
@@ -887,14 +1143,239 @@
            END-READ
            EXIT.
 
+       ADD-EXPERIENCE.
+           *> RESET COUNT TO 0
+           MOVE 0 TO WS-EXP-COUNT
+
+           PERFORM UNTIL WS-EXP-COUNT >= 3 OR WS-EXP-CHOICE = "DONE" OR EOF-IN
+               MOVE MSG-ADD-EXP TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-EXP-CHOICE
+
+               IF EOF-IN
+                   EXIT PERFORM
+               END-IF
+
+               IF WS-EXP-CHOICE = "DONE"
+                   EXIT PERFORM
+               ELSE
+                   ADD 1 TO WS-EXP-COUNT
+
+                   *>TITLE
+                   STRING "Experience #" WS-EXP-COUNT " - Title: " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-TITLE
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-TITLE-INPUT TO WS-EXP-TITLE(WS-EXP-COUNT)
+
+                   *>COMPANY/ORG
+                   STRING "Experience #" WS-EXP-COUNT " - Company/Organization: " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-COMPANY
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-COMPANY-INPUT TO WS-EXP-COMPANY(WS-EXP-COUNT)
+
+                   *>DATE
+                   STRING "Experience #" WS-EXP-COUNT " - Dates (e.g., Summer 2024): " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-DATES
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-DATES-INPUT TO WS-EXP-DATES(WS-EXP-COUNT)
+
+                   *>DESCRIPTION
+                   STRING "Experience #" WS-EXP-COUNT " - Description (max 100 chars, blank to skip): " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-DESCRIPTION
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   IF WS-DESC-INPUT NOT = SPACES
+                       MOVE WS-DESC-INPUT TO WS-EXP-DESC(WS-EXP-COUNT)
+                   END-IF
+              END-IF
+           END PERFORM
+           EXIT.
+
+       READ-EXP-CHOICE
+           MOVE SPACES TO WS-EXP-CHOICE
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-EXP-CHOICE
+           END-READ
+           EXIT.
+
+       READ-TITLE.
+           MOVE SPACES TO WS-TITLE-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-TITLE-INPUT
+           END-READ
+           EXIT.
+
+       READ-COMPANY.
+           MOVE SPACES TO WS-COMPANY-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-COMPANY-INPUT
+           END-READ
+           EXIT.
+       
+       READ-DATES.
+           MOVE SPACES TO WS-DATES-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-DATES-INPUT
+           END-READ
+           EXIT.
+
+       READ-DESCRIPTION.
+           MOVE SPACES TO WS-DESC-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-DESC-INPUT
+           END-READ
+           EXIT.
+
+       ADD-EDUCATION.
+           MOVE 0 TO WS-EDU-COUNT
+
+           PERFORM UNTIL WS-EDU-COUNT >= 3 OR WS-EDU-CHOICE = "DONE" OR EOF-IN
+               MOVE MSG-ADD-EDUCATION TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-EDU-CHOICE
+
+               IF EOF-IN
+                   EXIT PERFORM
+               END-IF
+
+               IF WS-EDU-CHOICE = "DONE"
+                   EXIT PERFORM
+               ELSE
+                   ADD 1 TO WS-EDU-COUNT
+
+                   *>Degree
+                   STRING "Education #" WS-EDU-COUNT " - Degree: " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-DEGREE
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-DEGREE-INPUT TO WS-EDU-DEGREE(WS-EDU-COUNT)
+
+                   *>Uni/College
+                   STRING "Education #" WS-EDU-COUNT " - University/College: " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-UNI
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-SCHOOL-INPUT TO WS-EDU-SCHOOL(WS-EDU-COUNT)
+
+                   *>Years attended
+                   STRING "Education #" WS-EDU-COUNT " - Years Attended (e.g., 2023-2025): " DELIMITED BY SIZE
+                       INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   PERFORM READ-YEAR
+                  
+                   IF EOF-IN
+                       EXIT PERFORM
+                   END-IF
+
+                   MOVE WS-YEARS-INPUT TO WS-EDU-YEARS(WS-EDU-COUNT)
+      
+               END-IF
+           END PERFORM
+           EXIT.
+
+       READ-EDU-CHOICE.
+           MOVE SPACES TO WS-EDU-CHOICE
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-EDU-CHOICE
+           END-READ
+           EXIT.
+
+       READ-DEGREE.
+           MOVE SPACES TO WS-DEGREE-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-DEGREE-INPUT
+           END-READ
+           EXIT.
+
+       READ-UNI.
+           MOVE SPACES TO WS-SCHOOL-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-SCHOOL-INPUT
+           END-READ
+           EXIT.
+
+       READ-YEAR.
+           MOVE SPACES TO WS-YEARS-INPUT
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-YEARS-INPUT
+           END-READ
+           EXIT.
+           
+
        VIEW-MY-PROFILE.
-                      PERFORM FIND-PROFILE-BY-USERNAME
+           PERFORM FIND-PROFILE-BY-USERNAME
            IF PROFILE-FOUND
               MOVE FUNCTION TRIM(WS-PROF-FIRST-IN) TO WS-PROF-FIRST(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-LAST-IN)  TO WS-PROF-LAST(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-UNIV-IN)  TO WS-PROF-UNIV(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-MAJOR-IN) TO WS-PROF-MAJOR(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN) TO WS-PROF-GYEAR(WS-PROFILE-IDX)   *> <<< THIS LINE
+              MOVE FUNCTION TRIM(WS-PROF-ABOUT-IN) TO WS-PROF-ABOUT(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-EXPS-STR)      TO WS-PROF-EXPERIENCES(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-EXPS-STR)      TO WS-PROF-EDUCATIONS(WS-PROFILE-IDX)
            ELSE
               ADD 1 TO WS-PROFILES-COUNT
               MOVE WS-PROFILES-COUNT TO WS-PROFILE-IDX
@@ -904,6 +1385,9 @@
               MOVE FUNCTION TRIM(WS-PROF-UNIV-IN)     TO WS-PROF-UNIV(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-MAJOR-IN)    TO WS-PROF-MAJOR(WS-PROFILE-IDX)
               MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN)    TO WS-PROF-GYEAR(WS-PROFILE-IDX) *> <<< THIS TOO
+              MOVE FUNCTION TRIM(WS-PROF-ABOUT-IN)    TO WS-PROF-ABOUT(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-EXPS-STR)         TO WS-PROF-EXPERIENCES(WS-PROFILE-IDX)
+              MOVE FUNCTION TRIM(WS-EXPS-STR)         TO WS-PROF-EDUCATIONS(WS-PROFILE-IDX)
            END-IF
 
            MOVE MSG-VIEW-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -938,11 +1422,14 @@
            END-STRING
            PERFORM DISPLAY-AND-LOG
 
+           MOVE WS-PROF-EXPERIENCES(WS-PROFILE-IDX) to WS-EXPS-STR
+           PERFORM DISPLAY-EXPERIENCES
+
+           MOVE WS-PROF-EDUCATIONS(WS-PROFILE-IDX) to WS-EDUS-STR
+           PERFORM DISPLAY-EDUCATION
+
            MOVE MSG-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
-
-
-
 
 
        IO-SECTION.
