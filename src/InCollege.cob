@@ -1158,6 +1158,7 @@
                    ADD 1 TO WS-EXP-COUNT
 
                    *>TITLE
+                   MOVE SPACES TO WS-MSG
                    STRING "Experience #" WS-EXP-COUNT " - Title: " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
@@ -1172,6 +1173,7 @@
                    MOVE WS-TITLE-INPUT TO WS-EXP-TITLE(WS-EXP-COUNT)
 
                    *>COMPANY/ORG
+                   MOVE SPACES TO WS-MSG
                    STRING "Experience #" WS-EXP-COUNT " - Company/Organization: " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
@@ -1186,6 +1188,7 @@
                    MOVE WS-COMPANY-INPUT TO WS-EXP-COMPANY(WS-EXP-COUNT)
 
                    *>DATE
+                   MOVE SPACES TO WS-MSG
                    STRING "Experience #" WS-EXP-COUNT " - Dates (e.g., Summer 2024): " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
@@ -1200,6 +1203,7 @@
                    MOVE WS-DATES-INPUT TO WS-EXP-DATES(WS-EXP-COUNT)
 
                    *>DESCRIPTION
+                   MOVE SPACES TO WS-MSG
                    STRING "Experience #" WS-EXP-COUNT " - Description (max 100 chars, blank to skip): " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
@@ -1280,6 +1284,7 @@
                    ADD 1 TO WS-EDU-COUNT
 
                    *>Degree
+                   MOVE SPACES TO WS-MSG
                    STRING "Education #" WS-EDU-COUNT " - Degree: " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
@@ -1294,6 +1299,7 @@
                    MOVE WS-DEGREE-INPUT TO WS-EDU-DEGREE(WS-EDU-COUNT)
 
                    *>Uni/College
+                   MOVE SPACES TO WS-MSG
                    STRING "Education #" WS-EDU-COUNT " - University/College: " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
@@ -1308,6 +1314,7 @@
                    MOVE WS-SCHOOL-INPUT TO WS-EDU-SCHOOL(WS-EDU-COUNT)
 
                    *>Years attended
+                   MOVE SPACES TO WS-MSG
                    STRING "Education #" WS-EDU-COUNT " - Years Attended (e.g., 2023-2025): " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
