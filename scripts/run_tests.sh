@@ -9,7 +9,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Move to the project's root directory
-# cd ..
+cd ..
 
 # --- Step 1: Force Compilation ---
 echo "Compiling the program to ensure latest changes..."
@@ -26,13 +26,15 @@ TEST_DIR="tests"
 TEMP_DIR="temp"
 mkdir -p $TEMP_DIR
 
-# Loop through all input files
-for test_input in $TEST_DIR/Input_*.txt; do
-    # Derive the target output filename by replacing "Input" with "Output"
-    base_filename=$(basename "$test_input")
-    target_output_file="$TEST_DIR/${base_filename/Input/Output}"
+# Loop through all input files in numeric order (Input_1.txt, Input_2.txt, ...)
+for i in $(seq 0 99); do
+    test_input="$TEST_DIR/Input_${i}.txt"
+    if [ ! -f "$test_input" ]; then
+        continue
+    fi
+    target_output_file="$TEST_DIR/Output_${i}.txt"
 
-    echo -e "Running for: ${base_filename}"
+    echo -e "Running for: Input_${i}.txt"
 
     # Prepare for the run by copying the correct input file
     cp "$test_input" "io/InCollege-Input.txt"
@@ -48,11 +50,12 @@ for test_input in $TEST_DIR/Input_*.txt; do
 done
 
 # --- Step 3: Cleanup ---
-rm -rf $TEMP_DIR
+# rm -rf $TEMP_DIR
 # rm io/InCollege-Input.txt io/InCollege-Output.txt # Clean up runtime files
 
 echo "--------------------------------------------------"
 echo "Output generation complete."
 echo -e "${RED}Next Step: Manually review each generated Output_XX.txt file to ensure it is correct.${NC}"
 
+cd scripts
 exit 0

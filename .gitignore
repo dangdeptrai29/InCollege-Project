@@ -5,12 +5,11 @@
 incollege
 
 
-# Local users data (real or local state) – commit only example
-data/users.txt
+# Files generated during runtime
+data/
+temp/
 
 .devcontainer
 .vscode
-
 .DS_Store
 
-temp/
