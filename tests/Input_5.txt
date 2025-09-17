@@ -1,0 +1,13 @@
+1
+testuser
+Password1!
+1
+Alice
+Brown
+Yale University
+Physics
+2023
+Persistent data across restart test
+DONE
+DONE
+2

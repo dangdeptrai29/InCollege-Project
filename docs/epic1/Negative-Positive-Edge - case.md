@@ -101,4 +101,3 @@ Validate core functionality across account creation, login, and post-login navig
 ### Notes
 - Keep the input order exactly as listed to properly exercise limit checks and subsequent login tests.
 - The login in Test 10 intentionally uses `user3` created in Test 5 for continuity and consistency.
-
