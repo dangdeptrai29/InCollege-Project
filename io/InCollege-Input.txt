@@ -1,9 +1,14 @@
 1
 testuser
-password1!
-testuser2
 Password1!
 1
+John
+Doe
+Example University
+Computer Science
+2025
 2
-3
 4
+1
+6
+2

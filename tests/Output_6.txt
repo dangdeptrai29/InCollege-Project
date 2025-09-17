@@ -23,44 +23,29 @@ Profile saved successfully!
 3. Search for User
 4. Learn a New Skill
 Enter your choice:
---- Your Profile ---
-Name: John Doe
-University: Example University
-Major: Computer Science
-Graduation Year: 2025
---------------------
+Invalid option
 1. Create/Edit My Profile
 2. View My Profile
 3. Search for User
 4. Learn a New Skill
 Enter your choice:
-Learn a new skill:
-Skill 1
-Skill 2
-Skill 3
-Skill 4
-Skill 5
-Go Back
+Invalid option
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
 Enter your choice:
-This skill is under construction.
-Learn a new skill:
-Skill 1
-Skill 2
-Skill 3
-Skill 4
-Skill 5
-Go Back
-Enter your choice:
+Invalid option
 1. Create/Edit My Profile
 2. View My Profile
 3. Search for User
 4. Learn a New Skill
 Enter your choice:
 --- Your Profile ---
-Name: John Doe
-University: Example University
+Name: Multi User
+University: University Test
 Major: Computer Science
-Graduation Year: 2025
+Graduation Year: 2020
 --------------------
 1. Create/Edit My Profile
 2. View My Profile

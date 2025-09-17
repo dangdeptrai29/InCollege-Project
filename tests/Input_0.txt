@@ -1,0 +1,12 @@
+1
+testuser
+Password1!
+1
+John
+Doe
+University of Test
+Computer Science
+2025
+Test bio for persistence validation
+DONE
+DONE
