@@ -26,3 +26,18 @@ Profile saved successfully!
 3. Search for User
 4. Learn a New Skill
 Enter your choice:
+--- Your Profile ---
+Name: Minnie Malist
+University: University of South Florida
+Major: General Studies
+Graduation Year: 2028
+Experience:
+(None)
+Education:
+(None)
+--------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+Enter your choice:

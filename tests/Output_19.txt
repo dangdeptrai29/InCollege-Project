@@ -19,8 +19,33 @@ Enter Major:
 Enter Graduation Year (YYYY):
 Enter About Me (optional, max 200 chars, enter blank line to skip):
 Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #1 - Title:
+Experience #1 - Company/Organization:
+Experience #1 - Dates (e.g., Summer 2024):
+Experience #1 - Description (max 100 chars, blank to skip):
+Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
 Add Education (optional, max 3 entries. Enter 'DONE' to finish):
 Profile saved successfully!
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+Enter your choice:
+--- Your Profile ---
+Name: Sub Field
+University: University of South Florida
+Major: Data
+Graduation Year: 2026
+Experience:
+Title: Data Clerk
+Company: Office Corp
+Dates: 2024
+Description:
+Education:
+Degree: Data Clerk
+University: Office Corp
+Years: 2024
+--------------------
 1. Create/Edit My Profile
 2. View My Profile
 3. Search for User

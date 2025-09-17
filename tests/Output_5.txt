@@ -17,25 +17,10 @@ Enter Last Name:
 Enter University/College Attended:
 Enter Major:
 Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
 Profile saved successfully!
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
-Invalid option
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
-Invalid option
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
-Invalid option
 1. Create/Edit My Profile
 2. View My Profile
 3. Search for User
@@ -46,6 +31,10 @@ Name: Alice Brown
 University: Yale University
 Major: Physics
 Graduation Year: 2023
+Experience:
+(None)
+Education:
+(None)
 --------------------
 1. Create/Edit My Profile
 2. View My Profile

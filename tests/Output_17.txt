@@ -24,34 +24,21 @@ Experience #1 - Company/Organization:
 Experience #1 - Dates (e.g., Summer 2024):
 Experience #1 - Description (max 100 chars, blank to skip):
 Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #2 - Title:
+Experience #2 - Company/Organization:
+Experience #2 - Dates (e.g., Summer 2024):
+Experience #2 - Description (max 100 chars, blank to skip):
+Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #3 - Title:
+Experience #3 - Company/Organization:
+Experience #3 - Dates (e.g., Summer 2024):
+Experience #3 - Description (max 100 chars, blank to skip):
 Add Education (optional, max 3 entries. Enter 'DONE' to finish):
 Education #1 - Degree:
 Education #1 - University/College:
 Education #1 - Years Attended (e.g., 2023-2025):
 Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education #2 - Degree:
+Education #2 - University/College:
+Education #2 - Years Attended (e.g., 2023-2025):
 Profile saved successfully!
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
---- Your Profile ---
-Name: John Doe
-University: Example University
-Major: Computer Science
-Graduation Year: 2025
-Experience:
-Title: Software Intern
-Company: Tech Corp
-Dates: Summer 2024
-Description: Developed tools for Internal testing
-Education:
-Degree: Software Intern
-University: Tech Corp
-Years: Summer 2024
---------------------
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:

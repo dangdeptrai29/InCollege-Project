@@ -34,6 +34,11 @@ Enter Major:
 Enter Graduation Year (YYYY):
 Enter About Me (optional, max 200 chars, enter blank line to skip):
 Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
+Experience #1 - Title:
+Experience #1 - Company/Organization:
+Experience #1 - Dates (e.g., Summer 2024):
+Experience #1 - Description (max 100 chars, blank to skip):
+Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
 Add Education (optional, max 3 entries. Enter 'DONE' to finish):
 Profile saved successfully!
 1. Create/Edit My Profile
@@ -42,14 +47,19 @@ Profile saved successfully!
 4. Learn a New Skill
 Enter your choice:
 --- Your Profile ---
-Name: Updated Tracking
-University: Updated University
-Major: Updated Major
-Graduation Year: 2026
+Name: EDITED FN EDITED LN
+University: University of South Florida
+Major: Digital Marketing
+Graduation Year: 2024
 Experience:
-(None)
+Title: EX1: Social Media Intern
+Company: EX2:Ad Agency
+Dates: EX3: Summer 2023
+Description: EX4: Managed three client social media accounts.
 Education:
-(None)
+Degree: EX1: Social Media Intern
+University: EX2:Ad Agency
+Years: EX3: Summer 2023
 --------------------
 1. Create/Edit My Profile
 2. View My Profile
