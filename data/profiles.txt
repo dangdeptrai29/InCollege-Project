@@ -1,1 +1,1 @@
-testuser|Sub|Field|University of South Florida|Data Entry|2026
+testuser|John|Doe|Example University|Computer Science|2025|Enthusiastic developer always learning new things|Software Intern~Tech Corp~Summer 2024~Developed tools for Internal testing|Bachelor of Science~Example University~2021-2025

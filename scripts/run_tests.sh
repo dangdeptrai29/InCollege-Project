@@ -49,7 +49,7 @@ done
 
 # --- Step 3: Cleanup ---
 rm -rf $TEMP_DIR
-rm io/InCollege-Input.txt io/InCollege-Output.txt # Clean up runtime files
+# rm io/InCollege-Input.txt io/InCollege-Output.txt # Clean up runtime files
 
 echo "--------------------------------------------------"
 echo "Output generation complete."

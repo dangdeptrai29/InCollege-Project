@@ -2,8 +2,8 @@
 testuser
 Password1!
 1
-Ed
-Itor
+FN 1
+LN 2
 University of South Florida
 Marketing
 2024
@@ -11,16 +11,17 @@ This is the original bio.
 DONE
 DONE
 1
-Ed
-Itor
+EDITED FN
+EDITED LN
 University of South Florida
 Digital Marketing
 2024
 This is the updated bio after editing.
-Social Media Intern
-Ad Agency
-Summer 2023
-Managed three client social media accounts.
+
+EX1: Social Media Intern
+EX2:Ad Agency
+EX3: Summer 2023
+EX4: Managed three client social media accounts.
 DONE
 DONE
 2

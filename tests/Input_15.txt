@@ -1,6 +1,6 @@
 1
-TestUser
-P@ssword1!
+testuser
+Password1!
 5
 abc
 2

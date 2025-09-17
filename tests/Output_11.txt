@@ -16,6 +16,10 @@ Name: Percy Sist
 University: University of South Florida
 Major: Data Science
 Graduation Year: 2026
+Experience:
+(None)
+Education:
+(None)
 --------------------
 1. Create/Edit My Profile
 2. View My Profile

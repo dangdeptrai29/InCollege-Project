@@ -235,7 +235,7 @@
        *> Experiences
        01  MSG-ADD-EXP                PIC X(90) VALUE "Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):".
        01  WS-EXP-CHOICE              PIC X(20).
-       01  WS-EXPERIENCE
+       01  WS-EXPERIENCE.
            05 WS-EXP-COUNT            PIC 9 VALUE 0.
            05 WS-EXP-ENTRY OCCURS 3 TIMES.
                10 WS-EXP-TITLE        PIC X(50).
@@ -250,7 +250,7 @@
        *> Education
        01  MSG-ADD-EDUCATION          PIC X(90) VALUE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):".
        01  WS-EDU-CHOICE              PIC X(20).
-       01  WS-EDUCATION
+       01  WS-EDUCATION.
            05 WS-EDU-COUNT            PIC 9 VALUE 0.
            05 WS-EDU-ENTRY OCCURS 3 TIMES.
                10 WS-EDU-DEGREE       PIC X(50).
@@ -958,7 +958,7 @@
                MOVE WS-T4 TO WS-EXP-DESC(WS-EXP-COUNT)
            END-PERFORM.
            EXIT.
-       
+
        DESERIALIZE-EDUCATION.
       *> Converts the saved string back into the WS-EDUCATION table.
            MOVE 0 TO WS-EDU-COUNT.
@@ -1048,9 +1048,9 @@
            MOVE MSG-ABOUT-ME TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM READ-PROFILE-ABOUT
            IF EOF-IN
-               EXIT PERFORM
+               EXIT PARAGRAPH
            END-IF
-           
+
            PERFORM ADD-EXPERIENCE
            PERFORM ADD-EDUCATION
 
@@ -1161,13 +1161,14 @@
                    ADD 1 TO WS-EXP-COUNT
 
                    *>TITLE
+                   MOVE SPACES TO WS-MSG
                    STRING "Experience #" WS-EXP-COUNT " - Title: " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
-                   
+
                    PERFORM READ-TITLE
-                  
+
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
@@ -1175,13 +1176,14 @@
                    MOVE WS-TITLE-INPUT TO WS-EXP-TITLE(WS-EXP-COUNT)
 
                    *>COMPANY/ORG
+                   MOVE SPACES TO WS-MSG
                    STRING "Experience #" WS-EXP-COUNT " - Company/Organization: " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
-                   
+
                    PERFORM READ-COMPANY
-                  
+
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
@@ -1189,13 +1191,14 @@
                    MOVE WS-COMPANY-INPUT TO WS-EXP-COMPANY(WS-EXP-COUNT)
 
                    *>DATE
+                   MOVE SPACES TO WS-MSG
                    STRING "Experience #" WS-EXP-COUNT " - Dates (e.g., Summer 2024): " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
-                   
+
                    PERFORM READ-DATES
-                  
+
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
@@ -1203,13 +1206,14 @@
                    MOVE WS-DATES-INPUT TO WS-EXP-DATES(WS-EXP-COUNT)
 
                    *>DESCRIPTION
+                   MOVE SPACES TO WS-MSG
                    STRING "Experience #" WS-EXP-COUNT " - Description (max 100 chars, blank to skip): " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
-                   
+
                    PERFORM READ-DESCRIPTION
-                  
+
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
@@ -1218,10 +1222,10 @@
                        MOVE WS-DESC-INPUT TO WS-EXP-DESC(WS-EXP-COUNT)
                    END-IF
               END-IF
-           END PERFORM
+           END-PERFORM
            EXIT.
 
-       READ-EXP-CHOICE
+       READ-EXP-CHOICE.
            MOVE SPACES TO WS-EXP-CHOICE
            READ INPUT-FILE
                AT END SET EOF-IN TO TRUE
@@ -1247,7 +1251,7 @@
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-COMPANY-INPUT
            END-READ
            EXIT.
-       
+
        READ-DATES.
            MOVE SPACES TO WS-DATES-INPUT
            READ INPUT-FILE
@@ -1283,13 +1287,14 @@
                    ADD 1 TO WS-EDU-COUNT
 
                    *>Degree
+                   MOVE SPACES TO WS-MSG
                    STRING "Education #" WS-EDU-COUNT " - Degree: " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
-                   
+
                    PERFORM READ-DEGREE
-                  
+
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
@@ -1297,13 +1302,14 @@
                    MOVE WS-DEGREE-INPUT TO WS-EDU-DEGREE(WS-EDU-COUNT)
 
                    *>Uni/College
+                   MOVE SPACES TO WS-MSG
                    STRING "Education #" WS-EDU-COUNT " - University/College: " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
-                   
+
                    PERFORM READ-UNI
-                  
+
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
@@ -1311,21 +1317,22 @@
                    MOVE WS-SCHOOL-INPUT TO WS-EDU-SCHOOL(WS-EDU-COUNT)
 
                    *>Years attended
+                   MOVE SPACES TO WS-MSG
                    STRING "Education #" WS-EDU-COUNT " - Years Attended (e.g., 2023-2025): " DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
-                   
+
                    PERFORM READ-YEAR
-                  
+
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
 
                    MOVE WS-YEARS-INPUT TO WS-EDU-YEARS(WS-EDU-COUNT)
-      
+
                END-IF
-           END PERFORM
+           END-PERFORM
            EXIT.
 
        READ-EDU-CHOICE.
@@ -1363,7 +1370,7 @@
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-YEARS-INPUT
            END-READ
            EXIT.
-           
+
 
        VIEW-MY-PROFILE.
            PERFORM FIND-PROFILE-BY-USERNAME
@@ -1440,6 +1447,4 @@
            WRITE OUTPUT-REC
            DISPLAY FUNCTION TRIM(WS-MSG)
            EXIT.
-
-
 
