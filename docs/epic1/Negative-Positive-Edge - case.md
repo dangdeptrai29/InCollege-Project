@@ -12,19 +12,20 @@ Validate core functionality across account creation, login, and post-login navig
 ---
 
 ### Test Matrix (Overview)
-| # | Area         | Scenario                   | Input (condensed)        | Expected                      |
-|---|--------------|----------------------------|--------------------------|-------------------------------|
-| 1 | Registration | Too short password         | `2, newuser, short`      | Reject: password requirements |
-| 2 | Registration | Missing special char       | `2, newuser, NoSpecial1` | Reject: password requirements |
-| 3 | Registration | Min length accepted (8)    | `2, edge1, Minimum1!`    | Account created               |
-| 4 | Registration | Max length accepted (12)   | `2, edge2, Maximum123!!` | Account created               |
-| 5 | Registration | Valid account (fill slots) | `2, user3, Perfect9@`    | Account created               |
-| 6 | Registration | Valid account (fill slots) | `2, user4, Another2#`    | Account created               |
-| 7 | Registration | Fill last slot (5th)       | `2, user5, LastOne3$`    | Account created (5 total)     |
-| 8 | Registration | Exceed account limit (6th) | `2, user6, ShouldFail4%` | Reject: limit reached         |
-| 9 | Login        | Incorrect credentials      | `1, wronguser, wrongpass`| Reject: incorrect creds       |
-| 10| Login        | Successful login           | `1, user3, Perfect9@`    | Logged in + welcome + menu    |
-| 11| Post-login   | Navigate options 1-4       | `1,2,3,4`                | Under construction + skills menu |
+| # | Area         | Scenario                   | Input (condensed)         | Expected                      |
+|---|--------------|----------------------------|---------------------------|-------------------------------|
+| 1 | Registration | Too short password         | `2, newuser, short`       | Reject: password requirements |
+| 2 | Registration | Missing special char       | `2, newuser, NoSpecial1`  | Reject: password requirements |
+| 3 | Registration | Too long pasword           |`2, newuser, Verylonglong@`| Reject: password requirements |
+| 3 | Registration | Min length accepted (8)    | `2, edge1, Minimum1!`     | Account created               |
+| 4 | Registration | Max length accepted (12)   | `2, edge2, Maximum123!!`  | Account created               |
+| 5 | Registration | Valid account (fill slots) | `2, user3, Perfect9@`     | Account created               |
+| 6 | Registration | Valid account (fill slots) | `2, user4, Another2#`     | Account created               |
+| 7 | Registration | Fill last slot (5th)       | `2, user5, LastOne3$`     | Account created (5 total)     |
+| 8 | Registration | Exceed account limit (6th) | `2, user6, ShouldFail4%`  | Reject: limit reached         |
+| 9 | Login        | Incorrect credentials      | `1, wronguser, wrongpass` | Reject: incorrect creds       |
+| 10| Login        | Successful login           | `1, user3, Perfect9@`     | Logged in + welcome + menu    |
+| 11| Post-login   | Navigate options 1-4       | `1,2,3,4`                 | Under construction + skills menu |
 
 ---
 
@@ -60,7 +61,7 @@ Validate core functionality across account creation, login, and post-login navig
 - **Expected**: Both accounts created successfully.
 
 #### 7. Fill the Last Account Slot (5 total)
-- **Note**: Assumes `WS-MAX-ACCOUNTS = 5`.
+- **Note**: Assumes `WS-MAX-USERS = 5`.
 - **Input**:
   - Action: `2`
   - Username: `user5`
