@@ -1278,7 +1278,7 @@
 
        READ-NEXT-LINE.
            *> Reusable read line, save input to WS-LINE (username, password, choice, etc) then trim whitespace
-           *> Usage: PERFORM READ-NEXT-LINE then MOVE WS-LINE TO <var> (assisgn the output back to the caller's variable)
+           *> Usage: PERFORM READ-NEXT-LINE then MOVE WS-LINE TO <var> (assign the output back to the caller's variable)
            MOVE SPACES TO WS-LINE
            READ INPUT-FILE
                AT END SET EOF-IN TO TRUE
