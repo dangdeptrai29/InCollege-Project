@@ -24,9 +24,13 @@ Experience:
   Dates: Summer 2024
   Description: Assisted with front-end development.
 Education:
+<<<<<<< HEAD
   Degree: Bachelor's
   University: State University
   Years: 2021-2025
+=======
+(None)
+>>>>>>> 4ad844d (refactor(view-profile): Fix view profile to properly load data from database)
 --------------------
 1. Create/Edit My Profile
 2. View My Profile
