@@ -42,9 +42,7 @@ Company: Office Corp
 Dates: 2024
 Description:
 Education:
-Degree: Data Clerk
-University: Office Corp
-Years: 2024
+(None)
 --------------------
 1. Create/Edit My Profile
 2. View My Profile
