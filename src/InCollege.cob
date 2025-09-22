@@ -68,6 +68,9 @@
            88  EOF-PROF                      VALUE 'Y'.
            88  NOT-EOF-PROF                  VALUE 'N'.
 
+       *> Generic Input buffer
+       01 WS-LINE                    PIC X(256) VALUE SPACES. 
+
        *> Credentials for the current attempt
        01  WS-USERNAME                PIC X(128) VALUE SPACES.
        01  WS-PASSWORD                PIC X(128) VALUE SPACES.
@@ -293,7 +296,9 @@
            MOVE MSG-CREATE       TO WS-MSG PERFORM DISPLAY-AND-LOG
            *> Always show the prompt before reading (file-driven simulation)
            MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
-           PERFORM READ-CHOICE
+
+           PERFORM READ-NEXT-LINE
+           MOVE WS-LINE TO WS-CHOICE
            IF EOF-IN
               EXIT PARAGRAPH
            END-IF
@@ -319,12 +324,16 @@
            *> Loop until correct credentials or EOF
            PERFORM UNTIL MATCH-FOUND OR EOF-IN
               MOVE MSG-ENTER-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
-              PERFORM READ-USERNAME
+              PERFORM READ-NEXT-LINE
+              MOVE WS-LINE TO WS-USERNAME
               IF EOF-IN
                  EXIT PERFORM
               END-IF
               MOVE MSG-ENTER-PASS TO WS-MSG PERFORM DISPLAY-AND-LOG
-              PERFORM READ-PASSWORD
+
+              PERFORM READ-NEXT-LINE
+              MOVE WS-LINE TO WS-PASSWORD
+
               IF EOF-IN
                  MOVE MSG-FAILURE TO WS-MSG
                  PERFORM DISPLAY-AND-LOG
@@ -355,36 +364,6 @@
            END-PERFORM
            EXIT.
 
-       READ-USERNAME.
-           *> Read one line for username; trim whitespace
-           MOVE SPACES TO WS-USERNAME
-           READ INPUT-FILE
-               AT END SET EOF-IN       TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-USERNAME
-           END-READ
-           EXIT.
-
-       READ-PASSWORD.
-           *> Read one line for password; trim whitespace
-           MOVE SPACES TO WS-PASSWORD
-           READ INPUT-FILE
-               AT END SET EOF-IN       TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-PASSWORD
-           END-READ
-           EXIT.
-
-       READ-CHOICE.
-           MOVE SPACES TO WS-CHOICE
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-CHOICE
-           END-READ
-           EXIT.
-
-
        CREATE-ACCOUNT.
            *>Check max account
            IF WS-USERS-COUNT >= 5
@@ -395,7 +374,9 @@
            *> Prompt for new username
            PERFORM UNTIL WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND OR EOF-IN
                MOVE MSG-ENTER-NEW-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
-               PERFORM READ-NEW-USERNAME
+                
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-NEW-USERNAME
 
                IF EOF-IN
                    EXIT PARAGRAPH
@@ -420,7 +401,8 @@
            PERFORM UNTIL PASS-VALID OR EOF-IN
                MOVE MSG-ENTER-NEW-PASS TO WS-MSG PERFORM DISPLAY-AND-LOG
 
-               PERFORM READ-NEW-PASSWORD
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-NEW-PASSWORD
 
                IF EOF-IN
                    EXIT PARAGRAPH
@@ -459,24 +441,6 @@
            CLOSE USERS-FILE
 
            MOVE MSG-ACCOUNT-SUCCESS TO WS-MSG PERFORM DISPLAY-AND-LOG
-           EXIT.
-
-       READ-NEW-USERNAME.
-           MOVE SPACES TO WS-NEW-USERNAME
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-NEW-USERNAME
-           END-READ
-           EXIT.
-
-       READ-NEW-PASSWORD.
-           MOVE SPACES TO WS-NEW-PASSWORD
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-NEW-PASSWORD
-           END-READ
            EXIT.
 
        VALIDATE-PASSWORD.
@@ -531,7 +495,9 @@
                MOVE MSG-MENU-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG      *> 4
                MOVE MSG-ENTER-CHOICE2  TO WS-MSG PERFORM DISPLAY-AND-LOG
 
-               PERFORM READ-LOGGED-CHOICE
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-LOGGED-CHOICE
+               
                IF EOF-IN
                    EXIT PERFORM
                END-IF
@@ -556,15 +522,6 @@
            END-PERFORM
            EXIT.
 
-       READ-LOGGED-CHOICE.
-           MOVE SPACES TO WS-LOGGED-CHOICE
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-LOGGED-CHOICE
-           END-READ
-           EXIT.
-
        SKILL-MENU.
            PERFORM UNTIL WS-SKILL-CHOICE = '6' OR EOF-IN
                MOVE "Learn a new skill:" TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -576,7 +533,8 @@
                MOVE MSG-SKILL6 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-ENTER-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
 
-               PERFORM READ-SKILL-CHOICE
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-SKILL-CHOICE
 
                IF EOF-IN
                    EXIT PERFORM
@@ -591,14 +549,6 @@
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
            END-PERFORM
-           EXIT.
-       READ-SKILL-CHOICE.
-           MOVE SPACES TO WS-SKILL-CHOICE
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-SKILL-CHOICE
-           END-READ
            EXIT.
 
        VALIDATION-SECTION.
@@ -998,7 +948,10 @@
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-FIRST-IN) NOT = SPACES
                MOVE MSG-ENTER-FIRST TO WS-MSG PERFORM DISPLAY-AND-LOG
-               PERFORM READ-PROFILE-FIRST
+
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-PROF-FIRST-IN
+
                IF EOF-IN EXIT PARAGRAPH END-IF
                IF FUNCTION TRIM(WS-PROF-FIRST-IN) = SPACES
                   MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -1007,7 +960,10 @@
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-LAST-IN) NOT = SPACES
                MOVE MSG-ENTER-LAST TO WS-MSG PERFORM DISPLAY-AND-LOG
-               PERFORM READ-PROFILE-LAST
+
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-PROF-LAST-IN
+
                IF EOF-IN EXIT PARAGRAPH END-IF
                IF FUNCTION TRIM(WS-PROF-LAST-IN) = SPACES
                   MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -1016,7 +972,10 @@
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-UNIV-IN) NOT = SPACES
                MOVE MSG-ENTER-UNIV TO WS-MSG PERFORM DISPLAY-AND-LOG
-               PERFORM READ-PROFILE-UNIV
+
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-PROF-UNIV-IN
+
                IF EOF-IN EXIT PARAGRAPH END-IF
                IF FUNCTION TRIM(WS-PROF-UNIV-IN) = SPACES
                   MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -1025,7 +984,10 @@
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-MAJOR-IN) NOT = SPACES
                MOVE MSG-ENTER-MAJOR TO WS-MSG PERFORM DISPLAY-AND-LOG
-               PERFORM READ-PROFILE-MAJOR
+               
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-PROF-MAJOR-IN
+
                IF EOF-IN EXIT PARAGRAPH END-IF
                IF FUNCTION TRIM(WS-PROF-MAJOR-IN) = SPACES
                   MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -1036,7 +998,10 @@
            SET YEAR-INVALID TO TRUE        *> start invalid so we enter the loop
            PERFORM UNTIL YEAR-VALID OR EOF-IN
                MOVE MSG-ENTER-GYEAR2 TO WS-MSG PERFORM DISPLAY-AND-LOG
-               PERFORM READ-PROFILE-GYEAR
+
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-PROF-GYEAR-IN
+
                IF EOF-IN EXIT PARAGRAPH END-IF
                PERFORM VALIDATE-GRAD-YEAR
                IF YEAR-INVALID
@@ -1046,7 +1011,10 @@
 
            *> ABOUT ME
            MOVE MSG-ABOUT-ME TO WS-MSG PERFORM DISPLAY-AND-LOG
-           PERFORM READ-PROFILE-ABOUT
+
+           *> Read profile about me (multi-line until a blank line)
+           PERFORM READ-NEXT-LINE
+           MOVE WS-LINE TO WS-PROF-ABOUT-IN
 
            PERFORM ADD-EXPERIENCE
            PERFORM ADD-EDUCATION
@@ -1083,63 +1051,6 @@
            MOVE MSG-PROFILE-SAVED-OK TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
 
-
-       READ-PROFILE-FIRST.
-           MOVE SPACES TO WS-PROF-FIRST-IN
-           READ INPUT-FILE
-              AT END SET EOF-IN TO TRUE
-              NOT AT END MOVE FUNCTION TRIM(INPUT-REC) TO WS-PROF-FIRST-IN
-           END-READ
-           EXIT.
-
-       READ-PROFILE-LAST.
-           MOVE SPACES TO WS-PROF-LAST-IN
-           READ INPUT-FILE
-              AT END SET EOF-IN TO TRUE
-              NOT AT END MOVE FUNCTION TRIM(INPUT-REC) TO WS-PROF-LAST-IN
-           END-READ
-           EXIT.
-
-       READ-PROFILE-UNIV.
-           MOVE SPACES TO WS-PROF-UNIV-IN
-           READ INPUT-FILE
-              AT END SET EOF-IN TO TRUE
-              NOT AT END MOVE FUNCTION TRIM(INPUT-REC) TO WS-PROF-UNIV-IN
-           END-READ
-           EXIT.
-
-       READ-PROFILE-MAJOR.
-           MOVE SPACES TO WS-PROF-MAJOR-IN
-           READ INPUT-FILE
-              AT END SET EOF-IN TO TRUE
-              NOT AT END MOVE FUNCTION TRIM(INPUT-REC) TO WS-PROF-MAJOR-IN
-           END-READ
-           EXIT.
-
-       READ-PROFILE-GYEAR.
-           MOVE SPACES TO WS-PROF-GYEAR-IN
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-PROF-GYEAR-IN
-           END-READ
-           EXIT.
-
-
-       READ-PROFILE-ABOUT.
-           MOVE SPACES TO WS-PROF-ABOUT-IN
-           READ INPUT-FILE
-              AT END SET EOF-IN TO TRUE
-              NOT AT END MOVE FUNCTION TRIM(INPUT-REC) TO WS-PROF-ABOUT-IN
-           END-READ
-           EXIT.
-
-       READ-PROFILE-LINE.
-           READ INPUT-FILE
-              AT END SET EOF-IN TO TRUE
-           END-READ
-           EXIT.
-
        ADD-EXPERIENCE.
            *> RESET COUNT TO 0
            MOVE 0 TO WS-EXP-COUNT
@@ -1147,7 +1058,9 @@
 
            PERFORM UNTIL WS-EXP-COUNT >= 3 OR WS-EXP-CHOICE = "DONE" OR EOF-IN
                MOVE MSG-ADD-EXP TO WS-MSG PERFORM DISPLAY-AND-LOG
-               PERFORM READ-EXP-CHOICE
+
+                PERFORM READ-NEXT-LINE
+                MOVE WS-LINE TO WS-EXP-CHOICE
 
                IF EOF-IN
                    EXIT PERFORM
@@ -1165,7 +1078,8 @@
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
 
-                   PERFORM READ-TITLE
+                   PERFORM READ-NEXT-LINE
+                   MOVE WS-LINE TO WS-TITLE-INPUT
 
                    IF EOF-IN
                        EXIT PERFORM
@@ -1180,7 +1094,8 @@
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
 
-                   PERFORM READ-COMPANY
+                   PERFORM READ-NEXT-LINE
+                   MOVE WS-LINE TO WS-COMPANY-INPUT
 
                    IF EOF-IN
                        EXIT PERFORM
@@ -1195,7 +1110,8 @@
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
 
-                   PERFORM READ-DATES
+                   PERFORM READ-NEXT-LINE
+                   MOVE WS-LINE TO WS-DATES-INPUT
 
                    IF EOF-IN
                        EXIT PERFORM
@@ -1210,7 +1126,8 @@
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
 
-                   PERFORM READ-DESCRIPTION
+                   PERFORM READ-NEXT-LINE
+                   MOVE WS-LINE TO WS-DESC-INPUT
 
                    IF EOF-IN
                        EXIT PERFORM
@@ -1223,58 +1140,15 @@
            END-PERFORM
            EXIT.
 
-       READ-EXP-CHOICE.
-           MOVE SPACES TO WS-EXP-CHOICE
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-EXP-CHOICE
-           END-READ
-           EXIT.
-
-       READ-TITLE.
-           MOVE SPACES TO WS-TITLE-INPUT
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-TITLE-INPUT
-           END-READ
-           EXIT.
-
-       READ-COMPANY.
-           MOVE SPACES TO WS-COMPANY-INPUT
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-COMPANY-INPUT
-           END-READ
-           EXIT.
-
-       READ-DATES.
-           MOVE SPACES TO WS-DATES-INPUT
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-DATES-INPUT
-           END-READ
-           EXIT.
-
-       READ-DESCRIPTION.
-           MOVE SPACES TO WS-DESC-INPUT
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-DESC-INPUT
-           END-READ
-           EXIT.
-
        ADD-EDUCATION.
            MOVE 0 TO WS-EDU-COUNT
            MOVE SPACES TO WS-EDU-CHOICE
 
            PERFORM UNTIL WS-EDU-COUNT >= 3 OR WS-EDU-CHOICE = "DONE" OR EOF-IN
                MOVE MSG-ADD-EDUCATION TO WS-MSG PERFORM DISPLAY-AND-LOG
-               PERFORM READ-EDU-CHOICE
+
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-EDU-CHOICE
 
                IF EOF-IN
                    EXIT PERFORM
@@ -1292,7 +1166,8 @@
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
 
-                   PERFORM READ-DEGREE
+                   PERFORM READ-NEXT-LINE
+                   MOVE WS-LINE TO WS-DEGREE-INPUT
 
                    IF EOF-IN
                        EXIT PERFORM
@@ -1307,7 +1182,8 @@
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
 
-                   PERFORM READ-UNI
+                   PERFORM READ-NEXT-LINE
+                   MOVE WS-LINE TO WS-SCHOOL-INPUT
 
                    IF EOF-IN
                        EXIT PERFORM
@@ -1322,7 +1198,8 @@
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
 
-                   PERFORM READ-YEAR
+                   PERFORM READ-NEXT-LINE
+                   MOVE WS-LINE TO WS-YEARS-INPUT
 
                    IF EOF-IN
                        EXIT PERFORM
@@ -1333,43 +1210,6 @@
                END-IF
            END-PERFORM
            EXIT.
-
-       READ-EDU-CHOICE.
-           MOVE SPACES TO WS-EDU-CHOICE
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-EDU-CHOICE
-           END-READ
-           EXIT.
-
-       READ-DEGREE.
-           MOVE SPACES TO WS-DEGREE-INPUT
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-DEGREE-INPUT
-           END-READ
-           EXIT.
-
-       READ-UNI.
-           MOVE SPACES TO WS-SCHOOL-INPUT
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-SCHOOL-INPUT
-           END-READ
-           EXIT.
-
-       READ-YEAR.
-           MOVE SPACES TO WS-YEARS-INPUT
-           READ INPUT-FILE
-               AT END SET EOF-IN TO TRUE
-               NOT AT END
-                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-YEARS-INPUT
-           END-READ
-           EXIT.
-
 
        VIEW-MY-PROFILE.
            PERFORM FIND-PROFILE-BY-USERNAME
@@ -1438,12 +1278,23 @@
            EXIT.
 
 
-       IO-SECTION.
+       HELPER-SECTION.
        DISPLAY-AND-LOG.
            *> Write message to output file and display it
            MOVE SPACES TO OUTPUT-REC
            MOVE FUNCTION TRIM(WS-MSG) TO OUTPUT-REC
            WRITE OUTPUT-REC
            DISPLAY FUNCTION TRIM(WS-MSG)
+           EXIT.
+
+       READ-NEXT-LINE.
+           *> Generic read next line into WS-LINE for reuse (username, password, choice, etc) then trim whitespace
+           *> Usage: PERFORM READ-NEXT-LINE then MOVE WS-LINE TO <var> (assisgn the output back to the caller's variable)
+           MOVE SPACES TO WS-LINE
+           READ INPUT-FILE
+               AT END SET EOF-IN TO TRUE
+               NOT AT END
+                   MOVE FUNCTION TRIM(INPUT-REC) TO WS-LINE
+           END-READ
            EXIT.
 
