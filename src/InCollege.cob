@@ -730,7 +730,6 @@
 
        VALIDATE-GRAD-YEAR.
            SET YEAR-VALID TO TRUE
-           MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN) TO WS-PROF-GYEAR(WS-PROFILES-COUNT)
            IF FUNCTION LENGTH(WS-PROF-GYEAR-IN) NOT = 4
               SET YEAR-INVALID TO TRUE
               EXIT PARAGRAPH
@@ -1277,7 +1276,7 @@
            EXIT.
 
        READ-NEXT-LINE.
-           *> Generic read next line into WS-LINE for reuse (username, password, choice, etc) then trim whitespace
+           *> Reusable read line, save input to WS-LINE (username, password, choice, etc) then trim whitespace
            *> Usage: PERFORM READ-NEXT-LINE then MOVE WS-LINE TO <var> (assisgn the output back to the caller's variable)
            MOVE SPACES TO WS-LINE
            READ INPUT-FILE
