@@ -57,9 +57,7 @@ Company: EX2:Ad Agency
 Dates: EX3: Summer 2023
 Description: EX4: Managed three client social media accounts.
 Education:
-Degree: EX1: Social Media Intern
-University: EX2:Ad Agency
-Years: EX3: Summer 2023
+(None)
 --------------------
 1. Create/Edit My Profile
 2. View My Profile
