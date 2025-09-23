@@ -1,32 +1,5 @@
 1
 testuser
 Password1!
-1
-Max
-Out
-University of South Florida
-Everything
-2023
-I do it all.
-Title1
-Company1
-Date1
-Desc1
-Title2
-Company2
-Date2
-Desc2
-Title3
-Company3
-Date3
-Desc3
-Degree1
-Uni1
-Years1
-Degree2
-Uni2
-Years2
-Degree3
-Uni3
-Years3
-2
+4
+Jean-Luc O'Connor

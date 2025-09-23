@@ -1,6 +1,6 @@
 Welcome to InCollege!
-Log In
-Create New Account
+1. Log In
+2. Create New Account
 Enter your choice:
 Please enter your username:
 Please enter your password:
@@ -8,36 +8,30 @@ You have successfully logged in.
 Welcome, testuser!
 1. Create/Edit My Profile
 2. View My Profile
-3. Search for User
-4. Learn a New Skill
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
 Enter your choice:
---- Create/Edit Profile ---
-Enter First Name:
-Enter Last Name:
-Enter University/College Attended:
-Enter Major:
-Enter Graduation Year (YYYY):
-Enter About Me (optional, max 200 chars, enter blank line to skip):
-Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
-Add Education (optional, max 3 entries. Enter 'DONE' to finish):
-Profile saved successfully!
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
---- Your Profile ---
-Name: Minnie Malist
-University: University of South Florida
-Major: General Studies
-Graduation Year: 2028
+Enter the full name of the person you are looking for:
+--- Found User Profile ---
+Name: Maximilianus Theophilus Bartholomew IV
+University: Royal Academy of Technology
+Major: Quantum Computing
+Graduation Year: 2030
+About Me: Dedicated to pushing computational limits.
 Experience:
-(None)
+  Title: Research Fellow
+  Company: Royal Lab
+  Dates: 2028-2030
+  Description: Developed quantum algorithms for navigation.
 Education:
-(None)
---------------------
+  Degree: PhD Candidate
+  University: Royal Academy of Technology
+  Years: 2026-2030
+-------------------------
 1. Create/Edit My Profile
 2. View My Profile
-3. Search for User
-4. Learn a New Skill
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
 Enter your choice:

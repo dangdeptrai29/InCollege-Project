@@ -1,6 +1,6 @@
 Welcome to InCollege!
-Log In
-Create New Account
+1. Log In
+2. Create New Account
 Enter your choice:
 Please enter your username:
 Please enter your password:
@@ -8,61 +8,59 @@ You have successfully logged in.
 Welcome, testuser!
 1. Create/Edit My Profile
 2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
---- Create/Edit Profile ---
-Enter First Name:
-Enter Last Name:
-Enter University/College Attended:
-Enter Major:
-Enter Graduation Year (YYYY):
-Enter About Me (optional, max 200 chars, enter blank line to skip):
-Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
-Add Education (optional, max 3 entries. Enter 'DONE' to finish):
-Profile saved successfully!
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
---- Create/Edit Profile ---
-Enter First Name:
-Enter Last Name:
-Enter University/College Attended:
-Enter Major:
-Enter Graduation Year (YYYY):
-Enter About Me (optional, max 200 chars, enter blank line to skip):
-Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
-Experience #1 - Title:
-Experience #1 - Company/Organization:
-Experience #1 - Dates (e.g., Summer 2024):
-Experience #1 - Description (max 100 chars, blank to skip):
-Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
-Add Education (optional, max 3 entries. Enter 'DONE' to finish):
-Profile saved successfully!
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
 Enter your choice:
 --- Your Profile ---
-Name: EDITED FN EDITED LN
-University: University of South Florida
-Major: Digital Marketing
-Graduation Year: 2024
+Name: Test User
+University: State University
+Major: Computer Science
+Graduation Year: 2025
+About Me: Passionate about software development.
 Experience:
-Title: EX1: Social Media Intern
-Company: EX2:Ad Agency
-Dates: EX3: Summer 2023
-Description: EX4: Managed three client social media accounts.
+  Title: Intern
+  Company: Tech Solutions
+  Dates: Summer 2024
+  Description: Assisted with front-end development.
 Education:
-Degree: EX1: Social Media Intern
-University: EX2:Ad Agency
-Years: EX3: Summer 2023
+  Degree: Bachelor's
+  University: State University
+  Years: 2021-2025
 --------------------
 1. Create/Edit My Profile
 2. View My Profile
-3. Search for User
-4. Learn a New Skill
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
+Enter the full name of the person you are looking for:
+--- Found User Profile ---
+Name: Jordan Blake
+University: Mountain Tech University
+Major: Information Systems
+Graduation Year: 2025
+About Me: Building future-ready systems.
+Experience:
+  Title: Systems Analyst
+  Company: Horizon Corp
+  Dates: 2022-2024
+  Description: Led cross-team integration projects.
+  Title: Intern
+  Company: InnovateX
+  Dates: Summer 2021
+  Description: Built automation scripts for QA.
+Education:
+  Degree: Master's
+  University: Mountain Tech University
+  Years: 2023-2025
+  Degree: Bachelor's
+  University: Lakeside College
+  Years: 2019-2023
+-------------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
 Enter your choice:
