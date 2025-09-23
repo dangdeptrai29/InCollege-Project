@@ -264,6 +264,15 @@
        01  WS-SCHOOL-INPUT            PIC X(50).
        01  WS-YEARS-INPUT             PIC X(20).
 
+       *> Search user
+       01  MSG-ENTER-USER-SEARCH           PIC X(64) VALUE "Enter the full name of the person you are looking for:".
+       01  MSG-USER-NOT-FOUND         PIC X(64) VALUE "No one by that name could be found.".
+       01  MSG-USER-PROFILE-HEADER    PIC X(32) VALUE "--- Found User Profile ---".
+       01  WS-SEARCH-FULLNAME         PIC X(128) VALUE SPACES.
+       01  WS-SEARCH-FOUND            PIC X VALUE 'N'.
+            88  SEARCH-FOUND                 VALUE 'Y'.
+            88  SEARCH-NOT-FOUND             VALUE 'N'.
+
 
 
        PROCEDURE DIVISION.
@@ -516,9 +525,8 @@
                        MOVE "Job search is under construction." TO WS-MSG
                        PERFORM DISPLAY-AND-LOG
                    WHEN '4'
-                       MOVE "Search for User is under construction." TO WS-MSG
-                       PERFORM DISPLAY-AND-LOG
-                   WHEN '4'
+                       PERFORM USER-SEARCH-MENU
+                   WHEN '5'
                        PERFORM SKILL-MENU
                    WHEN OTHER
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -553,6 +561,33 @@
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
            END-PERFORM
+           EXIT.
+
+       USER-SEARCH-MENU.
+           MOVE MSG-ENTER-USER-SEARCH TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+    
+           PERFORM READ-NEXT-LINE
+           MOVE WS-LINE TO WS-SEARCH-FULLNAME
+    
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+    
+           *> TODO: Implement Search logic here - compare against profiles
+      *>     PERFORM FIND-USER-BY-NAME
+           
+           *> Use mock logic for now
+           SET SEARCH-NOT-FOUND TO TRUE
+           IF SEARCH-FOUND
+               MOVE MSG-USER-PROFILE-HEADER TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               *> Display found user info
+      *>         PERFORM DISPLAY-USER
+           ELSE
+               MOVE MSG-USER-NOT-FOUND TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+           END-IF
            EXIT.
 
        VALIDATION-SECTION.
