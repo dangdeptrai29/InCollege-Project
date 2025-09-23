@@ -83,8 +83,8 @@
        01  MSG-SUCCESS                PIC X(64)  VALUE "You have successfully logged in.".
        01  MSG-FAILURE                PIC X(64)  VALUE "Incorrect username/password, please try again.".
        01  MSG-WELCOME                PIC X(64)  VALUE "Welcome to InCollege!".
-       01  MSG-LOGIN                  PIC X(32)  VALUE "Log In".
-       01  MSG-CREATE                 PIC X(32)  VALUE "Create New Account".
+       01  MSG-LOGIN                  PIC X(32)  VALUE "1. Log In".
+       01  MSG-CREATE                 PIC X(32)  VALUE "2. Create New Account".
        01  MSG-ENTER-CHOICE           PIC X(20)  VALUE "Enter your choice: ".
        01  MSG-WELCOME-PFX            PIC X(9)   VALUE "Welcome, ".
        01  MSG-ENTER-USER             PIC X(64)  VALUE "Please enter your username:".
@@ -213,8 +213,9 @@
             *> message for profiles
        01  MSG-MENU-PROF-EDIT         PIC X(32) VALUE "1. Create/Edit My Profile".
        01  MSG-MENU-PROF-VIEW         PIC X(32) VALUE "2. View My Profile".
-       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "3. Search for User".
-       01  MSG-MENU-SKILL2            PIC X(32) VALUE "4. Learn a New Skill".
+       01 MSG-MENU-JOB-SEARCH        PIC X(32) VALUE "3. Search for a job".
+       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "4. Find someone you know".
+       01  MSG-MENU-SKILL2            PIC X(32) VALUE "5. Learn a New Skill".
 
        01  MSG-EDIT-HEADER            PIC X(32) VALUE "--- Create/Edit Profile ---".
        01  MSG-VIEW-HEADER            PIC X(32) VALUE "--- Your Profile ---".
@@ -262,6 +263,15 @@
        01  WS-DEGREE-INPUT            PIC X(50).
        01  WS-SCHOOL-INPUT            PIC X(50).
        01  WS-YEARS-INPUT             PIC X(20).
+
+       *> Search user
+       01  MSG-ENTER-USER-SEARCH           PIC X(64) VALUE "Enter the full name of the person you are looking for:".
+       01  MSG-USER-NOT-FOUND         PIC X(64) VALUE "No one by that name could be found.".
+       01  MSG-USER-PROFILE-HEADER    PIC X(32) VALUE "--- Found User Profile ---".
+       01  WS-SEARCH-FULLNAME         PIC X(128) VALUE SPACES.
+       01  WS-SEARCH-FOUND            PIC X VALUE 'N'.
+            88  SEARCH-FOUND                 VALUE 'Y'.
+            88  SEARCH-NOT-FOUND             VALUE 'N'.
 
 
 
@@ -490,8 +500,9 @@
            PERFORM UNTIL EOF-IN
                MOVE MSG-MENU-PROF-EDIT TO WS-MSG PERFORM DISPLAY-AND-LOG   *> 1
                MOVE MSG-MENU-PROF-VIEW TO WS-MSG PERFORM DISPLAY-AND-LOG   *> 2
-               MOVE MSG-MENU-SEARCH-USER TO WS-MSG PERFORM DISPLAY-AND-LOG *> 3
-               MOVE MSG-MENU-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG      *> 4
+               MOVE MSG-MENU-JOB-SEARCH TO WS-MSG PERFORM DISPLAY-AND-LOG  *> 3
+               MOVE MSG-MENU-SEARCH-USER TO WS-MSG PERFORM DISPLAY-AND-LOG *> 4
+               MOVE MSG-MENU-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG      *> 5
                MOVE MSG-ENTER-CHOICE2  TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEXT-LINE
@@ -511,9 +522,11 @@
                    WHEN '2'
                        PERFORM VIEW-MY-PROFILE
                    WHEN '3'
-                       MOVE "Search for User is under construction." TO WS-MSG
+                       MOVE "Job search is under construction." TO WS-MSG
                        PERFORM DISPLAY-AND-LOG
                    WHEN '4'
+                       PERFORM USER-SEARCH-MENU
+                   WHEN '5'
                        PERFORM SKILL-MENU
                    WHEN OTHER
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -548,6 +561,33 @@
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
            END-PERFORM
+           EXIT.
+
+       USER-SEARCH-MENU.
+           MOVE MSG-ENTER-USER-SEARCH TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+    
+           PERFORM READ-NEXT-LINE
+           MOVE WS-LINE TO WS-SEARCH-FULLNAME
+    
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+    
+           *> TODO: Implement Search logic here - compare against profiles
+      *>     PERFORM FIND-USER-BY-NAME
+           
+           *> Use mock logic for now
+           SET SEARCH-NOT-FOUND TO TRUE
+           IF SEARCH-FOUND
+               MOVE MSG-USER-PROFILE-HEADER TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               *> Display found user info
+      *>         PERFORM DISPLAY-USER
+           ELSE
+               MOVE MSG-USER-NOT-FOUND TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+           END-IF
            EXIT.
 
        VALIDATION-SECTION.
@@ -1258,6 +1298,15 @@
                   INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
+
+           IF FUNCTION TRIM(WS-PROF-ABOUT-IN) NOT = SPACES
+               MOVE SPACES TO WS-MSG
+               STRING "About Me: " DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-PROF-ABOUT-IN) DELIMITED BY SIZE
+                      INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
+           END-IF
     
            PERFORM DISPLAY-EXPERIENCES
     
