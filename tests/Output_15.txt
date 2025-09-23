@@ -1,6 +1,6 @@
 Welcome to InCollege!
-Log In
-Create New Account
+1. Log In
+2. Create New Account
 Enter your choice:
 Please enter your username:
 Please enter your password:
@@ -8,33 +8,15 @@ You have successfully logged in.
 Welcome, testuser!
 1. Create/Edit My Profile
 2. View My Profile
-3. Search for User
-4. Learn a New Skill
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
 Enter your choice:
-Invalid option
+Enter the full name of the person you are looking for:
+No one by that name could be found.
 1. Create/Edit My Profile
 2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
-Invalid option
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
---- Your Profile ---
-Name: Val Idate
-University: University of South Florida
-Major: Mathematics
-Graduation Year: 2025
-Experience:
-(None)
-Education:
-(None)
---------------------
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
 Enter your choice:

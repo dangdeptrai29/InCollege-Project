@@ -1,27 +1,6 @@
 1
 testuser
 Password1!
-1
-FN 1
-LN 2
-University of South Florida
-Marketing
-2024
-This is the original bio.
-DONE
-DONE
-1
-EDITED FN
-EDITED LN
-University of South Florida
-Digital Marketing
-2024
-This is the updated bio after editing.
-
-EX1: Social Media Intern
-EX2:Ad Agency
-EX3: Summer 2023
-EX4: Managed three client social media accounts.
-DONE
-DONE
 2
+4
+Jordan Blake
