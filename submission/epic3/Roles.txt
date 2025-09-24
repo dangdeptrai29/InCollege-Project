@@ -1,7 +1,0 @@
-WEEK 3 ROLES
-Epic #3:	
-   Scrum Master:	Phong Nguyen
-	Coder #1:	Tam Nguyen
-	Coder #2:	Dang Nguyen
-	Tester #1:	Hieu Nguyen
-	Tester #2:	Minh Thien Nguyen
