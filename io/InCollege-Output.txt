@@ -1,6 +1,6 @@
 Welcome to InCollege!
-Log In
-Create New Account
+1. Log In
+2. Create New Account
 Enter your choice:
 Please enter your username:
 Please enter your password:
@@ -8,50 +8,22 @@ You have successfully logged in.
 Welcome, testuser!
 1. Create/Edit My Profile
 2. View My Profile
-3. Search for User
-4. Learn a New Skill
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
 Enter your choice:
---- Create/Edit Profile ---
-Enter First Name:
-Enter Last Name:
-Enter University/College Attended:
-Enter Major:
-Enter Graduation Year (YYYY):
-Enter About Me (optional, max 200 chars, enter blank line to skip):
-Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
-Experience #1 - Title:
-Experience #1 - Company/Organization:
-Experience #1 - Dates (e.g., Summer 2024):
-Experience #1 - Description (max 100 chars, blank to skip):
-Add Experiences (optional, max 3 entries. Enter 'DONE' to finish):
-Add Education (optional, max 3 entries. Enter 'DONE' to finish):
-Education #1 - Degree:
-Education #1 - University/College:
-Education #1 - Years Attended (e.g., 2023-2025):
-Add Education (optional, max 3 entries. Enter 'DONE' to finish):
-Profile saved successfully!
+Enter the full name of the person you are looking for:
+--- Found User Profile ---
+First Name: Jamie
+Last Name:  Lee
+University: Metro University
+Major:      Data Analytics
+About:      Loves turning data into stories.
+Experience: Data Analyst~Insight Corp~2023-2024~Built executive dashboards.
+Education:  Bachelor's~Metro University~2021-2025
 1. Create/Edit My Profile
 2. View My Profile
-3. Search for User
-4. Learn a New Skill
-Enter your choice:
---- Your Profile ---
-Name: John Doe
-University: Example University
-Major: Computer Science
-Graduation Year: 2025
-Experience:
-Title: Software Intern
-Company: Tech Corp
-Dates: Summer 2024
-Description: Developed tools for Internal testing
-Education:
-Degree: Software Intern
-University: Tech Corp
-Years: Summer 2024
---------------------
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for User
-4. Learn a New Skill
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
 Enter your choice:
