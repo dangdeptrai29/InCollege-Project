@@ -20,3 +20,4 @@ No one by that name could be found.
 4. Find someone you know
 5. Learn a New Skill
 Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---

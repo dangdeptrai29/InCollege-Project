@@ -4,9 +4,13 @@
 # Build artifact
 incollege
 
+# Temporary test files
+io/result.txt
+io/test*_result.txt
 
 # Files generated during runtime
-data/
+data/*
+!data/profiles.txt
 temp/
 
 .devcontainer

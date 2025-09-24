@@ -19,14 +19,14 @@ Major: Computer Science
 Graduation Year: 2025
 About Me: Passionate about software development.
 Experience:
-  Title: Intern
-  Company: Tech Solutions
-  Dates: Summer 2024
-  Description: Assisted with front-end development.
+    Title: Intern
+    Company: Tech Solutions
+    Dates: Summer 2024
+    Description: Assisted with front-end development.
 Education:
-  Degree: Bachelor's
-  University: State University
-  Years: 2021-2025
+    Degree: Bachelor's
+    University: State University
+    Years: 2021-2025
 --------------------
 1. Create/Edit My Profile
 2. View My Profile
@@ -42,21 +42,21 @@ Major: Information Systems
 Graduation Year: 2025
 About Me: Building future-ready systems.
 Experience:
-  Title: Systems Analyst
-  Company: Horizon Corp
-  Dates: 2022-2024
-  Description: Led cross-team integration projects.
-  Title: Intern
-  Company: InnovateX
-  Dates: Summer 2021
-  Description: Built automation scripts for QA.
+    Title: Systems Analyst
+    Company: Horizon Corp
+    Dates: 2022-2024
+    Description: Led cross-team integration projects.
+    Title: Intern
+    Company: InnovateX
+    Dates: Summer 2021
+    Description: Built automation scripts for QA.
 Education:
-  Degree: Master's
-  University: Mountain Tech University
-  Years: 2023-2025
-  Degree: Bachelor's
-  University: Lakeside College
-  Years: 2019-2023
+    Degree: Master's
+    University: Mountain Tech University
+    Years: 2023-2025
+    Degree: Bachelor's
+    University: Lakeside College
+    Years: 2019-2023
 -------------------------
 1. Create/Edit My Profile
 2. View My Profile
@@ -64,3 +64,4 @@ Education:
 4. Find someone you know
 5. Learn a New Skill
 Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---
