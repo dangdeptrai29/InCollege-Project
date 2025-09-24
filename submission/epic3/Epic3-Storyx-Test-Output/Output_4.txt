@@ -1,0 +1,46 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, testuser!
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
+Enter the full name of the person you are looking for:
+--- Found User Profile ---
+First Name: Alice
+Last Name:  Jenning
+University: USF
+Major:      Electrical Engineering
+About:      I love circuits.
+Experience:
+Education:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
+--- Your Profile ---
+Name: John Doe
+University: Changed Uni
+Major: Medicine
+Graduation Year: 2026
+About Me: Pivoted to medicine.
+Experience:
+(None)
+Education:
+(None)
+--------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:

@@ -1,0 +1,70 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, testuser!
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
+--- Your Profile ---
+Name: Test User
+University: State University
+Major: Computer Science
+Graduation Year: 2025
+About Me: Passionate about software development.
+Experience:
+  Title: Intern
+  Company: Tech Solutions
+  Dates: Summer 2024
+  Description: Assisted with front-end development.
+Education:
+<<<<<<< HEAD
+  Degree: Bachelor's
+  University: State University
+  Years: 2021-2025
+=======
+(None)
+>>>>>>> 4ad844d (refactor(view-profile): Fix view profile to properly load data from database)
+--------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
+Enter the full name of the person you are looking for:
+--- Found User Profile ---
+Name: Jordan Blake
+University: Mountain Tech University
+Major: Information Systems
+Graduation Year: 2025
+About Me: Building future-ready systems.
+Experience:
+  Title: Systems Analyst
+  Company: Horizon Corp
+  Dates: 2022-2024
+  Description: Led cross-team integration projects.
+  Title: Intern
+  Company: InnovateX
+  Dates: Summer 2021
+  Description: Built automation scripts for QA.
+Education:
+  Degree: Master's
+  University: Mountain Tech University
+  Years: 2023-2025
+  Degree: Bachelor's
+  University: Lakeside College
+  Years: 2019-2023
+-------------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:

@@ -1,0 +1,37 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, testuser!
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
+Enter the full name of the person you are looking for:
+--- Found User Profile ---
+Name: Maximilianus Theophilus Bartholomew IV
+University: Royal Academy of Technology
+Major: Quantum Computing
+Graduation Year: 2030
+About Me: Dedicated to pushing computational limits.
+Experience:
+  Title: Research Fellow
+  Company: Royal Lab
+  Dates: 2028-2030
+  Description: Developed quantum algorithms for navigation.
+Education:
+  Degree: PhD Candidate
+  University: Royal Academy of Technology
+  Years: 2026-2030
+-------------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
