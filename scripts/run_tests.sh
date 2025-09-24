@@ -9,7 +9,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Move to the project's root directory
-cd ..
+# cd ..
 
 # --- Step 1: Force Compilation ---
 echo "Compiling the program to ensure latest changes..."

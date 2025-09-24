@@ -13,13 +13,20 @@ Welcome, testuser!
 5. Learn a New Skill
 Enter your choice:
 --- Your Profile ---
-Name: Boundary Test
-University: Edge University
+Name: Test User
+University: State University
 Major: Computer Science
-Graduation Year: 2000
-About Me: Invalid then valid year test
-Experience: None
-Education: None
+Graduation Year: 2025
+About Me: Passionate about software development.
+Experience:
+    Title: Intern
+    Company: Tech Solutions
+    Dates: Summer 2024
+    Description: Assisted with front-end development.
+Education:
+    Degree: Bachelor's
+    University: State University
+    Years: 2021-2025
 --------------------
 1. Create/Edit My Profile
 2. View My Profile

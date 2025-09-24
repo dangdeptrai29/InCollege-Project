@@ -2,12 +2,24 @@
 testuser
 Password1!
 1
-Alice
-Brown
-Yale University
-Physics
-2023
-Persistent data across restart test
+Test
+User
+State University
+Computer Science
+2025
+Passionate about software development.
+
+Intern
+Tech Solutions
+Summer 2024
+Assisted with front-end development.
 DONE
+
+Bachelor's
+State University
+2021-2025
 DONE
+2
+4
+Another Student
 2

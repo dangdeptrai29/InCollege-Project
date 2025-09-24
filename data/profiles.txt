@@ -1,6 +1,6 @@
 TestUser|Test|User|State University|Computer Science|2025|Passionate about software development.|Intern~Tech Solutions~Summer 2024~Assisted with front-end development.|Bachelor's~State University~2021-2025
 astudent|Another|Student|City College|Electrical Engineering|2026|Robotics enthusiast.||
-testuser|Boundary|Test|Edge University|Computer Science|2000|Invalid then valid year test||
+testuser|Test|User|State University|Computer Science|2025|Passionate about software development.|Intern~Tech Solutions~Summer 2024~Assisted with front-end development.|Bachelor's~State University~2021-2025
 ajohnson|Alex|Johnson|State University|Computer Science|2025|Passionate about software development.|Intern~Tech Solutions~Summer 2024~Assisted with front-end development.|Bachelor's~State University~2021-2025
 mkim|Mina|Kim|Coastal University|Marketing|2024|||
 jblake|Jordan|Blake|Mountain Tech University|Information Systems|2025|Building future-ready systems.|Systems Analyst~Horizon Corp~2022-2024~Led cross-team integration projects.^Intern~InnovateX~Summer 2021~Built automation scripts for QA.|Master's~Mountain Tech University~2023-2025^Bachelor's~Lakeside College~2019-2023

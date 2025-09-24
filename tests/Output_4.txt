@@ -12,18 +12,27 @@ Welcome, testuser!
 4. Find someone you know
 5. Learn a New Skill
 Enter your choice:
---- Create/Edit Profile ---
-Enter First Name:
-This field is required. Please try again.
-Enter First Name:
-Enter Last Name:
-Enter University/College Attended:
-Enter Major:
-Enter Graduation Year (YYYY):
-Graduation year must be 1900–2100 and 4 digits.
-Enter Graduation Year (YYYY):
-Graduation year must be 1900–2100 and 4 digits.
-Enter Graduation Year (YYYY):
-Graduation year must be 1900–2100 and 4 digits.
-Enter Graduation Year (YYYY):
+Enter the full name of the person you are looking for:
+No one by that name could be found.
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
+--- Your Profile ---
+Name: John Doe
+University: Changed Uni
+Major: Medicine
+Graduation Year: 2026
+About Me: Pivoted to medicine.
+Experience: None
+Education: None
+--------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
 --- END_OF_PROGRAM_EXECUTION ---
