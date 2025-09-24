@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, testuser1!
+Welcome, testuser!
 1. Create/Edit My Profile
 2. View My Profile
 3. Search for a job
@@ -13,19 +13,19 @@ Welcome, testuser1!
 5. Learn a New Skill
 Enter your choice:
 --- Your Profile ---
-Name: Test User
-University: State University
+Name: John Doe
+University: Example University
 Major: Computer Science
 Graduation Year: 2025
-About Me: Passionate about software development.
+About Me: Enthusiastic developer always learning new things
 Experience:
-Title: Intern
-Company: Tech Solution
+Title: Software Intern
+Company: Tech Corp
 Dates: Summer 2024
-Description: Assisted with front-end development
+Description: Developed tools for Internal testing
 Education:
-Degree: Bachelor's
-University: State University
+Degree: Bachelor of Science
+University: Example University
 Years: 2021-2025
 --------------------
 1. Create/Edit My Profile
@@ -43,6 +43,28 @@ Major:      Electrical Engineering
 About:      Robotics enthusiast.
 Experience: None
 Education:  None
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+Enter your choice:
+--- Your Profile ---
+Name: John Doe
+University: Example University
+Major: Computer Science
+Graduation Year: 2025
+About Me: Enthusiastic developer always learning new things
+Experience:
+Title: Software Intern
+Company: Tech Corp
+Dates: Summer 2024
+Description: Developed tools for Internal testing
+Education:
+Degree: Bachelor of Science
+University: Example University
+Years: 2021-2025
+--------------------
 1. Create/Edit My Profile
 2. View My Profile
 3. Search for a job

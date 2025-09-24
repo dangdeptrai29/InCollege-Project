@@ -1,3 +1,4 @@
+
        >>SOURCE FORMAT FREE
        IDENTIFICATION DIVISION.
        PROGRAM-ID. INCOLLEGE.
@@ -46,6 +47,8 @@
 
 
        WORKING-STORAGE SECTION.
+
+    01  WS-SEARCH-RESULT-IDX      PIC 9(4) VALUE 0.
        *> File status codes
        01  WS-IN-STATUS               PIC XX VALUE "00".
        01  WS-OUT-STATUS              PIC XX VALUE "00".
@@ -69,7 +72,7 @@
            88  NOT-EOF-PROF                  VALUE 'N'.
 
        *> Generic Input buffer
-       01 WS-LINE                    PIC X(256) VALUE SPACES. 
+       01 WS-LINE                    PIC X(256) VALUE SPACES.
 
        *> Credentials for the current attempt
        01  WS-USERNAME                PIC X(128) VALUE SPACES.
@@ -83,8 +86,8 @@
        01  MSG-SUCCESS                PIC X(64)  VALUE "You have successfully logged in.".
        01  MSG-FAILURE                PIC X(64)  VALUE "Incorrect username/password, please try again.".
        01  MSG-WELCOME                PIC X(64)  VALUE "Welcome to InCollege!".
-       01  MSG-LOGIN                  PIC X(32)  VALUE "Log In".
-       01  MSG-CREATE                 PIC X(32)  VALUE "Create New Account".
+       01  MSG-LOGIN                  PIC X(32)  VALUE "1. Log In".
+       01  MSG-CREATE                 PIC X(32)  VALUE "2. Create New Account".
        01  MSG-ENTER-CHOICE           PIC X(20)  VALUE "Enter your choice: ".
        01  MSG-WELCOME-PFX            PIC X(9)   VALUE "Welcome, ".
        01  MSG-ENTER-USER             PIC X(64)  VALUE "Please enter your username:".
@@ -213,8 +216,9 @@
             *> message for profiles
        01  MSG-MENU-PROF-EDIT         PIC X(32) VALUE "1. Create/Edit My Profile".
        01  MSG-MENU-PROF-VIEW         PIC X(32) VALUE "2. View My Profile".
-       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "3. Search for User".
-       01  MSG-MENU-SKILL2            PIC X(32) VALUE "4. Learn a New Skill".
+       01 MSG-MENU-JOB-SEARCH        PIC X(32) VALUE "3. Search for a job".
+       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "4. Find someone you know".
+       01  MSG-MENU-SKILL2            PIC X(32) VALUE "5. Learn a New Skill".
 
        01  MSG-EDIT-HEADER            PIC X(32) VALUE "--- Create/Edit Profile ---".
        01  MSG-VIEW-HEADER            PIC X(32) VALUE "--- Your Profile ---".
@@ -262,6 +266,15 @@
        01  WS-DEGREE-INPUT            PIC X(50).
        01  WS-SCHOOL-INPUT            PIC X(50).
        01  WS-YEARS-INPUT             PIC X(20).
+
+       *> Search user
+       01  MSG-ENTER-USER-SEARCH           PIC X(64) VALUE "Enter the full name of the person you are looking for:".
+       01  MSG-USER-NOT-FOUND         PIC X(64) VALUE "No one by that name could be found.".
+       01  MSG-USER-PROFILE-HEADER    PIC X(32) VALUE "--- Found User Profile ---".
+       01  WS-SEARCH-FULLNAME         PIC X(128) VALUE SPACES.
+       01  WS-SEARCH-FOUND            PIC X VALUE 'N'.
+            88  SEARCH-FOUND                 VALUE 'Y'.
+            88  SEARCH-NOT-FOUND             VALUE 'N'.
 
 
 
@@ -374,7 +387,7 @@
            *> Prompt for new username
            PERFORM UNTIL WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND OR EOF-IN
                MOVE MSG-ENTER-NEW-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
-                
+
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-NEW-USERNAME
 
@@ -490,13 +503,14 @@
            PERFORM UNTIL EOF-IN
                MOVE MSG-MENU-PROF-EDIT TO WS-MSG PERFORM DISPLAY-AND-LOG   *> 1
                MOVE MSG-MENU-PROF-VIEW TO WS-MSG PERFORM DISPLAY-AND-LOG   *> 2
-               MOVE MSG-MENU-SEARCH-USER TO WS-MSG PERFORM DISPLAY-AND-LOG *> 3
-               MOVE MSG-MENU-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG      *> 4
+               MOVE MSG-MENU-JOB-SEARCH TO WS-MSG PERFORM DISPLAY-AND-LOG  *> 3
+               MOVE MSG-MENU-SEARCH-USER TO WS-MSG PERFORM DISPLAY-AND-LOG *> 4
+               MOVE MSG-MENU-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG      *> 5
                MOVE MSG-ENTER-CHOICE2  TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-LOGGED-CHOICE
-               
+
                IF EOF-IN
                    EXIT PERFORM
                END-IF
@@ -511,9 +525,11 @@
                    WHEN '2'
                        PERFORM VIEW-MY-PROFILE
                    WHEN '3'
-                       MOVE "Search for User is under construction." TO WS-MSG
+                       MOVE "Job search is under construction." TO WS-MSG
                        PERFORM DISPLAY-AND-LOG
                    WHEN '4'
+                       PERFORM USER-SEARCH-MENU
+                   WHEN '5'
                        PERFORM SKILL-MENU
                    WHEN OTHER
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -548,6 +564,83 @@
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
            END-PERFORM
+           EXIT.
+
+       USER-SEARCH-MENU.
+           MOVE MSG-ENTER-USER-SEARCH TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+
+           PERFORM READ-NEXT-LINE
+           MOVE WS-LINE TO WS-SEARCH-FULLNAME
+
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+
+           PERFORM FIND-USER-BY-NAME
+           IF SEARCH-FOUND
+               PERFORM DISPLAY-FOUND-USER
+           ELSE
+               PERFORM DISPLAY-NO-MATCH-MSG
+           END-IF
+           EXIT.
+       FIND-USER-BY-NAME.
+           MOVE 0 TO WS-SEARCH-RESULT-IDX
+           SET SEARCH-NOT-FOUND TO TRUE
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-PROFILES-COUNT OR SEARCH-FOUND
+               MOVE SPACES TO WS-T1
+               STRING FUNCTION TRIM(WS-PROF-FIRST(WS-I)) DELIMITED BY SIZE
+                      " " DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-PROF-LAST(WS-I)) DELIMITED BY SIZE
+                      INTO WS-T1
+               END-STRING
+               IF WS-T1 = FUNCTION TRIM(WS-SEARCH-FULLNAME)
+                   SET SEARCH-FOUND TO TRUE
+                   MOVE WS-I TO WS-SEARCH-RESULT-IDX
+               END-IF
+           END-PERFORM
+           EXIT.
+
+       DISPLAY-FOUND-USER.
+           IF WS-SEARCH-RESULT-IDX = 0
+               EXIT PARAGRAPH
+           END-IF
+           MOVE WS-SEARCH-RESULT-IDX TO WS-I
+           PERFORM DISPLAY-PROFILE-BY-ID
+           EXIT.
+
+       DISPLAY-PROFILE-BY-ID.
+           IF WS-I < 1 OR WS-I > WS-PROFILES-COUNT
+               MOVE "Invalid profile ID." TO WS-MSG PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+           MOVE MSG-USER-PROFILE-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING "First Name: " WS-PROF-FIRST(WS-I) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING "Last Name:  " WS-PROF-LAST(WS-I) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING "University: " WS-PROF-UNIV(WS-I) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING "Major:      " WS-PROF-MAJOR(WS-I) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING "About:      " WS-PROF-ABOUT(WS-I) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING "Experience: " WS-PROF-EXPERIENCES(WS-I) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING "Education:  " WS-PROF-EDUCATIONS(WS-I) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+           EXIT PARAGRAPH.
+
+       DISPLAY-NO-MATCH-MSG.
+           MOVE MSG-USER-NOT-FOUND TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
            EXIT.
 
        VALIDATION-SECTION.
@@ -983,7 +1076,7 @@
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-MAJOR-IN) NOT = SPACES
                MOVE MSG-ENTER-MAJOR TO WS-MSG PERFORM DISPLAY-AND-LOG
-               
+
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-PROF-MAJOR-IN
 
@@ -1226,9 +1319,9 @@
                MOVE MSG-PROFILE-NOT-FOUND TO WS-MSG PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
            END-IF
-    
+
            MOVE MSG-VIEW-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
-    
+
            MOVE SPACES TO WS-MSG
            STRING "Name: " DELIMITED BY SIZE
                   FUNCTION TRIM(WS-PROF-FIRST-IN) DELIMITED BY SIZE
@@ -1244,25 +1337,34 @@
                   INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
-    
+
            MOVE SPACES TO WS-MSG
            STRING "Major: " DELIMITED BY SIZE
                   FUNCTION TRIM(WS-PROF-MAJOR-IN) DELIMITED BY SIZE
                   INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
-    
+
            MOVE SPACES TO WS-MSG
            STRING "Graduation Year: " DELIMITED BY SIZE
                   FUNCTION TRIM(WS-PROF-GYEAR-IN) DELIMITED BY SIZE
                   INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
-    
+
+           IF FUNCTION TRIM(WS-PROF-ABOUT-IN) NOT = SPACES
+               MOVE SPACES TO WS-MSG
+               STRING "About Me: " DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-PROF-ABOUT-IN) DELIMITED BY SIZE
+                      INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+
            PERFORM DISPLAY-EXPERIENCES
-    
+
            PERFORM DISPLAY-EDUCATION
-    
+
            MOVE MSG-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
 
@@ -1285,4 +1387,3 @@
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-LINE
            END-READ
            EXIT.
-
