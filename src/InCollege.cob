@@ -127,6 +127,7 @@
 
 
        01  WS-I                       PIC 9(4) VALUE 0.
+       01  WS-SEARCH-RESULT-IDX       PIC 9(4) VALUE 0.
 
        *> Scratch area for parsing user file records
        01  WS-USER-FILE-USERNAME      PIC X(128) VALUE SPACES.
@@ -184,6 +185,9 @@
        01  WS-T2                      PIC X(128) VALUE SPACES.
        01  WS-T3                      PIC X(128) VALUE SPACES.
        01  WS-T4                      PIC X(128) VALUE SPACES.
+       01  WS-REST                    PIC X(1024) VALUE SPACES.
+       01  WS-REST-LEN                PIC 9(4) VALUE 0.
+       01  WS-LAST-PIPE               PIC 9(4) VALUE 0.
 
 
               *> Message for account creation
@@ -220,6 +224,8 @@
        01  MSG-EDIT-HEADER            PIC X(32) VALUE "--- Create/Edit Profile ---".
        01  MSG-VIEW-HEADER            PIC X(32) VALUE "--- Your Profile ---".
        01  MSG-LINE                   PIC X(20) VALUE "--------------------".
+       01  MSG-LINE-LONG              PIC X(25) VALUE "-------------------------".
+       01  MSG-END-OF-PROGRAM         PIC X(32) VALUE "--- END_OF_PROGRAM_EXECUTION ---".
 
        01  MSG-ENTER-FIRST            PIC X(32) VALUE "Enter First Name:".
        01  MSG-ENTER-LAST             PIC X(32) VALUE "Enter Last Name:".
@@ -228,7 +234,7 @@
        01  MSG-ENTER-GYEAR2           PIC X(32) VALUE "Enter Graduation Year (YYYY):".
 
        01  MSG-REQUIRED               PIC X(64) VALUE "This field is required. Please try again.".
-       01  MSG-YEAR-INVALID           PIC X(80) VALUE "Graduation year must be 1900–2100 and 4 digits.".
+       01  MSG-YEAR-INVALID           PIC X(80) VALUE "Graduation year must be 1900-2100 and 4 digits.".
        01  MSG-PROFILE-SAVED-OK       PIC X(64) VALUE "Profile saved successfully!".
        01  MSG-PROFILE-NOT-FOUND      PIC X(64) VALUE "No profile found. Please create your profile first.".
 
@@ -279,6 +285,7 @@
        MAIN-SECTION.
            PERFORM INIT-FILES
            PERFORM RUN-APP
+           MOVE MSG-END-OF-PROGRAM TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM CLOSE-FILES
            GOBACK.
 
@@ -461,7 +468,7 @@
            MOVE FUNCTION LENGTH(FUNCTION TRIM(WS-NEW-PASSWORD)) TO WS-PASS-LEN
            IF WS-PASS-LEN < 8 OR WS-PASS-LEN > 12
                SET PASS-INVALID TO TRUE
-               MOVE "Password must be 8–12 characters." TO WS-PASSWORD-ERROR
+               MOVE "Password must be 8-12 characters." TO WS-PASSWORD-ERROR
            END-IF
 
            *> Character category checks (scan once)
@@ -574,20 +581,91 @@
                EXIT PARAGRAPH
            END-IF
     
-           *> TODO: Implement Search logic here - compare against profiles
-      *>     PERFORM FIND-USER-BY-NAME
-           
-           *> Use mock logic for now
-           SET SEARCH-NOT-FOUND TO TRUE
+           PERFORM FIND-USER-BY-NAME
            IF SEARCH-FOUND
-               MOVE MSG-USER-PROFILE-HEADER TO WS-MSG
-               PERFORM DISPLAY-AND-LOG
-               *> Display found user info
-      *>         PERFORM DISPLAY-USER
+               PERFORM DISPLAY-FOUND-USER
            ELSE
-               MOVE MSG-USER-NOT-FOUND TO WS-MSG
-               PERFORM DISPLAY-AND-LOG
+               PERFORM DISPLAY-NO-MATCH-MSG
            END-IF
+           EXIT.
+       FIND-USER-BY-NAME.
+           MOVE 0 TO WS-SEARCH-RESULT-IDX
+           SET SEARCH-NOT-FOUND TO TRUE
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-PROFILES-COUNT OR SEARCH-FOUND
+               MOVE SPACES TO WS-T1
+               STRING FUNCTION TRIM(WS-PROF-FIRST(WS-I)) DELIMITED BY SIZE
+                      " " DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-PROF-LAST(WS-I)) DELIMITED BY SIZE
+                      INTO WS-T1
+               END-STRING
+               IF WS-T1 = FUNCTION TRIM(WS-SEARCH-FULLNAME)
+                   SET SEARCH-FOUND TO TRUE
+                   MOVE WS-I TO WS-SEARCH-RESULT-IDX
+               END-IF
+           END-PERFORM
+           EXIT.
+
+       DISPLAY-FOUND-USER.
+           IF WS-SEARCH-RESULT-IDX = 0
+               EXIT PARAGRAPH
+           END-IF
+           MOVE WS-SEARCH-RESULT-IDX TO WS-I
+           PERFORM DISPLAY-PROFILE-BY-ID
+           EXIT.
+
+       DISPLAY-PROFILE-BY-ID.
+           IF WS-I < 1 OR WS-I > WS-PROFILES-COUNT
+               MOVE "Invalid profile ID." TO WS-MSG PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Load profile data into shared buffers for consistent formatting
+           MOVE FUNCTION TRIM(WS-PROF-FIRST(WS-I))     TO WS-PROF-FIRST-IN
+           MOVE FUNCTION TRIM(WS-PROF-LAST(WS-I))      TO WS-PROF-LAST-IN
+           MOVE FUNCTION TRIM(WS-PROF-UNIV(WS-I))      TO WS-PROF-UNIV-IN
+           MOVE FUNCTION TRIM(WS-PROF-MAJOR(WS-I))     TO WS-PROF-MAJOR-IN
+           MOVE FUNCTION TRIM(WS-PROF-GYEAR(WS-I))     TO WS-PROF-GYEAR-IN
+           MOVE FUNCTION TRIM(WS-PROF-ABOUT(WS-I))     TO WS-PROF-ABOUT-IN
+           MOVE FUNCTION TRIM(WS-PROF-EXPERIENCES(WS-I)) TO WS-EXPS-STR
+           MOVE FUNCTION TRIM(WS-PROF-EDUCATIONS(WS-I))  TO WS-EDUS-STR
+
+           MOVE MSG-USER-PROFILE-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+           MOVE SPACES TO WS-MSG
+           STRING "Name: " DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-PROF-FIRST-IN) DELIMITED BY SIZE
+                  " " DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-PROF-LAST-IN) DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
+
+           MOVE SPACES TO WS-MSG
+           STRING "University: " FUNCTION TRIM(WS-PROF-UNIV-IN) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+
+           MOVE SPACES TO WS-MSG
+           STRING "Major: " FUNCTION TRIM(WS-PROF-MAJOR-IN) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+
+           MOVE SPACES TO WS-MSG
+           STRING "Graduation Year: " FUNCTION TRIM(WS-PROF-GYEAR-IN) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+
+           MOVE SPACES TO WS-MSG
+           STRING "About Me: " FUNCTION TRIM(WS-PROF-ABOUT-IN) DELIMITED BY SIZE INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+
+           PERFORM DISPLAY-EXPERIENCES
+
+           PERFORM DISPLAY-EDUCATION
+
+           MOVE MSG-LINE-LONG TO WS-MSG PERFORM DISPLAY-AND-LOG
+           EXIT PARAGRAPH.
+
+       DISPLAY-NO-MATCH-MSG.
+           MOVE MSG-USER-NOT-FOUND TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
            EXIT.
 
        VALIDATION-SECTION.
@@ -692,6 +770,7 @@
 
        PARSE-PROFILE-REC.
            *> Format: username|first|last|univ|major|gyear|about|experiences|educations
+           MOVE 1 TO WS-J
            UNSTRING PROFILE-REC DELIMITED BY '|'
                INTO WS-PROF-USER
                     WS-PROF-FIRST-IN
@@ -700,9 +779,29 @@
                     WS-PROF-MAJOR-IN
                     WS-PROF-GYEAR-IN
                     WS-PROF-ABOUT-IN
-                    WS-EXPS-STR
-                    WS-EDUS-STR
+               WITH POINTER WS-J
            END-UNSTRING
+
+           MOVE FUNCTION TRIM(PROFILE-REC(WS-J:)) TO WS-REST
+           MOVE SPACES TO WS-EXPS-STR WS-EDUS-STR
+
+           MOVE FUNCTION LENGTH(FUNCTION TRIM(WS-REST)) TO WS-REST-LEN
+           IF WS-REST-LEN > 0
+              MOVE 0 TO WS-LAST-PIPE
+              PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-REST-LEN
+                 IF WS-REST(WS-I:1) = "|"
+                    MOVE WS-I TO WS-LAST-PIPE
+                 END-IF
+              END-PERFORM
+              IF WS-LAST-PIPE = 0
+                 MOVE FUNCTION TRIM(WS-REST) TO WS-EXPS-STR
+              ELSE
+                 IF WS-LAST-PIPE > 1
+                    MOVE FUNCTION TRIM(WS-REST(1:WS-LAST-PIPE - 1)) TO WS-EXPS-STR
+                 END-IF
+                 MOVE FUNCTION TRIM(WS-REST(WS-LAST-PIPE + 1:)) TO WS-EDUS-STR
+              END-IF
+           END-IF
 
            IF WS-PROF-USER = SPACES
               EXIT PARAGRAPH
@@ -799,7 +898,7 @@
            MOVE 1 to WS-J
            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-EXP-COUNT
                IF WS-I > 1
-                   STRING "|" DELIMITED BY SIZE
+                   STRING "^" DELIMITED BY SIZE
                        INTO WS-EXPS-STR
                        WITH POINTER WS-J
                    END-STRING
@@ -825,7 +924,7 @@
            MOVE 1 to WS-J
            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-EDU-COUNT
                IF WS-I > 1
-                   STRING "|" DELIMITED BY SIZE
+                   STRING "^" DELIMITED BY SIZE
                        INTO WS-EDUS-STR
                        WITH POINTER WS-J
                    END-STRING
@@ -842,19 +941,23 @@
            EXIT.
 
        DISPLAY-EXPERIENCES.
-           MOVE SPACES TO WS-MSG.
-           STRING "Experience:" DELIMITED BY SIZE INTO WS-MSG.
-           PERFORM DISPLAY-AND-LOG.
-
            IF WS-EXPS-STR = SPACES
-               MOVE "  (None)" TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE SPACES TO WS-MSG
+               STRING "Experience: None" DELIMITED BY SIZE INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
-           END-IF.
+           END-IF
+
+           MOVE SPACES TO WS-MSG
+           STRING "Experience:" DELIMITED BY SIZE INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
 
            MOVE 1 TO WS-J.
            PERFORM UNTIL WS-J > FUNCTION LENGTH(FUNCTION TRIM(WS-EXPS-STR))
                INITIALIZE WS-ENTRY
-               UNSTRING WS-EXPS-STR DELIMITED BY "|"
+               UNSTRING WS-EXPS-STR DELIMITED BY "^"
                    INTO WS-ENTRY
                    WITH POINTER WS-J
                END-UNSTRING
@@ -883,19 +986,23 @@
            EXIT.
 
        DISPLAY-EDUCATION.
-           MOVE SPACES TO WS-MSG.
-           STRING "Education:" DELIMITED BY SIZE INTO WS-MSG.
-           PERFORM DISPLAY-AND-LOG.
-
            IF WS-EDUS-STR = SPACES
-               MOVE "  (None)" TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE SPACES TO WS-MSG
+               STRING "Education: None" DELIMITED BY SIZE INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
-           END-IF.
+           END-IF
+
+           MOVE SPACES TO WS-MSG
+           STRING "Education:" DELIMITED BY SIZE INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
 
            MOVE 1 TO WS-J.
            PERFORM UNTIL WS-J > FUNCTION LENGTH(FUNCTION TRIM(WS-EDUS-STR))
                INITIALIZE WS-ENTRY
-               UNSTRING WS-EDUS-STR DELIMITED BY "|"
+               UNSTRING WS-EDUS-STR DELIMITED BY "^"
                    INTO WS-ENTRY
                    WITH POINTER WS-J
                END-UNSTRING
@@ -931,7 +1038,7 @@
            PERFORM UNTIL WS-J > FUNCTION LENGTH(FUNCTION TRIM(WS-EXPS-STR))
                ADD 1 TO WS-EXP-COUNT
                INITIALIZE WS-ENTRY
-               UNSTRING WS-EXPS-STR DELIMITED BY "|"
+               UNSTRING WS-EXPS-STR DELIMITED BY "^"
                    INTO WS-ENTRY
                    WITH POINTER WS-J
                END-UNSTRING
@@ -960,7 +1067,7 @@
            PERFORM UNTIL WS-J > FUNCTION LENGTH(FUNCTION TRIM(WS-EDUS-STR))
                ADD 1 TO WS-EDU-COUNT
                INITIALIZE WS-ENTRY
-               UNSTRING WS-EDUS-STR DELIMITED BY "|"
+               UNSTRING WS-EDUS-STR DELIMITED BY "^"
                    INTO WS-ENTRY
                    WITH POINTER WS-J
                END-UNSTRING
@@ -1317,11 +1424,11 @@
 
        HELPER-SECTION.
        DISPLAY-AND-LOG.
-           *> Write message to output file and display it
+           *> Write message to output file and display it (preserve indentation)
            MOVE SPACES TO OUTPUT-REC
-           MOVE FUNCTION TRIM(WS-MSG) TO OUTPUT-REC
+           MOVE FUNCTION TRIM(WS-MSG TRAILING) TO OUTPUT-REC
            WRITE OUTPUT-REC
-           DISPLAY FUNCTION TRIM(WS-MSG)
+           DISPLAY FUNCTION TRIM(WS-MSG TRAILING)
            EXIT.
 
        READ-NEXT-LINE.

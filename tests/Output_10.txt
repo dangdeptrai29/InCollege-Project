@@ -20,14 +20,14 @@ Major: Computer Science
 Graduation Year: 2025
 About Me: Passionate about software development.
 Experience:
-  Title: Intern
-  Company: Tech Solutions
-  Dates: Summer 2024
-  Description: Assisted with front-end development.
+    Title: Intern
+    Company: Tech Solutions
+    Dates: Summer 2024
+    Description: Assisted with front-end development.
 Education:
-  Degree: Bachelor's
-  University: State University
-  Years: 2021-2025
+    Degree: Bachelor's
+    University: State University
+    Years: 2021-2025
 -------------------------
 1. Create/Edit My Profile
 2. View My Profile
@@ -35,3 +35,4 @@ Education:
 4. Find someone you know
 5. Learn a New Skill
 Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---

@@ -1,4 +1,5 @@
 Welcome to InCollege!
-Log In
-Create New Account
+1. Log In
+2. Create New Account
 Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---

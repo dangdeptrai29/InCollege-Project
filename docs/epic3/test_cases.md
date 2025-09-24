@@ -22,5 +22,68 @@ These automated cases exercise the Week 3 requirement for the "Find someone you 
 - Search is expected to perform a trimmed, case-sensitive exact match on the concatenated first and last name. Deviations will be captured during execution as either defects or requirement clarifications.
 - When duplicate names exist, the system should return the first persisted record; any alternate behaviour requires documentation.
 
+## Execution Commands
+
+### Run Individual Tests
+````bash
+# Test 10 - Exact-match lookup for fully populated profile
+cp tests/Input_10.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_10.txt io/result.txt
+
+# Test 11 - Exact-match lookup for minimal optional data  
+cp tests/Input_11.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_11.txt io/result.txt
+
+# Test 12 - View-own-profile followed by searching multi-entry profile
+cp tests/Input_12.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_12.txt io/result.txt
+
+# Test 13 - Search for non-existent user
+cp tests/Input_13.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_13.txt io/result.txt
+
+# Test 14 - Partial-name query
+cp tests/Input_14.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_14.txt io/result.txt
+
+# Test 15 - Case-variation query
+cp tests/Input_15.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_15.txt io/result.txt
+
+# Test 16 - Maximum-length full name
+cp tests/Input_16.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_16.txt io/result.txt
+
+# Test 17 - Name containing punctuation
+cp tests/Input_17.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_17.txt io/result.txt
+
+# Test 18 - Duplicate full names
+cp tests/Input_18.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_18.txt io/result.txt
+
+# Test 19 - Blank/whitespace search input
+cp tests/Input_19.txt io/InCollege-Input.txt && ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1 && diff tests/Output_19.txt io/result.txt
+````
+
+### Quick Test Validation
+````bash
+# Quick pass/fail check for all tests
+for id in {10..19}; do
+  cp tests/Input_${id}.txt io/InCollege-Input.txt
+  ./incollege < io/InCollege-Input.txt > io/result.txt 2>&1
+  if diff -q tests/Output_${id}.txt io/result.txt > /dev/null; then
+    echo "Test $id: ✅ PASSED"
+  else
+    echo "Test $id: ❌ FAILED"
+  fi
+done
+````
+
 ## Execution Status (Step 4)
-Engineering has not yet delivered the Epic 3 search functionality—option `3` still prints "Search for User is under construction." Because of this block, the scripted cases have not been executed. Once the implementation is available, we will run each input file, diff actual vs. expected output, and log results under Step 4 of the test plan.
+Search implementation is now available. After updating profile display formatting and list serialization, we re-ran Inputs_10-19 using `./incollege` with seeded `data/profiles.txt`; all scenarios now match the Epic 3 specification.
+
+### Result Summary
+| ID | Result | Notes |
+|----|--------|-------|
+| 10 | PASS | Exact-match search displays full profile with Name/Graduation Year and multi-line sections. |
+| 11 | PASS | Minimal profile shows `About Me:` blank, with Experience/Education reported as `None`. |
+| 12 | PASS | View + search flow renders multi-entry experience and education blocks with indentation. |
+| 13 | PASS | Non-existent user handled correctly with not-found message. |
+| 14 | PASS | Partial-name query returns not-found as expected. |
+| 15 | PASS | Case-sensitive lookup confirmed; lowercase query fails cleanly. |
+| 16 | PASS | Long-name profile formatted correctly with graduation year and wrapped sections. |
+| 17 | PASS | Hyphen/apostrophe name renders correctly with full details. |
+| 18 | PASS | Duplicate-name scenario returns profile with correct formatting. |
+| 19 | PASS | Blank input treated as no-match and menu resumes. |

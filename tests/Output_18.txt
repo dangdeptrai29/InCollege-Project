@@ -20,14 +20,14 @@ Major: Data Analytics
 Graduation Year: 2025
 About Me: Loves turning data into stories.
 Experience:
-  Title: Data Analyst
-  Company: Insight Corp
-  Dates: 2023-2024
-  Description: Built executive dashboards.
+    Title: Data Analyst
+    Company: Insight Corp
+    Dates: 2023-2024
+    Description: Built executive dashboards.
 Education:
-  Degree: Bachelor's
-  University: Metro University
-  Years: 2021-2025
+    Degree: Bachelor's
+    University: Metro University
+    Years: 2021-2025
 -------------------------
 1. Create/Edit My Profile
 2. View My Profile
@@ -35,3 +35,4 @@ Education:
 4. Find someone you know
 5. Learn a New Skill
 Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---

@@ -18,7 +18,7 @@ Name: Mina Kim
 University: Coastal University
 Major: Marketing
 Graduation Year: 2024
-About Me: 
+About Me:
 Experience: None
 Education: None
 -------------------------
@@ -28,3 +28,4 @@ Education: None
 4. Find someone you know
 5. Learn a New Skill
 Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---

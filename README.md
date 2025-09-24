@@ -22,11 +22,9 @@ The program provides the following functionality:
 
 This milestone also includes comprehensive tester responsibilities:
 
-- Development of extensive test input/output files covering positive cases (successful profile viewing, successful user searches), negative cases (searching for non-existent users), and edge cases (users with long names, partial name searches). All test cases are stored in `tests/` directory with pattern `Epic3-Story<x>-Input.txt` and `Epic3-Story<x>-Output.txt`.
+- Development of extensive test input/output files covering positive cases (successful profile viewing, successful user searches), negative cases (searching for non-existent users), and edge cases (users with long names, partial name searches). All test cases are stored in `tests/` directory with pattern `Input_<id>.txt` and `Output_<id>.txt` for cases 10-19.
 
 - Verification that console output and output file content match exactly for all profile viewing and search scenarios.
-
-- Detailed bug reporting in Jira for any discrepancies found during testing.
 
 ## Installation
 
@@ -52,6 +50,28 @@ cobc -x src/InCollege.cob -o incollege
 ### Run the Program
 
 ```bash
+./incollege
+```
+
+### Important: Input File Configuration
+
+- **Note**: The program reads ALL input from `io/InCollege-Input.txt`. What you see when running `./incollege` depends entirely on what's in this file.
+
+**For the sample demo flow** (profile viewing + search):
+```bash
+# Set up sample input
+echo -e "1\nTestUser\nPassword1!\n2\n4\nAnother Student\n4\nNonExistentUser\n6" > io/InCollege-Input.txt
+./incollege
+```
+
+**For specific test cases**:
+```bash
+# Run test case 10 (example)
+cp tests/Input_10.txt io/InCollege-Input.txt
+./incollege
+
+# Run test case 12 (example)  
+cp tests/Input_12.txt io/InCollege-Input.txt
 ./incollege
 ```
 
@@ -89,7 +109,26 @@ After logging in, users will see an updated menu with these options:
 
 When selecting "View My Profile", users see a formatted display of their complete profile. When selecting "Find someone you know", users can enter a full name to search for other users in the system.
 
+## Testing
+
+### Epic 3 Test Suite
+The project includes comprehensive test coverage with 10 test cases (10-19):
+
+- **Tests 10-12**: Positive cases (exact matches, profile viewing)
+- **Tests 13-15**: Negative cases (non-existent users, partial names, case sensitivity)  
+- **Tests 16-19**: Edge cases (long names, punctuation, duplicates, blank input)
+
+### Running Tests
+```bash
+# Compile program
+cobc -x src/InCollege.cob -o incollege
+
+# Run individual test (example: test 10)
+cp tests/Input_10.txt io/InCollege-Input.txt
+./incollege < io/InCollege-Input.txt > io/result.txt 2>&1
+diff tests/Output_10.txt io/result.txt
+
 ## Documentation
 
-- **Project Breakdown (source spec)**: `docs/epic3/project-breakdown.md`
-- **Architecture (sections/paragraphs layout)**: `docs/epic3/architecture.md`
+- **Architecture (implementation details)**: `docs/epic3/architecture.md`
+- **Test Cases (comprehensive test suite)**: `docs/epic3/test_cases.md`
