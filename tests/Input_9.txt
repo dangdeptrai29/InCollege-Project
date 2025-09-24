@@ -1,31 +1,8 @@
 1
 testuser
 Password1!
-1
-Boundary
-Test
-Edge University
-Computer Science
-1900
-Valid minimum year test
-DONE
-DONE
-1
-Boundary
-Test
-Edge University
-Computer Science
-2100
-Valid maximum year test
-DONE
-DONE
-1
-Boundary
-Test
-Edge University
-Computer Science
-1899
-2000
-Invalid then valid year test
-DONE
-DONE
+2
+4
+Another Student
+4
+Wrong Name
