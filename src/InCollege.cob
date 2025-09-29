@@ -297,6 +297,10 @@
        *> Connection requests
        01  MSG-PENDING-HEADER         PIC X(35) VALUE "--- Pending Connection Requests ---".
        01  MSG-NO-PENDING             PIC X(65) VALUE "You have no pending connection requests at this time.".
+       01  MSG-REQUEST-MENU-1            PIC X(32) VALUE "1. Send Connection Request".
+       01  MSG-REQUEST-MENU-2            PIC X(32) VALUE "2. Back to Main Menu".
+       01  MSG-REQUEST-SENT      PIC X(64) VALUE "Connection request sent to".
+       01  WS-REQUEST-CHOICE             PIC X(8) VALUE SPACES.
 
 
 
@@ -641,6 +645,8 @@
            END-IF
            MOVE WS-SEARCH-RESULT-IDX TO WS-I
            PERFORM DISPLAY-PROFILE-BY-ID
+
+           PERFORM REQUEST-MENU
            EXIT.
 
        DISPLAY-PROFILE-BY-ID.
@@ -1522,6 +1528,30 @@
            IF WS-T1 = SPACES
                MOVE FUNCTION TRIM(WS-REQ-SENDER) TO WS-T1
            END-IF
+           EXIT.
+
+       REQUEST-MENU.
+           MOVE MSG-REQUEST-MENU-1 TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-REQUEST-MENU-2 TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+           
+           PERFORM READ-NEXT-LINE
+           MOVE WS-LINE TO WS-REQUEST-CHOICE
+           
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+           
+           EVALUATE WS-REQUEST-CHOICE
+               WHEN '1'
+               *> TODO: Implement SEND-REQUEST logic
+      *>             PERFORM SEND-REQUEST
+                     EXIT PARAGRAPH
+               WHEN '2'
+                   EXIT PARAGRAPH  *> Back to main menu
+               WHEN OTHER
+                   MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+           END-EVALUATE
            EXIT.
 
        HELPER-SECTION.
