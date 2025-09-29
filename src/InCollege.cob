@@ -1554,6 +1554,42 @@
            END-EVALUATE
            EXIT.
 
+       SAVE-REQUEST.
+           *> Save a connection request to requests.txt file
+           *> Format: sender|receiver|status
+           *> TODO: Call this from SEND-REQUEST after validation
+       
+           *> Get the target user's username from the found profile  
+           MOVE WS-PROF-USERNAME(WS-SEARCH-RESULT-IDX) TO WS-REQ-RECEIVER
+           MOVE WS-CURRENT-USERNAME TO WS-REQ-SENDER  
+           MOVE "PENDING" TO WS-REQ-STATUS-VALUE
+           
+           *> Open file in append mode to add new request
+           OPEN EXTEND REQUEST-FILE
+           IF WS-REQ-STATUS = "00"
+               *> Create the request record
+               MOVE SPACES TO REQUEST-REC
+               STRING FUNCTION TRIM(WS-REQ-SENDER) DELIMITED BY SIZE
+                      "|" DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-REQ-RECEIVER) DELIMITED BY SIZE
+                      "|" DELIMITED BY SIZE  
+                      FUNCTION TRIM(WS-REQ-STATUS-VALUE) DELIMITED BY SIZE
+                      INTO REQUEST-REC
+               END-STRING
+               
+               *> Write the record to file
+               WRITE REQUEST-REC
+               CLOSE REQUEST-FILE
+           ELSE
+               *> Handle file error - close if opened
+               IF WS-REQ-STATUS NOT = "05"  *> Not "file not found"
+                   CLOSE REQUEST-FILE
+               END-IF
+               MOVE "Error: Unable to save connection request." TO WS-MSG 
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+           EXIT
+    
        HELPER-SECTION.
        DISPLAY-AND-LOG.
            *> Write message to output file and display it (preserve indentation)
