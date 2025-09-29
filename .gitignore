@@ -8,9 +8,6 @@ incollege
 io/result.txt
 io/test*_result.txt
 
-# Files generated during runtime
-data/*
-!data/profiles.txt
 temp/
 
 .devcontainer

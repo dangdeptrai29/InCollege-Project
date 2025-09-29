@@ -26,7 +26,9 @@
                 ORGANIZATION IS LINE SEQUENTIAL
                 FILE STATUS IS WS-PROF-STATUS.
 
-
+            SELECT REQUEST-FILE ASSIGN TO "data/requests.txt"
+                ORGANIZATION IS LINE SEQUENTIAL
+                FILE STATUS IS WS-REQ-STATUS.
 
        DATA DIVISION.
        FILE SECTION.
@@ -44,6 +46,9 @@
 
         FD  PROFILES-FILE.
         01  PROFILE-REC                PIC X(2048).
+
+        FD  REQUEST-FILE.
+        01  REQUEST-REC                PIC X(256).
 
 
        WORKING-STORAGE SECTION.
@@ -128,9 +133,19 @@
                10  WS-PROF-EDUCATIONS  PIC X(512). *> Serialized string for education
 
 
+          *> --- Connection requests variables --
+       01  WS-REQ-STATUS              PIC XX VALUE "00".
+
+       01  WS-EOF-REQ                 PIC X  VALUE 'N'.
+           88  EOF-REQ                       VALUE 'Y'.
+           88  NOT-EOF-REQ                   VALUE 'N'.
+
+       *> Simple request variables
+       01  WS-REQ-SENDER              PIC X(128) VALUE SPACES.
+       01  WS-REQ-RECEIVER            PIC X(128) VALUE SPACES.
+       01  WS-REQ-STATUS-VALUE        PIC X(10)  VALUE SPACES.
 
        01  WS-I                       PIC 9(4) VALUE 0.
-       01  WS-SEARCH-RESULT-IDX       PIC 9(4) VALUE 0.
 
        *> Scratch area for parsing user file records
        01  WS-USER-FILE-USERNAME      PIC X(128) VALUE SPACES.
@@ -203,11 +218,6 @@
        01  WS-LOGGED-CHOICE           PIC X(8) VALUE SPACES.
        01  WS-SKILL-CHOICE            PIC X(8) VALUE SPACES.
 
-       01  MSG-MENU-JOB               PIC X(32) VALUE "Search for a job".
-       01  MSG-MENU-FIND              PIC X(32) VALUE "Find someone you know".
-       01  MSG-MENU-SKILL             PIC X(32) VALUE "Learn a new skill".
-       01  MSG-ENTER-CHOICE2          PIC X(20) VALUE "Enter your choice: ".
-
        01  MSG-SKILL1                 PIC X(32) VALUE "Skill 1".
        01  MSG-SKILL2                 PIC X(32) VALUE "Skill 2".
        01  MSG-SKILL3                 PIC X(32) VALUE "Skill 3".
@@ -217,13 +227,15 @@
        01  MSG-ENTER-SKILL            PIC X(19) VALUE "Enter your choice: ".
        01  MSG-SKILL-UNDER            PIC X(64) VALUE "This skill is under construction.".
 
-            *> message for profiles
-       01  MSG-MENU-PROF-EDIT         PIC X(32) VALUE "1. Create/Edit My Profile".
-       01  MSG-MENU-PROF-VIEW         PIC X(32) VALUE "2. View My Profile".
-       01 MSG-MENU-JOB-SEARCH        PIC X(32) VALUE "3. Search for a job".
-       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "4. Find someone you know".
-       01  MSG-MENU-SKILL2            PIC X(32) VALUE "5. Learn a New Skill".
+       *> Logged-in menu messages
+      *> 01  MSG-MENU-PROF-EDIT         PIC X(32) VALUE "1. Create/Edit My Profile".
+       01  MSG-MENU-PROF-VIEW         PIC X(32) VALUE "1. View My Profile".
+      *> 01 MSG-MENU-JOB-SEARCH        PIC X(32) VALUE "3. Search for a job".
+       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "2. Search for User".
+       01  MSG-MENU-SKILL            PIC X(32) VALUE "3. Learn a New Skill".
+       01  MSG-MENU-REQUESTS          PIC X(40) VALUE "4. View My Pending Connection Requests".
 
+       *> Profile messages
        01  MSG-EDIT-HEADER            PIC X(32) VALUE "--- Create/Edit Profile ---".
        01  MSG-VIEW-HEADER            PIC X(32) VALUE "--- Your Profile ---".
        01  MSG-LINE                   PIC X(20) VALUE "--------------------".
@@ -281,6 +293,10 @@
        01  WS-SEARCH-FOUND            PIC X VALUE 'N'.
             88  SEARCH-FOUND                 VALUE 'Y'.
             88  SEARCH-NOT-FOUND             VALUE 'N'.
+
+       *> Connection requests
+       01  MSG-PENDING-HEADER         PIC X(35) VALUE "--- Pending Connection Requests ---".
+       01  MSG-NO-PENDING             PIC X(65) VALUE "You have no pending connection requests at this time.".
 
 
 
@@ -508,12 +524,11 @@
        LOGGED-IN-SECTION.
        LOGGED-IN-MENU.
            PERFORM UNTIL EOF-IN
-               MOVE MSG-MENU-PROF-EDIT TO WS-MSG PERFORM DISPLAY-AND-LOG   *> 1
-               MOVE MSG-MENU-PROF-VIEW TO WS-MSG PERFORM DISPLAY-AND-LOG   *> 2
-               MOVE MSG-MENU-JOB-SEARCH TO WS-MSG PERFORM DISPLAY-AND-LOG  *> 3
-               MOVE MSG-MENU-SEARCH-USER TO WS-MSG PERFORM DISPLAY-AND-LOG *> 4
-               MOVE MSG-MENU-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG      *> 5
-               MOVE MSG-ENTER-CHOICE2  TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-PROF-VIEW TO WS-MSG PERFORM DISPLAY-AND-LOG   *> 1
+               MOVE MSG-MENU-SEARCH-USER TO WS-MSG PERFORM DISPLAY-AND-LOG *> 2
+               MOVE MSG-MENU-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG      *> 3
+               MOVE MSG-MENU-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG    *> 4
+               MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-LOGGED-CHOICE
@@ -522,22 +537,34 @@
                    EXIT PERFORM
                END-IF
 
+      *>         EVALUATE WS-LOGGED-CHOICE
+      *>             WHEN '1'
+      *>                 reset scratch
+      *>                 MOVE SPACES TO WS-PROF-FIRST-IN WS-PROF-LAST-IN WS-PROF-UNIV-IN
+      *>                                 WS-PROF-MAJOR-IN WS-PROF-GYEAR-IN WS-PROF-ABOUT-IN
+      *>                 SET YEAR-VALID TO TRUE
+      *>                 PERFORM CREATE-OR-EDIT-PROFILE
+      *>             WHEN '2'
+      *>                 PERFORM VIEW-MY-PROFILE
+      *>             WHEN '3'
+      *>                 MOVE "Job search is under construction." TO WS-MSG
+      *>                 PERFORM DISPLAY-AND-LOG
+      *>             WHEN '4'
+      *>                 PERFORM USER-SEARCH-MENU
+      *>             WHEN '5'
+      *>                 PERFORM SKILL-MENU
+      *>             WHEN OTHER
+      *>                 MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+      *>         END-EVALUATE
                EVALUATE WS-LOGGED-CHOICE
                    WHEN '1'
-                       *> reset scratch
-                       MOVE SPACES TO WS-PROF-FIRST-IN WS-PROF-LAST-IN WS-PROF-UNIV-IN
-                                       WS-PROF-MAJOR-IN WS-PROF-GYEAR-IN WS-PROF-ABOUT-IN
-                       SET YEAR-VALID TO TRUE
-                       PERFORM CREATE-OR-EDIT-PROFILE
-                   WHEN '2'
                        PERFORM VIEW-MY-PROFILE
-                   WHEN '3'
-                       MOVE "Job search is under construction." TO WS-MSG
-                       PERFORM DISPLAY-AND-LOG
-                   WHEN '4'
+                   WHEN '2'
                        PERFORM USER-SEARCH-MENU
-                   WHEN '5'
+                   WHEN '3'
                        PERFORM SKILL-MENU
+                   WHEN '4'
+                       PERFORM VIEW-PENDING-REQUESTS
                    WHEN OTHER
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
@@ -1423,6 +1450,78 @@
            PERFORM DISPLAY-EDUCATION
 
            MOVE MSG-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
+           EXIT.
+
+    
+       REQUESTS-SECTION.
+       VIEW-PENDING-REQUESTS.
+           MOVE MSG-PENDING-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+           
+           *> Read through requests file and show pending requests for current user
+           OPEN INPUT REQUEST-FILE
+           IF WS-REQ-STATUS = "00"
+              SET NOT-EOF-REQ TO TRUE
+              MOVE 0 TO WS-I  *> Count pending requests
+              PERFORM UNTIL EOF-REQ
+                 READ REQUEST-FILE
+                    AT END SET EOF-REQ TO TRUE
+                    NOT AT END PERFORM CHECK-PENDING-REQUEST
+                 END-READ
+              END-PERFORM
+              CLOSE REQUEST-FILE
+              
+              IF WS-I = 0
+                 MOVE MSG-NO-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
+              END-IF
+           ELSE
+              MOVE MSG-NO-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
+           END-IF
+           
+           MOVE "-----------------------------------" TO WS-MSG PERFORM DISPLAY-AND-LOG
+           EXIT.
+           
+       CHECK-PENDING-REQUEST.
+           *> Parse request record: sender|receiver|status
+           MOVE SPACES TO WS-REQ-SENDER WS-REQ-RECEIVER WS-REQ-STATUS-VALUE
+           UNSTRING REQUEST-REC DELIMITED BY '|'
+               INTO WS-REQ-SENDER
+                    WS-REQ-RECEIVER
+                    WS-REQ-STATUS-VALUE
+           END-UNSTRING
+           
+           *> Check if this is a pending request TO the current user
+           IF FUNCTION TRIM(WS-REQ-RECEIVER) = FUNCTION TRIM(WS-CURRENT-USERNAME) AND FUNCTION TRIM(WS-REQ-STATUS-VALUE) = "PENDING"
+               ADD 1 TO WS-I
+              *> Find sender's profile to get their real name
+               PERFORM FIND-SENDER-NAME
+               MOVE SPACES TO WS-MSG
+               STRING "Connection request from " DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-T1) DELIMITED BY SIZE
+                      "." DELIMITED BY SIZE
+                      INTO WS-MSG
+               END-STRING         
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+           EXIT.
+       
+       FIND-SENDER-NAME.
+           *> Look up sender's profile to get their first and last name
+           MOVE SPACES TO WS-T1
+           PERFORM VARYING WS-J FROM 1 BY 1 UNTIL WS-J > WS-PROFILES-COUNT
+               IF FUNCTION TRIM(WS-PROF-USERNAME(WS-J)) = FUNCTION TRIM(WS-REQ-SENDER)
+                   STRING FUNCTION TRIM(WS-PROF-FIRST(WS-J)) DELIMITED BY SIZE
+                          " " DELIMITED BY SIZE
+                          FUNCTION TRIM(WS-PROF-LAST(WS-J)) DELIMITED BY SIZE
+                          INTO WS-T1
+                   END-STRING
+                   EXIT PERFORM
+               END-IF
+           END-PERFORM
+           
+           *> If no profile found, fall back to username
+           IF WS-T1 = SPACES
+               MOVE FUNCTION TRIM(WS-REQ-SENDER) TO WS-T1
+           END-IF
            EXIT.
 
        HELPER-SECTION.
