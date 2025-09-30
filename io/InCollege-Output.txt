@@ -12,7 +12,8 @@ Welcome, TestUser!
 4. View My Pending Connection Requests
 Enter your choice:
 --- Pending Connection Requests ---
-You have no pending connection requests at this time.
+astudent
+ajohnson
 -----------------------------------
 1. View My Profile
 2. Search for User
