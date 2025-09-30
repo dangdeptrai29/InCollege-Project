@@ -1,5 +1,7 @@
 1
-testuser1
+TestUser
 Password1!
 4
-   
+2
+Another Student
+1
