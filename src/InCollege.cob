@@ -29,7 +29,9 @@
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-CONN-FILE-STATUS.
 
-
+            SELECT REQUEST-FILE ASSIGN TO "data/requests.txt"
+                ORGANIZATION IS LINE SEQUENTIAL
+                FILE STATUS IS WS-REQ-STATUS.
 
        DATA DIVISION.
        FILE SECTION.
@@ -48,9 +50,15 @@
         FD  PROFILES-FILE.
         01  PROFILE-REC                   PIC X(2048).
 
+
+        FD  REQUEST-FILE.
+        01  REQUEST-REC                PIC X(256).
+
+
       *> New FD for connections file
         FD  CONNECTIONS-FILE.
         01  CONNECTION-REC                PIC X(258).
+
 
 
        WORKING-STORAGE SECTION.
@@ -147,9 +155,22 @@
                10  WS-CONN-RECEIVER      PIC X(128).
                10  WS-CONN-STATUS        PIC X. *> 'P'ending, 'A'ccepted
 
+          *> --- Connection requests variables --
+       01  WS-REQ-STATUS              PIC XX VALUE "00".
+
+       01  WS-EOF-REQ                 PIC X  VALUE 'N'.
+           88  EOF-REQ                       VALUE 'Y'.
+           88  NOT-EOF-REQ                   VALUE 'N'.
+
+       *> Simple request variables
+       01  WS-REQ-SENDER              PIC X(128) VALUE SPACES.
+       01  WS-REQ-RECEIVER            PIC X(128) VALUE SPACES.
+       01  WS-REQ-STATUS-VALUE        PIC X(10)  VALUE SPACES.
+
 
        01  WS-I                          PIC 9(4) VALUE 0.
        01  WS-SEARCH-RESULT-IDX          PIC 9(4) VALUE 0.
+
 
        *> Scratch area for parsing user file records
        01  WS-USER-FILE-USERNAME         PIC X(128) VALUE SPACES.
@@ -200,61 +221,63 @@
        01  WS-J                          PIC 9(4)   VALUE 0.
 
        *> temp holders for (de)serializing lists
-       01  WS-EXPS-STR                   PIC X(512) VALUE SPACES.
-       01  WS-EDUS-STR                   PIC X(512) VALUE SPACES.
-       01  WS-ENTRY                      PIC X(256) VALUE SPACES.
-       01  WS-T1                         PIC X(128) VALUE SPACES.
-       01  WS-T2                         PIC X(128) VALUE SPACES.
-       01  WS-T3                         PIC X(128) VALUE SPACES.
-       01  WS-T4                         PIC X(128) VALUE SPACES.
-       01  WS-REST                       PIC X(1024) VALUE SPACES.
-       01  WS-REST-LEN                   PIC 9(4) VALUE 0.
-       01  WS-LAST-PIPE                  PIC 9(4) VALUE 0.
+
+       01  WS-EXPS-STR                PIC X(512) VALUE SPACES.
+       01  WS-EDUS-STR                PIC X(512) VALUE SPACES.
+       01  WS-ENTRY                   PIC X(256) VALUE SPACES.
+       01  WS-T1                      PIC X(128) VALUE SPACES.
+       01  WS-T2                      PIC X(128) VALUE SPACES.
+       01  WS-T3                      PIC X(128) VALUE SPACES.
+       01  WS-T4                      PIC X(128) VALUE SPACES.
+       01  WS-REST                    PIC X(1024) VALUE SPACES.
+       01  WS-REST-LEN                PIC 9(4) VALUE 0.
+       01  WS-LAST-PIPE               PIC 9(4) VALUE 0.
 
 
-             *> Message for account creation
-       01 MSG-ACCOUNT-LIMIT             PIC X(80) VALUE "All permitted accounts have been created, please come back later.".
-       01 MSG-USERNAME-EXISTS           PIC X(64) VALUE "Username already exists. Please try a different one.".
-       01 MSG-ENTER-NEW-USER            PIC X(64) VALUE "Please enter your username:".
-       01 MSG-ENTER-NEW-PASS            PIC X(64) VALUE "Please enter your password:".
-       01 MSG-ACCOUNT-SUCCESS           PIC X(64) VALUE "Account created successfully.".
+              *> Message for account creation
+       01 MSG-ACCOUNT-LIMIT           PIC X(80) VALUE "All permitted accounts have been created, please come back later.".
+       01 MSG-USERNAME-EXISTS         PIC X(64) VALUE "Username already exists. Please try a different one.".
+       01 MSG-ENTER-NEW-USER          PIC X(64) VALUE "Please enter your username:".
+       01 MSG-ENTER-NEW-PASS          PIC X(64) VALUE "Please enter your password:".
+       01 MSG-ACCOUNT-SUCCESS         PIC X(64) VALUE "Account created successfully.".
 
-       01  WS-LOGGED-CHOICE              PIC X(8) VALUE SPACES.
-       01  WS-SKILL-CHOICE               PIC X(8) VALUE SPACES.
+       01  WS-LOGGED-CHOICE           PIC X(8) VALUE SPACES.
+       01  WS-SKILL-CHOICE            PIC X(8) VALUE SPACES.
 
-      *> MODIFIED: New menu messages to match sample output
-       01 MSG-MENU-VIEW-PROFILE         PIC X(32) VALUE "1. View My Profile".
-       01 MSG-MENU-SEARCH-USER-NEW      PIC X(32) VALUE "2. Search for User".
-       01 MSG-MENU-LEARN-SKILL          PIC X(32) VALUE "3. Learn a New Skill".
-       01 MSG-MENU-VIEW-PENDING         PIC X(48) VALUE "4. View My Pending Connection Requests".
-       01  MSG-ENTER-CHOICE2             PIC X(20) VALUE "Enter your choice: ".
+       01  MSG-SKILL1                 PIC X(32) VALUE "Skill 1".
+       01  MSG-SKILL2                 PIC X(32) VALUE "Skill 2".
+       01  MSG-SKILL3                 PIC X(32) VALUE "Skill 3".
+       01  MSG-SKILL4                 PIC X(32) VALUE "Skill 4".
+       01  MSG-SKILL5                 PIC X(32) VALUE "Skill 5".
+       01  MSG-SKILL6                 PIC X(32) VALUE "Go Back".
+       01  MSG-ENTER-SKILL            PIC X(19) VALUE "Enter your choice: ".
+       01  MSG-SKILL-UNDER            PIC X(64) VALUE "This skill is under construction.".
 
+       *> Logged-in menu messages
+      *> 01  MSG-MENU-PROF-EDIT         PIC X(32) VALUE "1. Create/Edit My Profile".
+       01  MSG-MENU-PROF-VIEW         PIC X(32) VALUE "1. View My Profile".
+      *> 01 MSG-MENU-JOB-SEARCH        PIC X(32) VALUE "3. Search for a job".
+       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "2. Search for User".
+       01  MSG-MENU-SKILL            PIC X(32) VALUE "3. Learn a New Skill".
+       01  MSG-MENU-REQUESTS          PIC X(40) VALUE "4. View My Pending Connection Requests".
 
-       01  MSG-SKILL1                    PIC X(32) VALUE "Skill 1".
-       01  MSG-SKILL2                    PIC X(32) VALUE "Skill 2".
-       01  MSG-SKILL3                    PIC X(32) VALUE "Skill 3".
-       01  MSG-SKILL4                    PIC X(32) VALUE "Skill 4".
-       01  MSG-SKILL5                    PIC X(32) VALUE "Skill 5".
-       01  MSG-SKILL6                    PIC X(32) VALUE "Go Back".
-       01  MSG-ENTER-SKILL               PIC X(19) VALUE "Enter your choice: ".
-       01  MSG-SKILL-UNDER               PIC X(64) VALUE "This skill is under construction.".
+       *> Profile messages
+       01  MSG-EDIT-HEADER            PIC X(32) VALUE "--- Create/Edit Profile ---".
+       01  MSG-VIEW-HEADER            PIC X(32) VALUE "--- Your Profile ---".
+       01  MSG-LINE                   PIC X(20) VALUE "--------------------".
+       01  MSG-LINE-LONG              PIC X(25) VALUE "-------------------------".
+       01  MSG-END-OF-PROGRAM         PIC X(32) VALUE "--- END_OF_PROGRAM_EXECUTION ---".
 
-       01  MSG-EDIT-HEADER               PIC X(32) VALUE "--- Create/Edit Profile ---".
-       01  MSG-VIEW-HEADER               PIC X(32) VALUE "--- Your Profile ---".
-       01  MSG-LINE                      PIC X(20) VALUE "--------------------".
-       01  MSG-LINE-LONG                 PIC X(25) VALUE "-------------------------".
-       01  MSG-END-OF-PROGRAM            PIC X(32) VALUE "--- END_OF_PROGRAM_EXECUTION ---".
+       01  MSG-ENTER-FIRST            PIC X(32) VALUE "Enter First Name:".
+       01  MSG-ENTER-LAST             PIC X(32) VALUE "Enter Last Name:".
+       01  MSG-ENTER-UNIV             PIC X(48) VALUE "Enter University/College Attended:".
+       01  MSG-ENTER-MAJOR            PIC X(32) VALUE "Enter Major:".
+       01  MSG-ENTER-GYEAR2           PIC X(32) VALUE "Enter Graduation Year (YYYY):".
 
-       01  MSG-ENTER-FIRST               PIC X(32) VALUE "Enter First Name:".
-       01  MSG-ENTER-LAST                PIC X(32) VALUE "Enter Last Name:".
-       01  MSG-ENTER-UNIV                PIC X(48) VALUE "Enter University/College Attended:".
-       01  MSG-ENTER-MAJOR               PIC X(32) VALUE "Enter Major:".
-       01  MSG-ENTER-GYEAR2              PIC X(32) VALUE "Enter Graduation Year (YYYY):".
-
-       01  MSG-REQUIRED                  PIC X(64) VALUE "This field is required. Please try again.".
-       01  MSG-YEAR-INVALID              PIC X(80) VALUE "Graduation year must be 1900-2100 and 4 digits.".
-       01  MSG-PROFILE-SAVED-OK          PIC X(64) VALUE "Profile saved successfully!".
-       01  MSG-PROFILE-NOT-FOUND         PIC X(64) VALUE "No profile found. Please create your profile first.".
+       01  MSG-REQUIRED               PIC X(64) VALUE "This field is required. Please try again.".
+       01  MSG-YEAR-INVALID           PIC X(80) VALUE "Graduation year must be 1900-2100 and 4 digits.".
+       01  MSG-PROFILE-SAVED-OK       PIC X(64) VALUE "Profile saved successfully!".
+       01  MSG-PROFILE-NOT-FOUND      PIC X(64) VALUE "No profile found. Please create your profile first.".
 
 
        *> Message for ABOUT ME
@@ -289,33 +312,24 @@
        01  WS-YEARS-INPUT                PIC X(20).
 
        *> Search user
-       01  MSG-ENTER-USER-SEARCH         PIC X(64) VALUE "Enter the full name of the person you are looking for:".
-       01  MSG-USER-NOT-FOUND            PIC X(64) VALUE "No one by that name could be found.".
-       01  MSG-USER-PROFILE-HEADER       PIC X(32) VALUE "--- Found User Profile ---".
-       01  WS-SEARCH-FULLNAME            PIC X(128) VALUE SPACES.
-       01  WS-SEARCH-FOUND               PIC X VALUE 'N'.
-           88  SEARCH-FOUND                      VALUE 'Y'.
-           88  SEARCH-NOT-FOUND                  VALUE 'N'.
 
-       *> Connection Request variables
-       01  WS-CONN-CHOICE                PIC X(8)   VALUE SPACES.
-       01  WS-FOUND-USER-USERNAME        PIC X(128) VALUE SPACES.
-       01  WS-CONNECTION-STATUS-FLAG     PIC X(2)   VALUE SPACES.
-           88 CONN-OK                            VALUE "OK".
-           88 CONN-ALREADY-ACCEPTED              VALUE "AC".
-           88 CONN-PENDING-BY-ME                 VALUE "P1".
-           88 CONN-PENDING-BY-THEM               VALUE "P2".
+       01  MSG-ENTER-USER-SEARCH           PIC X(64) VALUE "Enter the full name of the person you are looking for:".
+       01  MSG-USER-NOT-FOUND         PIC X(64) VALUE "No one by that name could be found.".
+       01  MSG-USER-PROFILE-HEADER    PIC X(32) VALUE "--- Found User Profile ---".
+       01  WS-SEARCH-FULLNAME         PIC X(128) VALUE SPACES.
+       01  WS-SEARCH-FOUND            PIC X VALUE 'N'.
+            88  SEARCH-FOUND                 VALUE 'Y'.
+            88  SEARCH-NOT-FOUND             VALUE 'N'.
 
-       01  MSG-SEND-REQUEST              PIC X(32)  VALUE "1. Send Connection Request".
-       01  MSG-BACK-TO-MENU              PIC X(32)  VALUE "2. Back to Main Menu".
-       01  MSG-ALREADY-CONNECTED         PIC X(64)  VALUE "You are already connected with this user.".
-       01  MSG-PENDING-REQUEST-EXISTS    PIC X(80)  VALUE "You have already sent a pending connection request to this user.".
-       01  MSG-THEY-SENT-REQUEST         PIC X(80)  VALUE "This user has already sent you a connection request.".
+       *> Connection requests
+       01  MSG-PENDING-HEADER         PIC X(35) VALUE "--- Pending Connection Requests ---".
+       01  MSG-NO-PENDING             PIC X(65) VALUE "You have no pending connection requests at this time.".
+       01  MSG-REQUEST-MENU-1            PIC X(32) VALUE "1. Send Connection Request".
+       01  MSG-REQUEST-MENU-2            PIC X(32) VALUE "2. Back to Main Menu".
+       01  MSG-REQUEST-SENT      PIC X(64) VALUE "Connection request sent to".
+       01  WS-REQUEST-CHOICE             PIC X(8) VALUE SPACES.
 
-      *> New messages for pending requests view
-       01 MSG-PENDING-HEADER            PIC X(64) VALUE "--- Pending Connection Requests ---".
-       01 MSG-NO-PENDING-REQUESTS       PIC X(64) VALUE "You have no pending connection requests at this time.".
-       01 MSG-PENDING-LINE              PIC X(35) VALUE "-----------------------------------".
+
 
 
        PROCEDURE DIVISION.
@@ -538,12 +552,13 @@
        LOGGED-IN-SECTION.
        LOGGED-IN-MENU.
            PERFORM UNTIL EOF-IN
-      *> MODIFIED: Display the new menu from the sample output
-               MOVE MSG-MENU-VIEW-PROFILE  TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-SEARCH-USER-NEW TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-LEARN-SKILL   TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-VIEW-PENDING  TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-ENTER-CHOICE2      TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+               MOVE MSG-MENU-PROF-VIEW TO WS-MSG PERFORM DISPLAY-AND-LOG   *> 1
+               MOVE MSG-MENU-SEARCH-USER TO WS-MSG PERFORM DISPLAY-AND-LOG *> 2
+               MOVE MSG-MENU-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG      *> 3
+               MOVE MSG-MENU-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG    *> 4
+               MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
+
 
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-LOGGED-CHOICE
@@ -552,7 +567,27 @@
                    EXIT PERFORM
                END-IF
 
-      *> MODIFIED: Evaluate choices based on the new menu
+      
+      *>         EVALUATE WS-LOGGED-CHOICE
+      *>             WHEN '1'
+      *>                 reset scratch
+      *>                 MOVE SPACES TO WS-PROF-FIRST-IN WS-PROF-LAST-IN WS-PROF-UNIV-IN
+      *>                                 WS-PROF-MAJOR-IN WS-PROF-GYEAR-IN WS-PROF-ABOUT-IN
+      *>                 SET YEAR-VALID TO TRUE
+      *>                 PERFORM CREATE-OR-EDIT-PROFILE
+      *>             WHEN '2'
+      *>                 PERFORM VIEW-MY-PROFILE
+      *>             WHEN '3'
+      *>                 MOVE "Job search is under construction." TO WS-MSG
+      *>                 PERFORM DISPLAY-AND-LOG
+      *>             WHEN '4'
+      *>                 PERFORM USER-SEARCH-MENU
+      *>             WHEN '5'
+      *>                 PERFORM SKILL-MENU
+      *>             WHEN OTHER
+      *>                 MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+      *>         END-EVALUATE
+
                EVALUATE WS-LOGGED-CHOICE
                    WHEN '1'
                        PERFORM VIEW-MY-PROFILE
@@ -639,11 +674,9 @@
            MOVE WS-SEARCH-RESULT-IDX TO WS-I
            PERFORM DISPLAY-PROFILE-BY-ID
 
-      *> After displaying profile, ask to connect if not self.
-           MOVE WS-PROF-USERNAME(WS-SEARCH-RESULT-IDX) TO WS-FOUND-USER-USERNAME
-           IF WS-FOUND-USER-USERNAME NOT = WS-CURRENT-USERNAME AND NOT EOF-IN
-               PERFORM PROMPT-FOR-CONNECTION
-           END-IF
+
+           PERFORM REQUEST-MENU
+
            EXIT.
 
        DISPLAY-PROFILE-BY-ID.
@@ -1608,6 +1641,138 @@
            MOVE MSG-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
 
+    
+       REQUESTS-SECTION.
+       VIEW-PENDING-REQUESTS.
+           MOVE MSG-PENDING-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+           
+           *> Read through requests file and show pending requests for current user
+           OPEN INPUT REQUEST-FILE
+           IF WS-REQ-STATUS = "00"
+              SET NOT-EOF-REQ TO TRUE
+              MOVE 0 TO WS-I  *> Count pending requests
+              PERFORM UNTIL EOF-REQ
+                 READ REQUEST-FILE
+                    AT END SET EOF-REQ TO TRUE
+                    NOT AT END PERFORM CHECK-PENDING-REQUEST
+                 END-READ
+              END-PERFORM
+              CLOSE REQUEST-FILE
+              
+              IF WS-I = 0
+                 MOVE MSG-NO-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
+              END-IF
+           ELSE
+              MOVE MSG-NO-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
+           END-IF
+           
+           MOVE "-----------------------------------" TO WS-MSG PERFORM DISPLAY-AND-LOG
+           EXIT.
+           
+       CHECK-PENDING-REQUEST.
+           *> Parse request record: sender|receiver|status
+           MOVE SPACES TO WS-REQ-SENDER WS-REQ-RECEIVER WS-REQ-STATUS-VALUE
+           UNSTRING REQUEST-REC DELIMITED BY '|'
+               INTO WS-REQ-SENDER
+                    WS-REQ-RECEIVER
+                    WS-REQ-STATUS-VALUE
+           END-UNSTRING
+           
+           *> Check if this is a pending request TO the current user
+           IF FUNCTION TRIM(WS-REQ-RECEIVER) = FUNCTION TRIM(WS-CURRENT-USERNAME) AND FUNCTION TRIM(WS-REQ-STATUS-VALUE) = "PENDING"
+               ADD 1 TO WS-I
+              *> Find sender's profile to get their real name
+               PERFORM FIND-SENDER-NAME
+               MOVE SPACES TO WS-MSG
+               STRING "Connection request from " DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-T1) DELIMITED BY SIZE
+                      "." DELIMITED BY SIZE
+                      INTO WS-MSG
+               END-STRING         
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+           EXIT.
+       
+       FIND-SENDER-NAME.
+           *> Look up sender's profile to get their first and last name
+           MOVE SPACES TO WS-T1
+           PERFORM VARYING WS-J FROM 1 BY 1 UNTIL WS-J > WS-PROFILES-COUNT
+               IF FUNCTION TRIM(WS-PROF-USERNAME(WS-J)) = FUNCTION TRIM(WS-REQ-SENDER)
+                   STRING FUNCTION TRIM(WS-PROF-FIRST(WS-J)) DELIMITED BY SIZE
+                          " " DELIMITED BY SIZE
+                          FUNCTION TRIM(WS-PROF-LAST(WS-J)) DELIMITED BY SIZE
+                          INTO WS-T1
+                   END-STRING
+                   EXIT PERFORM
+               END-IF
+           END-PERFORM
+           
+           *> If no profile found, fall back to username
+           IF WS-T1 = SPACES
+               MOVE FUNCTION TRIM(WS-REQ-SENDER) TO WS-T1
+           END-IF
+           EXIT.
+
+       REQUEST-MENU.
+           MOVE MSG-REQUEST-MENU-1 TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-REQUEST-MENU-2 TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+           
+           PERFORM READ-NEXT-LINE
+           MOVE WS-LINE TO WS-REQUEST-CHOICE
+           
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+           
+           EVALUATE WS-REQUEST-CHOICE
+               WHEN '1'
+               *> TODO: Implement SEND-REQUEST logic
+      *>             PERFORM SEND-REQUEST
+                     EXIT PARAGRAPH
+               WHEN '2'
+                   EXIT PARAGRAPH  *> Back to main menu
+               WHEN OTHER
+                   MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+           END-EVALUATE
+           EXIT.
+
+       SAVE-REQUEST.
+           *> Save a connection request to requests.txt file
+           *> Format: sender|receiver|status
+           *> TODO: Call this from SEND-REQUEST after validation
+       
+           *> Get the target user's username from the found profile  
+           MOVE WS-PROF-USERNAME(WS-SEARCH-RESULT-IDX) TO WS-REQ-RECEIVER
+           MOVE WS-CURRENT-USERNAME TO WS-REQ-SENDER  
+           MOVE "PENDING" TO WS-REQ-STATUS-VALUE
+           
+           *> Open file in append mode to add new request
+           OPEN EXTEND REQUEST-FILE
+           IF WS-REQ-STATUS = "00"
+               *> Create the request record
+               MOVE SPACES TO REQUEST-REC
+               STRING FUNCTION TRIM(WS-REQ-SENDER) DELIMITED BY SIZE
+                      "|" DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-REQ-RECEIVER) DELIMITED BY SIZE
+                      "|" DELIMITED BY SIZE  
+                      FUNCTION TRIM(WS-REQ-STATUS-VALUE) DELIMITED BY SIZE
+                      INTO REQUEST-REC
+               END-STRING
+               
+               *> Write the record to file
+               WRITE REQUEST-REC
+               CLOSE REQUEST-FILE
+           ELSE
+               *> Handle file error - close if opened
+               IF WS-REQ-STATUS NOT = "05"  *> Not "file not found"
+                   CLOSE REQUEST-FILE
+               END-IF
+               MOVE "Error: Unable to save connection request." TO WS-MSG 
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+           EXIT
+    
        HELPER-SECTION.
        DISPLAY-AND-LOG.
            *> Write message to output file and display it (preserve indentation)

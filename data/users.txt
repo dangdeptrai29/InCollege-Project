@@ -1,0 +1,11 @@
+testuser|Password1!
+jane_smith|MyPass123!
+TestUser|SecurePass1!
+astudent|Student123!
+ajohnson|Alex2024!
+mkim|Marketing1!
+jblake|Systems99!
+mtheo|Quantum2030!
+jlconnor|Space123!
+jlee1|DataViz1!
+jlee2|Finance22!
