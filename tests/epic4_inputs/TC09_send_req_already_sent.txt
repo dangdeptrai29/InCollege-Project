@@ -1,5 +1,6 @@
 1
 testuser
 Password1!
-4
-Jean-Luc O'Connor
+2
+Mina Kim
+1

@@ -6,18 +6,16 @@ Please enter your username:
 Please enter your password:
 You have successfully logged in.
 Welcome, testuser!
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for a job
-4. Find someone you know
-5. Learn a New Skill
+1. View My Profile
+2. Search for User
+3. Learn a New Skill
+4. View My Pending Connection Requests
 Enter your choice:
 Enter the full name of the person you are looking for:
 No one by that name could be found.
-1. Create/Edit My Profile
-2. View My Profile
-3. Search for a job
-4. Find someone you know
-5. Learn a New Skill
+1. View My Profile
+2. Search for User
+3. Learn a New Skill
+4. View My Pending Connection Requests
 Enter your choice:
 --- END_OF_PROGRAM_EXECUTION ---
