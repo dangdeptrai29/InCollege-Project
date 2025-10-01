@@ -233,17 +233,25 @@
        01  WS-REST-LEN                PIC 9(4) VALUE 0.
        01  WS-LAST-PIPE               PIC 9(4) VALUE 0.
 
+       *> Account creation messages
+       01  MSG-ACCOUNT-LIMIT          PIC X(80) VALUE "All permitted accounts have been created, please come back later.".
+       01  MSG-USERNAME-EXISTS        PIC X(64) VALUE "Username already exists. Please try a different one.".
+       01  MSG-ENTER-NEW-USER         PIC X(64) VALUE "Please enter your username:".
+       01  MSG-ENTER-NEW-PASS         PIC X(64) VALUE "Please enter your password:".
+       01  MSG-ACCOUNT-SUCCESS        PIC X(64) VALUE "Account created successfully.".
 
-              *> Message for account creation
-       01 MSG-ACCOUNT-LIMIT           PIC X(80) VALUE "All permitted accounts have been created, please come back later.".
-       01 MSG-USERNAME-EXISTS         PIC X(64) VALUE "Username already exists. Please try a different one.".
-       01 MSG-ENTER-NEW-USER          PIC X(64) VALUE "Please enter your username:".
-       01 MSG-ENTER-NEW-PASS          PIC X(64) VALUE "Please enter your password:".
-       01 MSG-ACCOUNT-SUCCESS         PIC X(64) VALUE "Account created successfully.".
-
+       *> Logged-in choices
        01  WS-LOGGED-CHOICE           PIC X(8) VALUE SPACES.
        01  WS-SKILL-CHOICE            PIC X(8) VALUE SPACES.
 
+       *> Main menu messages
+       01  MSG-MENU-VIEW-PROFILE      PIC X(32) VALUE "1. View My Profile".
+       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "2. Search for User".
+       01  MSG-MENU-LEARN-SKILL       PIC X(32) VALUE "3. Learn a New Skill".
+       01  MSG-MENU-VIEW-PENDING      PIC X(48) VALUE "4. View My Pending Connection Requests".
+       01  MSG-ENTER-CHOICE2          PIC X(20) VALUE "Enter your choice: ".
+
+       *> Skills
        01  MSG-SKILL1                 PIC X(32) VALUE "Skill 1".
        01  MSG-SKILL2                 PIC X(32) VALUE "Skill 2".
        01  MSG-SKILL3                 PIC X(32) VALUE "Skill 3".
@@ -252,14 +260,6 @@
        01  MSG-SKILL6                 PIC X(32) VALUE "Go Back".
        01  MSG-ENTER-SKILL            PIC X(19) VALUE "Enter your choice: ".
        01  MSG-SKILL-UNDER            PIC X(64) VALUE "This skill is under construction.".
-
-       *> Logged-in menu messages
-      *> 01  MSG-MENU-PROF-EDIT         PIC X(32) VALUE "1. Create/Edit My Profile".
-       01  MSG-MENU-PROF-VIEW         PIC X(32) VALUE "1. View My Profile".
-      *> 01 MSG-MENU-JOB-SEARCH        PIC X(32) VALUE "3. Search for a job".
-       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "2. Search for User".
-       01  MSG-MENU-SKILL            PIC X(32) VALUE "3. Learn a New Skill".
-       01  MSG-MENU-REQUESTS          PIC X(40) VALUE "4. View My Pending Connection Requests".
 
        *> Profile messages
        01  MSG-EDIT-HEADER            PIC X(32) VALUE "--- Create/Edit Profile ---".
@@ -312,23 +312,40 @@
        01  WS-YEARS-INPUT                PIC X(20).
 
        *> Search user
+       01  MSG-ENTER-USER-SEARCH         PIC X(64) VALUE "Enter the full name of the person you are looking for:".
+       01  MSG-USER-NOT-FOUND            PIC X(64) VALUE "No one by that name could be found.".
+       01  MSG-USER-PROFILE-HEADER       PIC X(32) VALUE "--- Found User Profile ---".
+       01  WS-SEARCH-FULLNAME            PIC X(128) VALUE SPACES.
+       01  WS-SEARCH-FOUND               PIC X VALUE 'N'.
+           88  SEARCH-FOUND                      VALUE 'Y'.
+           88  SEARCH-NOT-FOUND                  VALUE 'N'.
 
-       01  MSG-ENTER-USER-SEARCH           PIC X(64) VALUE "Enter the full name of the person you are looking for:".
-       01  MSG-USER-NOT-FOUND         PIC X(64) VALUE "No one by that name could be found.".
-       01  MSG-USER-PROFILE-HEADER    PIC X(32) VALUE "--- Found User Profile ---".
-       01  WS-SEARCH-FULLNAME         PIC X(128) VALUE SPACES.
-       01  WS-SEARCH-FOUND            PIC X VALUE 'N'.
-            88  SEARCH-FOUND                 VALUE 'Y'.
-            88  SEARCH-NOT-FOUND             VALUE 'N'.
+       *> Connection Request variables
+       01  WS-CONN-CHOICE                PIC X(8)   VALUE SPACES.
+       01  WS-FOUND-USER-USERNAME        PIC X(128) VALUE SPACES.
+       01  WS-CONNECTION-STATUS-FLAG     PIC X(2)   VALUE SPACES.
+           88 CONN-OK                            VALUE "OK".
+           88 CONN-ALREADY-ACCEPTED              VALUE "AC".
+           88 CONN-PENDING-BY-ME                 VALUE "P1".
+           88 CONN-PENDING-BY-THEM               VALUE "P2".
+
+       01  MSG-SEND-REQUEST              PIC X(32)  VALUE "1. Send Connection Request".
+       01  MSG-BACK-TO-MENU              PIC X(32)  VALUE "2. Back to Main Menu".
+       01  MSG-ALREADY-CONNECTED         PIC X(64)  VALUE "You are already connected with this user.".
+       01  MSG-PENDING-REQUEST-EXISTS    PIC X(80)  VALUE "You have already sent a pending connection request to this user.".
+       01  MSG-THEY-SENT-REQUEST         PIC X(80)  VALUE "This user has already sent you a connection request.".
+
+      *> New messages for pending requests view
+       01 MSG-PENDING-HEADER            PIC X(64) VALUE "--- Pending Connection Requests ---".
+       01 MSG-NO-PENDING-REQUESTS       PIC X(64) VALUE "You have no pending connection requests at this time.".
+       01 MSG-PENDING-LINE              PIC X(35) VALUE "-----------------------------------".
+
 
        *> Connection requests
-       01  MSG-PENDING-HEADER         PIC X(35) VALUE "--- Pending Connection Requests ---".
-       01  MSG-NO-PENDING             PIC X(65) VALUE "You have no pending connection requests at this time.".
        01  MSG-REQUEST-MENU-1            PIC X(32) VALUE "1. Send Connection Request".
        01  MSG-REQUEST-MENU-2            PIC X(32) VALUE "2. Back to Main Menu".
        01  MSG-REQUEST-SENT      PIC X(64) VALUE "Connection request sent to".
        01  WS-REQUEST-CHOICE             PIC X(8) VALUE SPACES.
-
 
 
 
@@ -553,11 +570,13 @@
        LOGGED-IN-MENU.
            PERFORM UNTIL EOF-IN
 
-               MOVE MSG-MENU-PROF-VIEW TO WS-MSG PERFORM DISPLAY-AND-LOG   *> 1
-               MOVE MSG-MENU-SEARCH-USER TO WS-MSG PERFORM DISPLAY-AND-LOG *> 2
-               MOVE MSG-MENU-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG      *> 3
-               MOVE MSG-MENU-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG    *> 4
-               MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
+           *> Display the post-login menu (single, consistent set)
+           MOVE MSG-MENU-VIEW-PROFILE  TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-MENU-SEARCH-USER   TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-MENU-LEARN-SKILL   TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-MENU-VIEW-PENDING  TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-ENTER-CHOICE2      TO WS-MSG PERFORM DISPLAY-AND-LOG
+
 
 
                PERFORM READ-NEXT-LINE
@@ -674,8 +693,11 @@
            MOVE WS-SEARCH-RESULT-IDX TO WS-I
            PERFORM DISPLAY-PROFILE-BY-ID
 
-
-           PERFORM REQUEST-MENU
+      *> After displaying profile, ask to connect if not self.
+           MOVE WS-PROF-USERNAME(WS-SEARCH-RESULT-IDX) TO WS-FOUND-USER-USERNAME
+           IF WS-FOUND-USER-USERNAME NOT = WS-CURRENT-USERNAME AND NOT EOF-IN
+               PERFORM PROMPT-FOR-CONNECTION
+           END-IF
 
            EXIT.
 
@@ -1643,7 +1665,7 @@
 
     
        REQUESTS-SECTION.
-       VIEW-PENDING-REQUESTS.
+       VIEW-PENDING-REQUESTS-FILE.
            MOVE MSG-PENDING-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
            
            *> Read through requests file and show pending requests for current user
@@ -1660,10 +1682,10 @@
               CLOSE REQUEST-FILE
               
               IF WS-I = 0
-                 MOVE MSG-NO-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
+                 MOVE MSG-NO-PENDING-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG
               END-IF
            ELSE
-              MOVE MSG-NO-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
+              MOVE MSG-NO-PENDING-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG
            END-IF
            
            MOVE "-----------------------------------" TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -1771,7 +1793,7 @@
                MOVE "Error: Unable to save connection request." TO WS-MSG 
                PERFORM DISPLAY-AND-LOG
            END-IF
-           EXIT
+           EXIT.
     
        HELPER-SECTION.
        DISPLAY-AND-LOG.
