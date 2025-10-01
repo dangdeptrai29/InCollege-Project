@@ -1,0 +1,10 @@
+7. testuser view pending requests (no pending requests)
+8. (Positive test case) testuser sends successful request to someone new (Mina Kim - mkim)
+9. (Negative test case) testuser sends request to someone they have already sent a request before (Mina Kim - mkim) -followed up from 11
+10. (Negative test case) testuser try to find someone non-existent
+11. mkim views her pending requests (multiple)
+12. (Negative test case) Mina Kim sends request to user who already sent her a request
+13. (Negative test case) Mina Kim sends request to user who she already accepted a request (Alex Johnson)
+14. (Negative test case) Alex Johnson sends request to user who he already sent a request and got accepted (Mina Kim)
+15. (Positive test case) Alex Johnson sends 2 consecutive requests to 2 new people
+16. (Imitate follow-up example output) TestUser views their requests (0 request), then sends a request to (New Student), who already has been sent a request.
