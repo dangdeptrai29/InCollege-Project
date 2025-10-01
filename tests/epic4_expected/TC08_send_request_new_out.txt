@@ -5,15 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, TestUser!
-1. View My Profile
-2. Search for User
-3. Learn a New Skill
-4. View My Pending Connection Requests
-Enter your choice:
---- Pending Connection Requests ---
-You have no pending connection requests at this time.
------------------------------------
+Welcome, testuser!
 1. View My Profile
 2. Search for User
 3. Learn a New Skill
@@ -21,10 +13,10 @@ You have no pending connection requests at this time.
 Enter your choice:
 Enter the full name of the person you are looking for:
 --- Found User Profile ---
-Name: New Student
-University: West Coast Uni
-Major: Business
-Graduation Year: 2027
+Name: Mina Kim
+University: Coastal University
+Major: Marketing
+Graduation Year: 2024
 About Me:
 Experience: None
 Education: None
@@ -32,7 +24,7 @@ Education: None
 1. Send Connection Request
 2. Back to Main Menu
 Enter your choice:
-Connection request sent to New Student.
+Connection request sent to Mina Kim.
 1. View My Profile
 2. Search for User
 3. Learn a New Skill

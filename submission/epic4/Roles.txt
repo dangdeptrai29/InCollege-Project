@@ -1,0 +1,7 @@
+WEEK 4 ROLES
+Epic #4:	
+   Scrum Master:	Minh Thien Nguyen
+	Coder #1:	Tam Nguyen
+	Coder #2:	Phong Nguyen
+	Tester #1:	Hieu Nguyen
+	Tester #2:	Dang Nguyen

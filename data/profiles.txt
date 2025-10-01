@@ -1,3 +1,8 @@
+alice|Alice|Smith|USF|Computer Science|2025|||
+bob|Bob|Tran|UCF|Cybersecurity|2026|||
+carol|Carol|Nguyen|UF|Business|2027|||
+testuser|Test|User|—|—|—|||
+newstudent|New|Student|West Coast Uni|Business|2027|||
 TestUser|Test|User|State University|Computer Science|2025|Passionate about software development.|Intern~Tech Solutions~Summer 2024~Assisted with front-end development.|Bachelor's~State University~2021-2025
 astudent|Another|Student|City College|Electrical Engineering|2026|Robotics enthusiast.||
 testuser|Test1|User|State University|Computer Science|2025|Passionate about software development.|Intern~Tech Solutions~Summer 2024~Assisted with front-end development.|Bachelor's~State University~2021-2025
@@ -8,4 +13,4 @@ mtheo|Maximilianus|Theophilus Bartholomew IV|Royal Academy of Technology|Quantum
 jlconnor|Jean-Luc|O'Connor|International Space Institute|Aerospace Engineering|2026|Testing prototype starships.|Flight Engineer~Orbital Dynamics~2024-2025~Monitored mission telemetry.|Master's~International Space Institute~2024-2026
 jlee1|Jamie|Lee|Metro University|Data Analytics|2025|Loves turning data into stories.|Data Analyst~Insight Corp~2023-2024~Built executive dashboards.|Bachelor's~Metro University~2021-2025
 jlee2|Jamie|Lee|Harbor University|Finance|2025|Interested in fintech innovation.|Financial Analyst~Harbor Bank~2023-2024~Supported portfolio analysis.|Bachelor's~Harbor University~2021-2025
-jane_smith|Jane|Smith|Metro College|Psychology|2024|Interested in human behavior research.|Research Assistant~Behavioral Lab~2023-2024~Conducted user experience studies.|Bachelor's~Metro College~2020-2024
+newstudent|New|Student|West Coast Uni|Business|2027|||
