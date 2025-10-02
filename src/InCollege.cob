@@ -5,6 +5,15 @@
        *> Epic 1 – Task 1: Notify user on unsuccessful login
        *> Follow PDF requirements: read input from file, display output to
        *> screen and also write identical output to an output file.
+       *>
+       *> Epic 5 – Connection Management & Network Display
+       *> Phase 1 (Developer 1):
+       *>   - Added GET-FULL-NAME helper for profile lookups
+       *>   - Enhanced VIEW-PENDING-REQUESTS with interactive accept/reject
+       *>   - Implemented ACCEPT-CONNECTION with status update and file persistence
+       *>   - Implemented REJECT-CONNECTION with array shifting and file persistence
+       *>   - Added WS-DISPLAY-NAME and WS-TARGET-USERNAME working storage variables
+       *>   - Added message constants for accept/reject options
 
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
@@ -220,6 +229,10 @@
        01  WS-PROFILE-IDX                PIC 9(4)   VALUE 0.
        01  WS-J                          PIC 9(4)   VALUE 0.
 
+       *> Epic 5: Variables for accept/reject connection functionality
+       01  WS-DISPLAY-NAME               PIC X(256) VALUE SPACES.
+       01  WS-TARGET-USERNAME            PIC X(128) VALUE SPACES.
+
        *> temp holders for (de)serializing lists
 
        01  WS-EXPS-STR                PIC X(512) VALUE SPACES.
@@ -340,6 +353,10 @@
        01 MSG-NO-PENDING-REQUESTS       PIC X(64) VALUE "You have no pending connection requests at this time.".
        01 MSG-PENDING-LINE              PIC X(35) VALUE "-----------------------------------".
 
+      *> Epic 5: Accept/Reject messages
+       01 MSG-ACCEPT-OPTION             PIC X(16) VALUE "1. Accept".
+       01 MSG-REJECT-OPTION             PIC X(16) VALUE "2. Reject".
+       01 MSG-INVALID-CHOICE-SKIP       PIC X(48) VALUE "Invalid choice. Skipping request.".
 
        *> Connection requests
        01  MSG-REQUEST-MENU-1            PIC X(32) VALUE "1. Send Connection Request".
@@ -1065,25 +1082,214 @@
            EXIT.
 
       *> NEW PARAGRAPH: To handle menu option 4
+      *> Epic 5: Enhanced to support interactive accept/reject with full names
        VIEW-PENDING-REQUESTS.
+      *> Purpose: Display all pending connection requests and allow accept/reject
+      *> Inputs:
+      *>   - WS-CURRENT-USERNAME: User viewing their pending requests
+      *>   - WS-CONNECTIONS-TABLE: All connections in memory
+      *>   - WS-PROFILES-TABLE: For full name lookup
+      *> Outputs:
+      *>   - Interactive display with accept/reject options
+      *>   - Calls ACCEPT-CONNECTION or REJECT-CONNECTION based on user choice
+      *> Side Effects:
+      *>   - Displays messages to console and log file
+      *>   - Reads user input for each pending request
+      *>   - Modifies connections via called paragraphs
            MOVE MSG-PENDING-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE 0 TO WS-TMP-COUNT
 
+           *> Loop through all connections looking for pending requests to current user
            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-CONNECTIONS-COUNT
+               *> Check if this is a pending request for the current user
                IF WS-CONN-RECEIVER(WS-I) = WS-CURRENT-USERNAME AND
                   WS-CONN-STATUS(WS-I) = 'P'
-                   MOVE WS-CONN-SENDER(WS-I) TO WS-MSG
-                   PERFORM DISPLAY-AND-LOG
                    ADD 1 TO WS-TMP-COUNT
+                   
+                   *> Get full name for display (sender's name)
+                   MOVE WS-CONN-SENDER(WS-I) TO WS-TARGET-USERNAME
+                   PERFORM GET-FULL-NAME
+                   
+                   *> Display request with full name instead of username
+                   MOVE SPACES TO WS-MSG
+                   STRING "Connection request from " DELIMITED BY SIZE
+                          FUNCTION TRIM(WS-DISPLAY-NAME) DELIMITED BY SIZE
+                          INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+                   
+                   *> Show accept/reject options to user
+                   MOVE MSG-ACCEPT-OPTION TO WS-MSG PERFORM DISPLAY-AND-LOG
+                   MOVE MSG-REJECT-OPTION TO WS-MSG PERFORM DISPLAY-AND-LOG
+                   
+                   *> Read user's choice (expects "1" or "2")
+                   PERFORM READ-NEXT-LINE
+                   
+                   *> Process choice: accept, reject, or skip invalid
+                   IF WS-LINE = "1"
+                       *> User chose to accept - WS-I still points to this connection
+                       PERFORM ACCEPT-CONNECTION
+                   ELSE IF WS-LINE = "2"
+                       *> User chose to reject - WS-I still points to this connection
+                       PERFORM REJECT-CONNECTION
+                   ELSE
+                       *> Invalid input - skip this request and continue
+                       MOVE MSG-INVALID-CHOICE-SKIP TO WS-MSG
+                       PERFORM DISPLAY-AND-LOG
+                   END-IF
                END-IF
            END-PERFORM
 
+           *> If no pending requests found, inform user
            IF WS-TMP-COUNT = 0
                MOVE MSG-NO-PENDING-REQUESTS TO WS-MSG
                PERFORM DISPLAY-AND-LOG
            END-IF
 
            MOVE MSG-PENDING-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
+           EXIT.
+
+       GET-FULL-NAME.
+      *> Purpose: Lookup full name for username from profiles table
+      *> Input: WS-TARGET-USERNAME - username to lookup
+      *> Output: WS-DISPLAY-NAME - "First Last" or username if not found
+      *> Side Effects: None (read-only operation)
+           SET PROFILE-NOT-FOUND TO TRUE
+           INITIALIZE WS-DISPLAY-NAME
+           
+           PERFORM VARYING PROF-IDX FROM 1 BY 1 
+                   UNTIL PROF-IDX > WS-PROFILES-COUNT
+               IF WS-PROF-USERNAME(PROF-IDX) = WS-TARGET-USERNAME
+                   SET PROFILE-FOUND TO TRUE
+                   STRING 
+                       FUNCTION TRIM(WS-PROF-FIRST(PROF-IDX))
+                       " "
+                       FUNCTION TRIM(WS-PROF-LAST(PROF-IDX))
+                       INTO WS-DISPLAY-NAME
+                   END-STRING
+                   EXIT PERFORM
+               END-IF
+           END-PERFORM
+           
+           IF PROFILE-NOT-FOUND
+               MOVE WS-TARGET-USERNAME TO WS-DISPLAY-NAME
+           END-IF
+           EXIT.
+
+       ACCEPT-CONNECTION.
+      *> Purpose: Accept a pending connection request
+      *> Inputs:
+      *>   - WS-I: Index of connection in WS-CONNECTIONS-TABLE
+      *>   - WS-CURRENT-USERNAME: Current logged-in user
+      *>   - WS-DISPLAY-NAME: Full name of requester (from GET-FULL-NAME)
+      *> Outputs:
+      *>   - WS-CONN-STATUS(WS-I): Changed from 'P' to 'A'
+      *>   - data/connections.txt: Updated with new status
+      *> Side Effects:
+      *>   - Displays confirmation message
+      *>   - Writes to connections file
+      *> Error Handling:
+      *>   - Validates status is 'P' before accepting
+      *>   - Rolls back if file save fails
+           
+           *> Validate preconditions
+           IF WS-CONN-STATUS(WS-I) NOT = 'P'
+               MOVE "Error: This request has already been processed." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+           
+           IF WS-CONN-RECEIVER(WS-I) NOT = WS-CURRENT-USERNAME
+               MOVE "Error: You cannot accept this request." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+           
+           *> Update status in memory
+           MOVE 'A' TO WS-CONN-STATUS(WS-I)
+           
+           *> Persist to file
+           PERFORM SAVE-CONNECTIONS
+           
+           *> Check for errors and rollback if needed
+           IF WS-CONN-FILE-STATUS NOT = "00"
+               *> Rollback in-memory change
+               MOVE 'P' TO WS-CONN-STATUS(WS-I)
+               MOVE "Error: Could not save connection. Please try again." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+           
+           *> Display confirmation with full name
+           MOVE SPACES TO WS-MSG
+           STRING "Connection accepted with " DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-DISPLAY-NAME) DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
+           EXIT.
+
+       REJECT-CONNECTION.
+      *> Purpose: Reject a pending connection request by removing it
+      *> Inputs:
+      *>   - WS-I: Index of connection to reject in WS-CONNECTIONS-TABLE
+      *>   - WS-CURRENT-USERNAME: Current logged-in user
+      *>   - WS-DISPLAY-NAME: Full name of requester (from GET-FULL-NAME)
+      *> Outputs:
+      *>   - WS-CONNECTIONS-TABLE: Connection removed, remaining shifted down
+      *>   - WS-CONNECTIONS-COUNT: Decremented by 1
+      *>   - data/connections.txt: Updated without rejected connection
+      *> Side Effects:
+      *>   - Displays confirmation message
+      *>   - Modifies connection array structure
+      *>   - Writes to connections file
+      *> Error Handling:
+      *>   - Validates status is 'P' before rejecting
+      *>   - Handles array boundaries carefully
+           
+           *> Validate preconditions
+           IF WS-CONN-STATUS(WS-I) NOT = 'P'
+               MOVE "Error: This request has already been processed." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+           
+           IF WS-CONN-RECEIVER(WS-I) NOT = WS-CURRENT-USERNAME
+               MOVE "Error: You cannot reject this request." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+           
+           *> Shift all subsequent connections down to remove this one
+           *> Note: WS-J is used as loop variable (already exists in working storage)
+           PERFORM VARYING WS-J FROM WS-I BY 1 
+                   UNTIL WS-J >= WS-CONNECTIONS-COUNT
+               MOVE WS-CONN-SENDER(WS-J + 1) TO WS-CONN-SENDER(WS-J)
+               MOVE WS-CONN-RECEIVER(WS-J + 1) TO WS-CONN-RECEIVER(WS-J)
+               MOVE WS-CONN-STATUS(WS-J + 1) TO WS-CONN-STATUS(WS-J)
+           END-PERFORM
+           
+           *> Decrement count (last element now duplicated but won't be written)
+           SUBTRACT 1 FROM WS-CONNECTIONS-COUNT
+           
+           *> Persist to file
+           PERFORM SAVE-CONNECTIONS
+           
+           *> Check for errors (rollback difficult for array removal)
+           IF WS-CONN-FILE-STATUS NOT = "00"
+               MOVE "Error: Could not save changes. Please restart program." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+           
+           *> Display confirmation with full name
+           MOVE SPACES TO WS-MSG
+           STRING "Connection request from " DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-DISPLAY-NAME) DELIMITED BY SIZE
+                  " rejected" DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
            EXIT.
 
        INIT-LOAD-CONNECTIONS.
