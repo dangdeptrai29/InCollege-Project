@@ -1,7 +1,2 @@
-ajohnson|mkim|A
-testuser|mkim|P
-ajohnson|jblake|P
-jlee1|TestUser|P
-astudent|TestUser|A
-ajohnson|TestUser|A
-TestUser|ajohnson|A
+otheruser|testuser|A
+friendb|testuser|A
