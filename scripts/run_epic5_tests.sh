@@ -24,6 +24,7 @@ echo "--------------------------------------------------"
 
 # --- Step 2: Run Tests with Setup Phase ---
 TEST_DIR="tests"
+EXPECTED_DIR="tests/epic5_expected"
 TEMP_DIR="temp"
 DATA_DIR="data"
 BACKUP_DIR="$TEMP_DIR/backup"
@@ -175,7 +176,7 @@ echo -e "${BLUE}Epic 5 tests will use clean/empty database (no existing users)${
 
 # Loop through all test cases in numeric order
 for i in $(seq 1 10); do
-    setup_input="$TEST_DIR/Setup_${i}.txt"
+    setup_input="$TEST_DIR/epic5_setups/Setup_${i}.txt"
     test_input="$TEST_DIR/Input_${i}.txt"
     
     # Skip if test input doesn't exist
@@ -223,7 +224,7 @@ for i in $(seq 1 10); do
     cp "$DATA_DIR/connections.txt" "$TEMP_DIR/connections_after_test_${i}.txt" 2>/dev/null || true
     
     # --- Step 2.5: Compare with Expected Output ---
-    expected_output_file="$TEST_DIR/expected/Output_${i}.txt"
+    expected_output_file="$EXPECTED_DIR/Output_${i}.txt"
     if [ -f "$expected_output_file" ]; then
         echo -e "${YELLOW}  Comparing with expected output...${NC}"
         
@@ -276,7 +277,7 @@ skip_count=0
 
 for i in $(seq 1 10); do
     test_input="$TEST_DIR/Input_${i}.txt"
-    expected_output_file="$TEST_DIR/expected/Output_${i}.txt"
+    expected_output_file="$EXPECTED_DIR/Output_${i}.txt"
     target_output_file="$TEST_DIR/Output_${i}.txt"
     
     if [ ! -f "$test_input" ]; then
