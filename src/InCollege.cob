@@ -1185,24 +1185,20 @@
                        PERFORM VARYING WS-J FROM 1 BY 1 UNTIL WS-J > WS-PROFILES-COUNT
                            IF WS-PROF-USERNAME(WS-J) = WS-TARGET-USERNAME
                                SET PROFILE-FOUND TO TRUE
-                               *> Display Full Name
+                               *> Create the single-line output to match the sample
                                MOVE SPACES TO WS-MSG
-                               STRING FUNCTION TRIM(WS-PROF-FIRST(WS-J)) " "
-                                      FUNCTION TRIM(WS-PROF-LAST(WS-J))
+                               STRING "Connected with: "           DELIMITED BY SIZE
+                                      FUNCTION TRIM(WS-PROF-FIRST(WS-J)) DELIMITED BY SIZE
+                                      " "                          DELIMITED BY SIZE
+                                      FUNCTION TRIM(WS-PROF-LAST(WS-J))  DELIMITED BY SIZE
+                                      " (University: "             DELIMITED BY SIZE
+                                      FUNCTION TRIM(WS-PROF-UNIV(WS-J))  DELIMITED BY SIZE
+                                      ", Major: "                  DELIMITED BY SIZE
+                                      FUNCTION TRIM(WS-PROF-MAJOR(WS-J)) DELIMITED BY SIZE
+                                      ")"                          DELIMITED BY SIZE
                                       INTO WS-MSG
                                END-STRING
                                PERFORM DISPLAY-AND-LOG
-
-                               *> Display University and Major
-                               MOVE SPACES TO WS-MSG
-                               STRING "  University: " FUNCTION TRIM(WS-PROF-UNIV(WS-J))
-                                      ", Major: " FUNCTION TRIM(WS-PROF-MAJOR(WS-J))
-                                      INTO WS-MSG
-                               END-STRING
-                               PERFORM DISPLAY-AND-LOG
-
-                               *> Add a separator for better readability between entries
-                               MOVE MSG-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                                *> Exit inner loop since the profile was found
                                EXIT PERFORM
@@ -1212,10 +1208,10 @@
                        *> Fallback case if a profile is missing for a connected user
                        IF PROFILE-NOT-FOUND
                            MOVE SPACES TO WS-MSG
-                           STRING "Name: " FUNCTION TRIM(WS-TARGET-USERNAME) " (Profile not found)"
+                           STRING "Connected with: " FUNCTION TRIM(WS-TARGET-USERNAME)
+                                  " (Profile not found)"
                                   INTO WS-MSG
                            PERFORM DISPLAY-AND-LOG
-                           MOVE MSG-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
                        END-IF
                    END-IF
                END-IF
@@ -1224,6 +1220,9 @@
            *> If loop completes and no connections were found, display a message
            IF WS-TMP-COUNT = 0
                MOVE MSG-NO-CONNECTIONS TO WS-MSG PERFORM DISPLAY-AND-LOG
+           ELSE
+               *> Otherwise, display a final separator line to match the sample output
+               MOVE MSG-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
            END-IF
            EXIT.
 
@@ -2098,4 +2097,3 @@
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-LINE
            END-READ
            EXIT.
-           

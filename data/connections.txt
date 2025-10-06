@@ -1,6 +1,7 @@
 ajohnson|mkim|A
 testuser|mkim|P
 ajohnson|jblake|P
-ajohnson|jlee1|P
+|jlee1|P
 astudent|TestUser|A
+ajohnson|TestUser|A
 TestUser|ajohnson|A
