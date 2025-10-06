@@ -2,4 +2,5 @@ ajohnson|mkim|A
 testuser|mkim|P
 ajohnson|jblake|P
 ajohnson|jlee1|P
-TestUser|newstudent|P
+astudent|TestUser|A
+TestUser|ajohnson|A
