@@ -5,33 +5,37 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, testuser!
+Welcome, TestUser!
 1. View My Profile
 2. Search for User
 3. Learn a New Skill
 4. View My Pending Connection Requests
-5. View My Network
 Enter your choice:
 --- Pending Connection Requests ---
-Connection request from Other User
-1. Accept
-2. Reject
-Connection accepted with Other User
+You have no pending connection requests at this time.
 -----------------------------------
 1. View My Profile
 2. Search for User
 3. Learn a New Skill
 4. View My Pending Connection Requests
-5. View My Network
 Enter your choice:
---- Your Network ---
-Connected with: Other User (University: Another U, Major: Marketing)
-Connected with: Friend B (University: Big State, Major: Engineering)
---------------------
+Enter the full name of the person you are looking for:
+--- Found User Profile ---
+Name: New Student
+University: West Coast Uni
+Major: Business
+Graduation Year: 2027
+About Me:
+Experience: None
+Education: None
+-------------------------
+1. Send Connection Request
+2. Back to Main Menu
+Enter your choice:
+You have already sent a pending connection request to this user.
 1. View My Profile
 2. Search for User
 3. Learn a New Skill
 4. View My Pending Connection Requests
-5. View My Network
 Enter your choice:
 --- END_OF_PROGRAM_EXECUTION ---

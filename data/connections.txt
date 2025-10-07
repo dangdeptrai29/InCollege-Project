@@ -1,5 +1,2 @@
-ajohnson|mkim|A
-testuser|mkim|P
-ajohnson|jblake|P
-ajohnson|jlee1|P
-TestUser|newstudent|P
+otheruser|testuser|A
+friendb|testuser|A

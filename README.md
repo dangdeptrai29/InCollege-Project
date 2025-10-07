@@ -1,134 +1,231 @@
-# InCollege Project – Week 3 Deliverable
+# InCollege Project – Week 5 Deliverable
 
 ## Description
 
-This repository contains the Week 3 deliverable for the InCollege Project. The objective of this milestone is to implement profile viewing and basic user search functionality in COBOL. This is a critical step towards fostering connections within the InCollege community and enabling users to effectively view their complete profile information.
+This repository contains the **Week 5 deliverable** for the InCollege Project.  
+The objective of this milestone is to complete the connection system by enabling users to **accept or reject pending connection requests** and **view their established network**.  
+All inputs are read from file, all outputs are displayed on screen and duplicated into a file for validation.
 
-### Key Features
+---
 
-The program provides the following functionality:
+## Key Features
 
-- **Enhanced Profile Viewing**: Users can now reliably view their complete profile information including all fields from Week 2 (First Name, Last Name, University/College, Major, Graduation Year, About Me, Experience entries, and Education entries) in a clearly formatted, readable console display.
+### ✅ Manage Pending Connection Requests
+- View all pending connection requests (from Week 4).  
+- Accept or reject each request individually.
+- Accepting a request:
+  - Creates a permanent connection between the two users.
+  - Removes that request from the pending list.
+- Rejecting a request:
+  - Simply removes it from the pending list.
+- The user receives confirmation after each action.
 
-- **Basic User Search**: The "Find someone you know" option is now fully functional, allowing users to search for other registered InCollege users by their exact full name (e.g., "John Doe").
+### ✅ Display Established Network
+- A new menu option `5. View My Network` shows all users currently connected to the logged-in user.
+- Each connection displays at least the connected user's full name and may include their University and Major.
 
-- **Search Results Display**: When a match is found, the system displays the complete profile of the found user. When no match is found, the system informs the user appropriately.
+### ✅ File I/O Requirements
+- **Input**: All inputs are read from `io/InCollege-Input.txt`.
+- **Output**: All screen output is mirrored to `io/InCollege-Output.txt`.
+- This ensures reproducible, automated testing.
 
-- **Data Persistence**: Profile data continues to be stored in `data/profiles.txt` and linked to user accounts in `data/users.txt` from Week 1. Search functionality reads through existing user data efficiently.
+---
 
-- **File I/O Operations**: All user input (menu selections, search queries) is read from `io/InCollege-Input.txt` and all program output is both displayed on screen and written to `io/InCollege-Output.txt` for testing consistency.
+## Tester Responsibilities
 
-### Tester Responsibilities
+Testers are responsible for verifying every new feature end-to-end:
 
-This milestone also includes comprehensive tester responsibilities:
+1. **Develop Test Cases**:
+   - Accept single connection.
+   - Reject single connection.
+   - Mixed accept/reject scenario.
+   - Network display after accepted requests.
+   - Edge cases (no pending requests, multiple requests).
 
-- Development of extensive test input/output files covering positive cases (successful profile viewing, successful user searches), negative cases (searching for non-existent users), and edge cases (users with long names, partial name searches). All test cases are stored in `tests/` directory with pattern `Input_<id>.txt` and `Output_<id>.txt` for cases 10-19.
+2. **Run Automated Tests**:
+   Use the helper script to compile, seed test data, and run each case.
 
-- Verification that console output and output file content match exactly for all profile viewing and search scenarios.
+3. **Verify Outputs**:
+   Compare program console vs. output files — they must be identical.
 
-## Installation
+---
 
-To run COBOL, first install a COBOL compiler. Common choice: GnuCOBOL (open-cobol), available via package managers.
+## Installation & Usage
 
 ### Prerequisites
+Install GnuCOBOL on Linux/macOS/WSL:
+```bash
+sudo apt-get install open-cobol
+# or
+brew install gnu-cobol
+```
 
-- **Linux/macOS**: `brew install gnu-cobol` or `apt-get install open-cobol`
-- **Windows**: GnuCOBOL binaries exist, or run inside WSL
-
-### Verify Installation
-
+Check version:
 ```bash
 cobc -v
 ```
 
-### Compile the Program
+---
 
+### Compile Program
 ```bash
-cobc -x src/InCollege.cob -o incollege
+cobc -x -free -o InCollegeTest src/InCollege.cob
 ```
 
-### Run the Program
+---
 
+### Run Program
 ```bash
-./incollege
+./InCollegeTest
 ```
 
-### Important: Input File Configuration
+---
 
-- **Note**: The program reads ALL input from `io/InCollege-Input.txt`. What you see when running `./incollege` depends entirely on what's in this file.
+## Automated Testing (Recommended)
 
-**For the sample demo flow** (profile viewing + search):
+### Run All Epic 5 Test Cases
+
+To automatically compile, seed data, and run every Epic 5 test case:
+
 ```bash
-# Set up sample input
-echo -e "1\nTestUser\nPassword1!\n2\n4\nAnother Student\n4\nNonExistentUser\n6" > io/InCollege-Input.txt
-./incollege
+scripts/run_epic5_generate_outputs.sh
 ```
 
-**For specific test cases**:
-```bash
-# Run test case 10 (example)
-cp tests/Input_10.txt io/InCollege-Input.txt
-./incollege
+This will:
+- Reset persistent data (`data/users.txt`, `data/requests.txt`, `data/connections.txt`).
+- Automatically execute every file in `tests/epic5_inputs/`.
+- Save corresponding results in `tests/epic5_outputs/`.
 
-# Run test case 12 (example)  
-cp tests/Input_12.txt io/InCollege-Input.txt
-./incollege
+Each run prints confirmation lines like:
+```
+🟩 Generated: tests/epic5_outputs/TC01_accept_single.out.txt
 ```
 
-### Modes of Operation
+---
 
-There are 2 modes of operation:
+### Manual Testing
 
-1. **Interactive**: The program reads directly from keyboard and writes to console.
-2. **File-driven (per spec)**: All input comes from `io/InCollege-Input.txt` and every printed line is mirrored to `io/InCollege-Output.txt`. This mode enables deterministic testing for profile viewing and search functionality.
-
-## New Features in Week 3
-
-### Enhanced Profile Viewing
-
-- Complete profile display including all optional fields (About Me, Experience, Education)
-- Formatted console output for improved readability
-- Reliable retrieval of all profile information stored in Week 2
-
-### Basic User Search Functionality
-
-- Exact name matching search capability
-- Full profile display for found users
-- Appropriate messaging when no user matches the search query
-- Integration with existing menu navigation system
-
-## Sample Usage
-
-After logging in, users will see an updated menu with these options:
-
-1. Create/Edit My Profile
-2. View My Profile (enhanced functionality)
-3. Search for a job
-4. Find someone you know (new functionality)
-5. Learn a New Skill
-
-When selecting "View My Profile", users see a formatted display of their complete profile. When selecting "Find someone you know", users can enter a full name to search for other users in the system.
-
-## Testing
-
-### Epic 3 Test Suite
-The project includes comprehensive test coverage with 10 test cases (10-19):
-
-- **Tests 10-12**: Positive cases (exact matches, profile viewing)
-- **Tests 13-15**: Negative cases (non-existent users, partial names, case sensitivity)  
-- **Tests 16-19**: Edge cases (long names, punctuation, duplicates, blank input)
-
-### Running Tests
+To test individual cases:
 ```bash
-# Compile program
-cobc -x src/InCollege.cob -o incollege
+cp tests/epic5_inputs/TC01_accept_single.txt io/InCollege-Input.txt
+:> io/InCollege-Output.txt
+./InCollegeTest
+diff -u tests/epic5_expected/TC01_accept_single.out.txt io/InCollege-Output.txt
+```
 
-# Run individual test (example: test 10)
-cp tests/Input_10.txt io/InCollege-Input.txt
-./incollege < io/InCollege-Input.txt > io/result.txt 2>&1
-diff tests/Output_10.txt io/result.txt
+If there’s no difference, the test passes silently.
+If there’s a mismatch, `diff` will print the differing lines.
+
+---
+
+## Sample Input/Output
+
+### Sample Input (`InCollege-Input.txt`)
+```
+1
+TestUser
+Password123!
+4
+5
+```
+
+### Sample Output (`InCollege-Output.txt`)
+```
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, TestUser!
+1. View My Profile
+2. Search for User
+3. Learn a New Skill
+4. View My Pending Connection Requests
+5. View My Network
+Enter your choice:
+--- Pending Connection Requests ---
+Request from: OtherUser
+1. Accept
+2. Reject
+Enter your choice for OtherUser:
+Connection request from OtherUser accepted!
+-----------------------------------
+1. View My Profile
+2. Search for User
+3. Learn a New Skill
+4. View My Pending Connection Requests
+5. View My Network
+Enter your choice:
+--- Your Network ---
+Connected with: OtherUser (University: Another U, Major: Marketing)
+Connected with: FriendB (University: Big State, Major: Engineering)
+--------------------
+1. View My Profile
+2. Search for User
+3. Learn a New Skill
+4. View My Pending Connection Requests
+5. View My Network
+Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---
+```
+
+---
+
+## Repository Structure
+
+```
+src/                     → COBOL source files
+data/                    → User, profile, request, connection data
+io/                      → Active input/output files for program runs
+tests/epic5_inputs/      → Input test cases for Week 5
+tests/epic5_outputs/     → Generated outputs
+scripts/                 → Automation scripts (including run_epic5_generate_outputs.sh)
+submission/epic5/        → Zipped deliverables for final submission
+```
+
+---
+
+## Deliverables Summary
+
+| # | Deliverable | Description |
+|---|--------------|-------------|
+| 1 | `Roles.txt` | Roles of all team members |
+| 2 | `InCollege.cob` | Working COBOL source file |
+| 3 | `InCollege-Input.txt` | Sample input |
+| 4 | `InCollege-Output.txt` | Sample output |
+| 5 | `Epic5-Storyx-Test-Input.zip` | Compressed test input set |
+| 6 | `Epic5-Storyx-Test-Output.zip` | Actual generated test outputs |
+| 7 | `Jira.jpg` | Screenshot of updated Jira board |
+| 8 | `GitHub.jpg` | Screenshot of GitHub commit history |
+
+---
+
+## Submission Instructions
+
+1. Ensure all tests pass:
+   ```bash
+   scripts/run_epic5_generate_outputs.sh
+   ```
+2. Zip deliverables:
+   ```bash
+   zip -r submission/epic5/Epic5-Storyx-Test-Input.zip tests/epic5_inputs
+   zip -r submission/epic5/Epic5-Storyx-Test-Output.zip tests/epic5_outputs
+   ```
+3. Commit & push your final work:
+   ```bash
+   git add .
+   git commit -m "Finalize Week 5 deliverable: Connection acceptance/rejection & network display"
+   git push origin epic5/test
+   ```
+4. Upload your zipped files and screenshots to Canvas.
+
+---
 
 ## Documentation
 
-- **Architecture (implementation details)**: `docs/epic3/architecture.md`
-- **Test Cases (comprehensive test suite)**: `docs/epic3/test_cases.md`
+- **Architecture Notes:** `docs/epic5/architecture.md`
+- **Test Cases:** `docs/epic5/test_cases.md`
+- **Automation Script:** `scripts/run_epic5_generate_outputs.sh`
+- **Data Samples:** `data/users.txt`, `data/profiles.txt`, `data/requests.txt`, `data/connections.txt`

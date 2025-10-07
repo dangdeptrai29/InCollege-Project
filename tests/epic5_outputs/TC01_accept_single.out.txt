@@ -26,7 +26,6 @@ Connection accepted with Other User
 Enter your choice:
 --- Your Network ---
 Connected with: Other User (University: Another U, Major: Marketing)
-Connected with: Friend B (University: Big State, Major: Engineering)
 --------------------
 1. View My Profile
 2. Search for User

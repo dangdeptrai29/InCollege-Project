@@ -5,6 +5,19 @@
        *> Epic 1 – Task 1: Notify user on unsuccessful login
        *> Follow PDF requirements: read input from file, display output to
        *> screen and also write identical output to an output file.
+       *>
+       *> Epic 5 – Connection Management & Network Display
+       *> Phase 1 (Developer 1):
+       *>   - Added GET-FULL-NAME helper for profile lookups
+       *>   - Enhanced VIEW-PENDING-REQUESTS with interactive accept/reject
+       *>   - Implemented ACCEPT-CONNECTION with status update and file persistence
+       *>   - Implemented REJECT-CONNECTION with array shifting and file persistence
+       *>   - Added WS-DISPLAY-NAME and WS-TARGET-USERNAME working storage variables
+       *>   - Added message constants for accept/reject options
+       *> Phase 2 (Developer 2):
+       *>   - Added VIEW-MY-NETWORK paragraph to display established connections.
+       *>   - Added "View My Network" option to the post-login menu.
+       *>   - Added message constants for network display.
 
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
@@ -24,12 +37,12 @@
            SELECT PROFILES-FILE ASSIGN TO "data/profiles.txt"
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-PROF-STATUS.
-      *> New file for connections
+       *> New file for connections
            SELECT CONNECTIONS-FILE ASSIGN TO "data/connections.txt"
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-CONN-FILE-STATUS.
 
-            SELECT REQUEST-FILE ASSIGN TO "data/requests.txt"
+           SELECT REQUEST-FILE ASSIGN TO "data/requests.txt"
                 ORGANIZATION IS LINE SEQUENTIAL
                 FILE STATUS IS WS-REQ-STATUS.
 
@@ -52,10 +65,10 @@
 
 
         FD  REQUEST-FILE.
-        01  REQUEST-REC                PIC X(256).
+        01  REQUEST-REC                 PIC X(256).
 
 
-      *> New FD for connections file
+       *> New FD for connections file
         FD  CONNECTIONS-FILE.
         01  CONNECTION-REC                PIC X(258).
 
@@ -122,9 +135,9 @@
                10  WS-TBL-USERNAME       PIC X(128).
                10  WS-TBL-PASSWORD       PIC X(128).
 
-         *> --- existing users table ends here ---
+           *> --- existing users table ends here ---
 
-         *> --- profiles table --
+           *> --- profiles table --
 
        01  WS-PROFILES-MAX               PIC 9(4) VALUE 200.
        01  WS-PROFILES-COUNT             PIC 9(4) VALUE 0.
@@ -144,7 +157,7 @@
                10  WS-PROF-EXPERIENCES   PIC X(512).  *> Serialized string for experiences
                10  WS-PROF-EDUCATIONS    PIC X(512). *> Serialized string for education
 
-      *> --- Connections table ---
+       *> --- Connections table ---
        01  WS-CONNECTIONS-MAX            PIC 9(4) VALUE 500.
        01  WS-CONNECTIONS-COUNT          PIC 9(4) VALUE 0.
        01  WS-CONNECTIONS-TABLE.
@@ -155,17 +168,17 @@
                10  WS-CONN-RECEIVER      PIC X(128).
                10  WS-CONN-STATUS        PIC X. *> 'P'ending, 'A'ccepted
 
-          *> --- Connection requests variables --
-       01  WS-REQ-STATUS              PIC XX VALUE "00".
+           *> --- Connection requests variables --
+       01  WS-REQ-STATUS                 PIC XX VALUE "00".
 
-       01  WS-EOF-REQ                 PIC X  VALUE 'N'.
-           88  EOF-REQ                       VALUE 'Y'.
-           88  NOT-EOF-REQ                   VALUE 'N'.
+       01  WS-EOF-REQ                    PIC X  VALUE 'N'.
+           88  EOF-REQ                           VALUE 'Y'.
+           88  NOT-EOF-REQ                       VALUE 'N'.
 
        *> Simple request variables
-       01  WS-REQ-SENDER              PIC X(128) VALUE SPACES.
-       01  WS-REQ-RECEIVER            PIC X(128) VALUE SPACES.
-       01  WS-REQ-STATUS-VALUE        PIC X(10)  VALUE SPACES.
+       01  WS-REQ-SENDER                 PIC X(128) VALUE SPACES.
+       01  WS-REQ-RECEIVER               PIC X(128) VALUE SPACES.
+       01  WS-REQ-STATUS-VALUE           PIC X(10)  VALUE SPACES.
 
 
        01  WS-I                          PIC 9(4) VALUE 0.
@@ -178,8 +191,8 @@
 
        *> Match flag with condition names
        01  WS-MATCH-FOUND                PIC X VALUE 'N'.
-           88  MATCH-FOUND                     VALUE 'Y'.
-           88  MATCH-NOT-FOUND                 VALUE 'N'.
+           88  MATCH-FOUND                       VALUE 'Y'.
+           88  MATCH-NOT-FOUND                   VALUE 'N'.
 
        *> Variables to hold input while creating new account
        01  WS-NEW-USERNAME               PIC X(128) VALUE SPACES.
@@ -187,8 +200,8 @@
 
        *> Vars for validating password:
        01  WS-PASSWORD-INVALID           PIC X VALUE 'N'.
-           88 PASS-VALID                       VALUE 'N'.
-           88 PASS-INVALID                     VALUE 'Y'.
+           88 PASS-VALID                         VALUE 'N'.
+           88 PASS-INVALID                       VALUE 'Y'.
 
        01  WS-PASSWORD-ERROR             PIC X(128) VALUE SPACES.
        01  WS-PASS-LEN                   PIC 9(4) VALUE 0.
@@ -220,64 +233,69 @@
        01  WS-PROFILE-IDX                PIC 9(4)   VALUE 0.
        01  WS-J                          PIC 9(4)   VALUE 0.
 
+       *> Epic 5: Variables for accept/reject connection functionality
+       01  WS-DISPLAY-NAME               PIC X(256) VALUE SPACES.
+       01  WS-TARGET-USERNAME            PIC X(128) VALUE SPACES.
+
        *> temp holders for (de)serializing lists
 
-       01  WS-EXPS-STR                PIC X(512) VALUE SPACES.
-       01  WS-EDUS-STR                PIC X(512) VALUE SPACES.
-       01  WS-ENTRY                   PIC X(256) VALUE SPACES.
-       01  WS-T1                      PIC X(128) VALUE SPACES.
-       01  WS-T2                      PIC X(128) VALUE SPACES.
-       01  WS-T3                      PIC X(128) VALUE SPACES.
-       01  WS-T4                      PIC X(128) VALUE SPACES.
-       01  WS-REST                    PIC X(1024) VALUE SPACES.
-       01  WS-REST-LEN                PIC 9(4) VALUE 0.
-       01  WS-LAST-PIPE               PIC 9(4) VALUE 0.
+       01  WS-EXPS-STR                   PIC X(512) VALUE SPACES.
+       01  WS-EDUS-STR                   PIC X(512) VALUE SPACES.
+       01  WS-ENTRY                      PIC X(256) VALUE SPACES.
+       01  WS-T1                         PIC X(128) VALUE SPACES.
+       01  WS-T2                         PIC X(128) VALUE SPACES.
+       01  WS-T3                         PIC X(128) VALUE SPACES.
+       01  WS-T4                         PIC X(128) VALUE SPACES.
+       01  WS-REST                       PIC X(1024) VALUE SPACES.
+       01  WS-REST-LEN                   PIC 9(4) VALUE 0.
+       01  WS-LAST-PIPE                  PIC 9(4) VALUE 0.
 
        *> Account creation messages
-       01  MSG-ACCOUNT-LIMIT          PIC X(80) VALUE "All permitted accounts have been created, please come back later.".
-       01  MSG-USERNAME-EXISTS        PIC X(64) VALUE "Username already exists. Please try a different one.".
-       01  MSG-ENTER-NEW-USER         PIC X(64) VALUE "Please enter your username:".
-       01  MSG-ENTER-NEW-PASS         PIC X(64) VALUE "Please enter your password:".
-       01  MSG-ACCOUNT-SUCCESS        PIC X(64) VALUE "Account created successfully.".
+       01  MSG-ACCOUNT-LIMIT             PIC X(80) VALUE "All permitted accounts have been created, please come back later.".
+       01  MSG-USERNAME-EXISTS           PIC X(64) VALUE "Username already exists. Please try a different one.".
+       01  MSG-ENTER-NEW-USER            PIC X(64) VALUE "Please enter your username:".
+       01  MSG-ENTER-NEW-PASS            PIC X(64) VALUE "Please enter your password:".
+       01  MSG-ACCOUNT-SUCCESS           PIC X(64) VALUE "Account created successfully.".
 
        *> Logged-in choices
-       01  WS-LOGGED-CHOICE           PIC X(8) VALUE SPACES.
-       01  WS-SKILL-CHOICE            PIC X(8) VALUE SPACES.
+       01  WS-LOGGED-CHOICE              PIC X(8) VALUE SPACES.
+       01  WS-SKILL-CHOICE               PIC X(8) VALUE SPACES.
 
        *> Main menu messages
-       01  MSG-MENU-VIEW-PROFILE      PIC X(32) VALUE "1. View My Profile".
-       01  MSG-MENU-SEARCH-USER       PIC X(32) VALUE "2. Search for User".
-       01  MSG-MENU-LEARN-SKILL       PIC X(32) VALUE "3. Learn a New Skill".
-       01  MSG-MENU-VIEW-PENDING      PIC X(48) VALUE "4. View My Pending Connection Requests".
-       01  MSG-ENTER-CHOICE2          PIC X(20) VALUE "Enter your choice: ".
+       01  MSG-MENU-VIEW-PROFILE         PIC X(32) VALUE "1. View My Profile".
+       01  MSG-MENU-SEARCH-USER          PIC X(32) VALUE "2. Search for User".
+       01  MSG-MENU-LEARN-SKILL          PIC X(32) VALUE "3. Learn a New Skill".
+       01  MSG-MENU-VIEW-PENDING         PIC X(48) VALUE "4. View My Pending Connection Requests".
+       01  MSG-MENU-VIEW-NETWORK         PIC X(32) VALUE "5. View My Network".
+       01  MSG-ENTER-CHOICE2             PIC X(20) VALUE "Enter your choice: ".
 
        *> Skills
-       01  MSG-SKILL1                 PIC X(32) VALUE "Skill 1".
-       01  MSG-SKILL2                 PIC X(32) VALUE "Skill 2".
-       01  MSG-SKILL3                 PIC X(32) VALUE "Skill 3".
-       01  MSG-SKILL4                 PIC X(32) VALUE "Skill 4".
-       01  MSG-SKILL5                 PIC X(32) VALUE "Skill 5".
-       01  MSG-SKILL6                 PIC X(32) VALUE "Go Back".
-       01  MSG-ENTER-SKILL            PIC X(19) VALUE "Enter your choice: ".
-       01  MSG-SKILL-UNDER            PIC X(64) VALUE "This skill is under construction.".
+       01  MSG-SKILL1                    PIC X(32) VALUE "Skill 1".
+       01  MSG-SKILL2                    PIC X(32) VALUE "Skill 2".
+       01  MSG-SKILL3                    PIC X(32) VALUE "Skill 3".
+       01  MSG-SKILL4                    PIC X(32) VALUE "Skill 4".
+       01  MSG-SKILL5                    PIC X(32) VALUE "Skill 5".
+       01  MSG-SKILL6                    PIC X(32) VALUE "Go Back".
+       01  MSG-ENTER-SKILL               PIC X(19) VALUE "Enter your choice: ".
+       01  MSG-SKILL-UNDER               PIC X(64) VALUE "This skill is under construction.".
 
        *> Profile messages
-       01  MSG-EDIT-HEADER            PIC X(32) VALUE "--- Create/Edit Profile ---".
-       01  MSG-VIEW-HEADER            PIC X(32) VALUE "--- Your Profile ---".
-       01  MSG-LINE                   PIC X(20) VALUE "--------------------".
-       01  MSG-LINE-LONG              PIC X(25) VALUE "-------------------------".
-       01  MSG-END-OF-PROGRAM         PIC X(32) VALUE "--- END_OF_PROGRAM_EXECUTION ---".
+       01  MSG-EDIT-HEADER               PIC X(32) VALUE "--- Create/Edit Profile ---".
+       01  MSG-VIEW-HEADER               PIC X(32) VALUE "--- Your Profile ---".
+       01  MSG-LINE                      PIC X(20) VALUE "--------------------".
+       01  MSG-LINE-LONG                 PIC X(25) VALUE "-------------------------".
+       01  MSG-END-OF-PROGRAM            PIC X(32) VALUE "--- END_OF_PROGRAM_EXECUTION ---".
 
-       01  MSG-ENTER-FIRST            PIC X(32) VALUE "Enter First Name:".
-       01  MSG-ENTER-LAST             PIC X(32) VALUE "Enter Last Name:".
-       01  MSG-ENTER-UNIV             PIC X(48) VALUE "Enter University/College Attended:".
-       01  MSG-ENTER-MAJOR            PIC X(32) VALUE "Enter Major:".
-       01  MSG-ENTER-GYEAR2           PIC X(32) VALUE "Enter Graduation Year (YYYY):".
+       01  MSG-ENTER-FIRST               PIC X(32) VALUE "Enter First Name:".
+       01  MSG-ENTER-LAST                PIC X(32) VALUE "Enter Last Name:".
+       01  MSG-ENTER-UNIV                PIC X(48) VALUE "Enter University/College Attended:".
+       01  MSG-ENTER-MAJOR               PIC X(32) VALUE "Enter Major:".
+       01  MSG-ENTER-GYEAR2              PIC X(32) VALUE "Enter Graduation Year (YYYY):".
 
-       01  MSG-REQUIRED               PIC X(64) VALUE "This field is required. Please try again.".
-       01  MSG-YEAR-INVALID           PIC X(80) VALUE "Graduation year must be 1900-2100 and 4 digits.".
-       01  MSG-PROFILE-SAVED-OK       PIC X(64) VALUE "Profile saved successfully!".
-       01  MSG-PROFILE-NOT-FOUND      PIC X(64) VALUE "No profile found. Please create your profile first.".
+       01  MSG-REQUIRED                  PIC X(64) VALUE "This field is required. Please try again.".
+       01  MSG-YEAR-INVALID              PIC X(80) VALUE "Graduation year must be 1900-2100 and 4 digits.".
+       01  MSG-PROFILE-SAVED-OK          PIC X(64) VALUE "Profile saved successfully!".
+       01  MSG-PROFILE-NOT-FOUND         PIC X(64) VALUE "No profile found. Please create your profile first.".
 
 
        *> Message for ABOUT ME
@@ -289,10 +307,10 @@
        01  WS-EXPERIENCE.
            05 WS-EXP-COUNT               PIC 9.
            05 WS-EXP-ENTRY OCCURS 3 TIMES.
-               10 WS-EXP-TITLE           PIC X(50).
-               10 WS-EXP-COMPANY         PIC X(50).
-               10 WS-EXP-DATES           PIC X(50).
-               10 WS-EXP-DESC            PIC X(100).
+              10 WS-EXP-TITLE            PIC X(50).
+              10 WS-EXP-COMPANY          PIC X(50).
+              10 WS-EXP-DATES            PIC X(50).
+              10 WS-EXP-DESC             PIC X(100).
        01  WS-TITLE-INPUT                PIC X(50).
        01  WS-COMPANY-INPUT              PIC X(50).
        01  WS-DATES-INPUT                PIC X(50).
@@ -304,9 +322,9 @@
        01  WS-EDUCATION.
            05 WS-EDU-COUNT               PIC 9.
            05 WS-EDU-ENTRY OCCURS 3 TIMES.
-               10 WS-EDU-DEGREE          PIC X(50).
-               10 WS-EDU-SCHOOL          PIC X(50).
-               10 WS-EDU-YEARS           PIC X(20).
+              10 WS-EDU-DEGREE           PIC X(50).
+              10 WS-EDU-SCHOOL           PIC X(50).
+              10 WS-EDU-YEARS            PIC X(20).
        01  WS-DEGREE-INPUT               PIC X(50).
        01  WS-SCHOOL-INPUT               PIC X(50).
        01  WS-YEARS-INPUT                PIC X(20).
@@ -335,11 +353,19 @@
        01  MSG-PENDING-REQUEST-EXISTS    PIC X(80)  VALUE "You have already sent a pending connection request to this user.".
        01  MSG-THEY-SENT-REQUEST         PIC X(80)  VALUE "This user has already sent you a connection request.".
 
-      *> New messages for pending requests view
-       01 MSG-PENDING-HEADER            PIC X(64) VALUE "--- Pending Connection Requests ---".
-       01 MSG-NO-PENDING-REQUESTS       PIC X(64) VALUE "You have no pending connection requests at this time.".
-       01 MSG-PENDING-LINE              PIC X(35) VALUE "-----------------------------------".
+       *> New messages for pending requests view
+       01 MSG-PENDING-HEADER           PIC X(64) VALUE "--- Pending Connection Requests ---".
+       01 MSG-NO-PENDING-REQUESTS      PIC X(64) VALUE "You have no pending connection requests at this time.".
+       01 MSG-PENDING-LINE             PIC X(35) VALUE "-----------------------------------".
 
+       *> Epic 5: Accept/Reject messages
+       01 MSG-ACCEPT-OPTION            PIC X(16) VALUE "1. Accept".
+       01 MSG-REJECT-OPTION            PIC X(16) VALUE "2. Reject".
+       01 MSG-INVALID-CHOICE-SKIP      PIC X(48) VALUE "Invalid choice. Skipping request.".
+
+       *> Network View messages
+       01  MSG-NETWORK-HEADER            PIC X(32) VALUE "--- Your Network ---".
+       01  MSG-NO-CONNECTIONS            PIC X(64) VALUE "You have no connections in your network yet.".
 
        *> Connection requests
        01  MSG-REQUEST-MENU-1            PIC X(32) VALUE "1. Send Connection Request".
@@ -366,7 +392,7 @@
            *> Load users from file into memory (optional if file missing)
            PERFORM INIT-LOAD-ACCOUNTS
            PERFORM INIT-LOAD-PROFILES
-      *> New: Load connections
+       *> New: Load connections
            PERFORM INIT-LOAD-CONNECTIONS
 
            EXIT.
@@ -378,9 +404,9 @@
        MENU-SECTION.
        RUN-APP.
            *> Show main menu and route based on choice
-           MOVE MSG-WELCOME      TO WS-MSG PERFORM DISPLAY-AND-LOG
-           MOVE MSG-LOGIN        TO WS-MSG PERFORM DISPLAY-AND-LOG
-           MOVE MSG-CREATE       TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-WELCOME       TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-LOGIN         TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-CREATE        TO WS-MSG PERFORM DISPLAY-AND-LOG
            *> Always show the prompt before reading (file-driven simulation)
            MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
 
@@ -575,6 +601,7 @@
            MOVE MSG-MENU-SEARCH-USER   TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-MENU-LEARN-SKILL   TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-MENU-VIEW-PENDING  TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-MENU-VIEW-NETWORK  TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-ENTER-CHOICE2      TO WS-MSG PERFORM DISPLAY-AND-LOG
 
 
@@ -586,26 +613,26 @@
                    EXIT PERFORM
                END-IF
 
-      
-      *>         EVALUATE WS-LOGGED-CHOICE
-      *>             WHEN '1'
-      *>                 reset scratch
-      *>                 MOVE SPACES TO WS-PROF-FIRST-IN WS-PROF-LAST-IN WS-PROF-UNIV-IN
-      *>                                 WS-PROF-MAJOR-IN WS-PROF-GYEAR-IN WS-PROF-ABOUT-IN
-      *>                 SET YEAR-VALID TO TRUE
-      *>                 PERFORM CREATE-OR-EDIT-PROFILE
-      *>             WHEN '2'
-      *>                 PERFORM VIEW-MY-PROFILE
-      *>             WHEN '3'
-      *>                 MOVE "Job search is under construction." TO WS-MSG
-      *>                 PERFORM DISPLAY-AND-LOG
-      *>             WHEN '4'
-      *>                 PERFORM USER-SEARCH-MENU
-      *>             WHEN '5'
-      *>                 PERFORM SKILL-MENU
-      *>             WHEN OTHER
-      *>                 MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
-      *>         END-EVALUATE
+
+       *>         EVALUATE WS-LOGGED-CHOICE
+       *>           WHEN '1'
+       *>               reset scratch
+       *>               MOVE SPACES TO WS-PROF-FIRST-IN WS-PROF-LAST-IN WS-PROF-UNIV-IN
+       *>                                WS-PROF-MAJOR-IN WS-PROF-GYEAR-IN WS-PROF-ABOUT-IN
+       *>               SET YEAR-VALID TO TRUE
+       *>               PERFORM CREATE-OR-EDIT-PROFILE
+       *>           WHEN '2'
+       *>               PERFORM VIEW-MY-PROFILE
+       *>           WHEN '3'
+       *>               MOVE "Job search is under construction." TO WS-MSG
+       *>               PERFORM DISPLAY-AND-LOG
+       *>           WHEN '4'
+       *>               PERFORM USER-SEARCH-MENU
+       *>           WHEN '5'
+       *>               PERFORM SKILL-MENU
+       *>           WHEN OTHER
+       *>               MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+       *>       END-EVALUATE
 
                EVALUATE WS-LOGGED-CHOICE
                    WHEN '1'
@@ -616,6 +643,8 @@
                        PERFORM SKILL-MENU
                    WHEN '4'
                        PERFORM VIEW-PENDING-REQUESTS
+                   WHEN '5'
+                       PERFORM VIEW-MY-NETWORK
                    WHEN OTHER
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
@@ -693,7 +722,7 @@
            MOVE WS-SEARCH-RESULT-IDX TO WS-I
            PERFORM DISPLAY-PROFILE-BY-ID
 
-      *> After displaying profile, ask to connect if not self.
+       *> After displaying profile, ask to connect if not self.
            MOVE WS-PROF-USERNAME(WS-SEARCH-RESULT-IDX) TO WS-FOUND-USER-USERNAME
            IF WS-FOUND-USER-USERNAME NOT = WS-CURRENT-USERNAME AND NOT EOF-IN
                PERFORM PROMPT-FOR-CONNECTION
@@ -789,16 +818,16 @@
            *> Prefer real users.txt; if missing OR empty, fall back to users.examples.txt
            OPEN INPUT USERS-FILE
            IF WS-USR-STATUS = "00"
-              PERFORM LOAD-ACCOUNTS-FROM-USERS
-              CLOSE USERS-FILE
+             PERFORM LOAD-ACCOUNTS-FROM-USERS
+             CLOSE USERS-FILE
            END-IF
 
            *> If nothing loaded, try examples
            IF WS-USERS-COUNT = 0
              OPEN INPUT USERS-EXAMPLE-FILE
              IF WS-UEX-STATUS = "00"
-                PERFORM LOAD-ACCOUNTS-FROM-EXAMPLE
-                CLOSE USERS-EXAMPLE-FILE
+               PERFORM LOAD-ACCOUNTS-FROM-EXAMPLE
+               CLOSE USERS-EXAMPLE-FILE
              END-IF
            END-IF
            EXIT.
@@ -878,7 +907,7 @@
              MOVE 0 TO WS-LAST-PIPE
              PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-REST-LEN
                  IF WS-REST(WS-I:1) = "|"
-                    MOVE WS-I TO WS-LAST-PIPE
+                   MOVE WS-I TO WS-LAST-PIPE
                  END-IF
              END-PERFORM
              IF WS-LAST-PIPE = 0
@@ -896,48 +925,48 @@
            END-IF
 
            IF WS-PROFILES-COUNT < WS-PROFILES-MAX
-             ADD 1 TO WS-PROFILES-COUNT
-             MOVE FUNCTION TRIM(WS-PROF-USER)       TO WS-PROF-USERNAME(WS-PROFILES-COUNT)
-             MOVE FUNCTION TRIM(WS-PROF-FIRST-IN)   TO WS-PROF-FIRST(WS-PROFILES-COUNT)
-             MOVE FUNCTION TRIM(WS-PROF-LAST-IN)    TO WS-PROF-LAST(WS-PROFILES-COUNT)
-             MOVE FUNCTION TRIM(WS-PROF-UNIV-IN)    TO WS-PROF-UNIV(WS-PROFILES-COUNT)
-             MOVE FUNCTION TRIM(WS-PROF-MAJOR-IN)   TO WS-PROF-MAJOR(WS-PROFILES-COUNT)
-             MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN)   TO WS-PROF-GYEAR(WS-PROFILES-COUNT)
-             MOVE FUNCTION TRIM(WS-PROF-ABOUT-IN)   TO WS-PROF-ABOUT(WS-PROFILES-COUNT)
-             MOVE FUNCTION TRIM(WS-EXPS-STR)        TO WS-PROF-EXPERIENCES(WS-PROFILES-COUNT)
-             MOVE FUNCTION TRIM(WS-EDUS-STR)        TO WS-PROF-EDUCATIONS(WS-PROFILES-COUNT)
+              ADD 1 TO WS-PROFILES-COUNT
+              MOVE FUNCTION TRIM(WS-PROF-USER)       TO WS-PROF-USERNAME(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-PROF-FIRST-IN)   TO WS-PROF-FIRST(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-PROF-LAST-IN)    TO WS-PROF-LAST(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-PROF-UNIV-IN)    TO WS-PROF-UNIV(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-PROF-MAJOR-IN)   TO WS-PROF-MAJOR(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN)   TO WS-PROF-GYEAR(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-PROF-ABOUT-IN)   TO WS-PROF-ABOUT(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-EXPS-STR)        TO WS-PROF-EXPERIENCES(WS-PROFILES-COUNT)
+              MOVE FUNCTION TRIM(WS-EDUS-STR)        TO WS-PROF-EDUCATIONS(WS-PROFILES-COUNT)
            END-IF
            EXIT.
 
 
-                 SAVE-PROFILES.
-                     OPEN OUTPUT PROFILES-FILE
-                     PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-PROFILES-COUNT
-                         MOVE SPACES TO PROFILE-REC
-                         STRING FUNCTION TRIM(WS-PROF-USERNAME(WS-I)) DELIMITED BY SIZE
-        "|" DELIMITED BY SIZE
-        FUNCTION TRIM(WS-PROF-FIRST(WS-I))     DELIMITED BY SIZE
-        "|" DELIMITED BY SIZE
-        FUNCTION TRIM(WS-PROF-LAST(WS-I))      DELIMITED BY SIZE
-        "|" DELIMITED BY SIZE
-        FUNCTION TRIM(WS-PROF-UNIV(WS-I))      DELIMITED BY SIZE
-        "|" DELIMITED BY SIZE
-        FUNCTION TRIM(WS-PROF-MAJOR(WS-I))     DELIMITED BY SIZE
-        "|" DELIMITED BY SIZE
-        FUNCTION TRIM(WS-PROF-GYEAR(WS-I))     DELIMITED BY SIZE
-        "|" DELIMITED BY SIZE
-        FUNCTION TRIM(WS-PROF-ABOUT(WS-I))     DELIMITED BY SIZE
-        "|" DELIMITED BY SIZE
-        FUNCTION TRIM(WS-PROF-EXPERIENCES(WS-I))     DELIMITED BY SIZE
-        "|" DELIMITED BY SIZE
-        FUNCTION TRIM(WS-PROF-EDUCATIONS(WS-I))      DELIMITED BY SIZE
-        INTO PROFILE-REC
-            END-STRING
+                     SAVE-PROFILES.
+                           OPEN OUTPUT PROFILES-FILE
+                           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-PROFILES-COUNT
+                                 MOVE SPACES TO PROFILE-REC
+                                 STRING FUNCTION TRIM(WS-PROF-USERNAME(WS-I)) DELIMITED BY SIZE
+       "|" DELIMITED BY SIZE
+       FUNCTION TRIM(WS-PROF-FIRST(WS-I))     DELIMITED BY SIZE
+       "|" DELIMITED BY SIZE
+       FUNCTION TRIM(WS-PROF-LAST(WS-I))      DELIMITED BY SIZE
+       "|" DELIMITED BY SIZE
+       FUNCTION TRIM(WS-PROF-UNIV(WS-I))      DELIMITED BY SIZE
+       "|" DELIMITED BY SIZE
+       FUNCTION TRIM(WS-PROF-MAJOR(WS-I))     DELIMITED BY SIZE
+       "|" DELIMITED BY SIZE
+       FUNCTION TRIM(WS-PROF-GYEAR(WS-I))     DELIMITED BY SIZE
+       "|" DELIMITED BY SIZE
+       FUNCTION TRIM(WS-PROF-ABOUT(WS-I))     DELIMITED BY SIZE
+       "|" DELIMITED BY SIZE
+       FUNCTION TRIM(WS-PROF-EXPERIENCES(WS-I))     DELIMITED BY SIZE
+       "|" DELIMITED BY SIZE
+       FUNCTION TRIM(WS-PROF-EDUCATIONS(WS-I))      DELIMITED BY SIZE
+       INTO PROFILE-REC
+           END-STRING
 
-                      WRITE PROFILE-REC
-            END-PERFORM
-            CLOSE PROFILES-FILE
-            EXIT.
+                               WRITE PROFILE-REC
+                           END-PERFORM
+                           CLOSE PROFILES-FILE
+                           EXIT.
 
 
         FIND-PROFILE-BY-USERNAME.
@@ -977,13 +1006,13 @@
            END-IF
            EXIT.
 
-      *> ===============================================================
-      *> CONNECTION HANDLING SECTION
-      *> ===============================================================
+       *> ===============================================================
+       *> CONNECTION HANDLING SECTION
+       *> ===============================================================
        CONNECTION-HANDLING-SECTION.
        PROMPT-FOR-CONNECTION.
            MOVE MSG-SEND-REQUEST TO WS-MSG PERFORM DISPLAY-AND-LOG
-      *> MODIFIED: Use new message for clarity
+       *> MODIFIED: Use new message for clarity
            MOVE MSG-BACK-TO-MENU TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
 
@@ -1017,7 +1046,7 @@
                WHEN CONN-OK
                    PERFORM ADD-NEW-CONNECTION
                    PERFORM SAVE-CONNECTIONS
-      *> MODIFIED: Create personalized confirmation message
+       *> MODIFIED: Create personalized confirmation message
                    MOVE WS-SEARCH-RESULT-IDX to WS-I
                    STRING "Connection request sent to " DELIMITED BY SIZE
                           FUNCTION TRIM(WS-PROF-FIRST(WS-I)) DELIMITED BY SIZE
@@ -1031,7 +1060,7 @@
            EXIT.
 
        CHECK-CONNECTION-STATUS.
-      *> Checks relationship between WS-CURRENT-USERNAME and WS-FOUND-USER-USERNAME
+       *> Checks relationship between WS-CURRENT-USERNAME and WS-FOUND-USER-USERNAME
            SET CONN-OK TO TRUE
            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-CONNECTIONS-COUNT
                *> Check for ME -> THEM
@@ -1059,31 +1088,285 @@
 
        ADD-NEW-CONNECTION.
            ADD 1 TO WS-CONNECTIONS-COUNT
-           MOVE WS-CURRENT-USERNAME   TO WS-CONN-SENDER(WS-CONNECTIONS-COUNT)
+           MOVE WS-CURRENT-USERNAME    TO WS-CONN-SENDER(WS-CONNECTIONS-COUNT)
            MOVE WS-FOUND-USER-USERNAME TO WS-CONN-RECEIVER(WS-CONNECTIONS-COUNT)
-           MOVE 'P'                   TO WS-CONN-STATUS(WS-CONNECTIONS-COUNT)
+           MOVE 'P'                    TO WS-CONN-STATUS(WS-CONNECTIONS-COUNT)
            EXIT.
 
-      *> NEW PARAGRAPH: To handle menu option 4
+       *> NEW PARAGRAPH: To handle menu option 4
+       *> Epic 5: Enhanced to support interactive accept/reject with full names
        VIEW-PENDING-REQUESTS.
+       *> Purpose: Display all pending connection requests and allow accept/reject
+       *> Inputs:
+       *>   - WS-CURRENT-USERNAME: User viewing their pending requests
+       *>   - WS-CONNECTIONS-TABLE: All connections in memory
+       *>   - WS-PROFILES-TABLE: For full name lookup
+       *> Outputs:
+       *>   - Interactive display with accept/reject options
+       *>   - Calls ACCEPT-CONNECTION or REJECT-CONNECTION based on user choice
+       *> Side Effects:
+       *>   - Displays messages to console and log file
+       *>   - Reads user input for each pending request
+       *>   - Modifies connections via called paragraphs
            MOVE MSG-PENDING-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE 0 TO WS-TMP-COUNT
 
+           *> Loop through all connections looking for pending requests to current user
            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-CONNECTIONS-COUNT
+               *> Check if this is a pending request for the current user
                IF WS-CONN-RECEIVER(WS-I) = WS-CURRENT-USERNAME AND
                   WS-CONN-STATUS(WS-I) = 'P'
-                   MOVE WS-CONN-SENDER(WS-I) TO WS-MSG
-                   PERFORM DISPLAY-AND-LOG
                    ADD 1 TO WS-TMP-COUNT
+
+                   *> Get full name for display (sender's name)
+                   MOVE WS-CONN-SENDER(WS-I) TO WS-TARGET-USERNAME
+                   PERFORM GET-FULL-NAME
+
+                   *> Display request with full name instead of username
+                   MOVE SPACES TO WS-MSG
+                   STRING "Connection request from " DELIMITED BY SIZE
+                          FUNCTION TRIM(WS-DISPLAY-NAME) DELIMITED BY SIZE
+                          INTO WS-MSG
+                   END-STRING
+                   PERFORM DISPLAY-AND-LOG
+
+                   *> Show accept/reject options to user
+                   MOVE MSG-ACCEPT-OPTION TO WS-MSG PERFORM DISPLAY-AND-LOG
+                   MOVE MSG-REJECT-OPTION TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+                   *> Read user's choice (expects "1" or "2")
+                   PERFORM READ-NEXT-LINE
+
+                   *> Process choice: accept, reject, or skip invalid
+                   IF WS-LINE = "1"
+                       *> User chose to accept - WS-I still points to this connection
+                       PERFORM ACCEPT-CONNECTION
+                   ELSE IF WS-LINE = "2"
+                       *> User chose to reject - WS-I still points to this connection
+                       PERFORM REJECT-CONNECTION
+                   ELSE
+                       *> Invalid input - skip this request and continue
+                       MOVE MSG-INVALID-CHOICE-SKIP TO WS-MSG
+                       PERFORM DISPLAY-AND-LOG
+                   END-IF
                END-IF
            END-PERFORM
 
+           *> If no pending requests found, inform user
            IF WS-TMP-COUNT = 0
                MOVE MSG-NO-PENDING-REQUESTS TO WS-MSG
                PERFORM DISPLAY-AND-LOG
            END-IF
 
            MOVE MSG-PENDING-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
+           EXIT.
+
+       VIEW-MY-NETWORK.
+           MOVE MSG-NETWORK-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE 0 TO WS-TMP-COUNT
+
+           *> Loop through connections to find accepted ones involving the current user
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-CONNECTIONS-COUNT
+               IF WS-CONN-STATUS(WS-I) = 'A'
+                   *> Determine who the "other" user is in the connection
+                   INITIALIZE WS-TARGET-USERNAME
+                   IF WS-CONN-SENDER(WS-I) = WS-CURRENT-USERNAME
+                       MOVE WS-CONN-RECEIVER(WS-I) TO WS-TARGET-USERNAME
+                   ELSE IF WS-CONN-RECEIVER(WS-I) = WS-CURRENT-USERNAME
+                       MOVE WS-CONN-SENDER(WS-I) TO WS-TARGET-USERNAME
+                   END-IF
+
+                   *> If a connection was found, lookup and display the other user's profile
+                   IF WS-TARGET-USERNAME NOT = SPACES
+                       ADD 1 TO WS-TMP-COUNT
+                       SET PROFILE-NOT-FOUND TO TRUE
+
+                       *> Find the profile for the target username
+                       PERFORM VARYING WS-J FROM 1 BY 1 UNTIL WS-J > WS-PROFILES-COUNT
+                           IF WS-PROF-USERNAME(WS-J) = WS-TARGET-USERNAME
+                               SET PROFILE-FOUND TO TRUE
+                               *> Create the single-line output to match the sample
+                               MOVE SPACES TO WS-MSG
+                               STRING "Connected with: "           DELIMITED BY SIZE
+                                      FUNCTION TRIM(WS-PROF-FIRST(WS-J)) DELIMITED BY SIZE
+                                      " "                          DELIMITED BY SIZE
+                                      FUNCTION TRIM(WS-PROF-LAST(WS-J))  DELIMITED BY SIZE
+                                      " (University: "             DELIMITED BY SIZE
+                                      FUNCTION TRIM(WS-PROF-UNIV(WS-J))  DELIMITED BY SIZE
+                                      ", Major: "                  DELIMITED BY SIZE
+                                      FUNCTION TRIM(WS-PROF-MAJOR(WS-J)) DELIMITED BY SIZE
+                                      ")"                          DELIMITED BY SIZE
+                                      INTO WS-MSG
+                               END-STRING
+                               PERFORM DISPLAY-AND-LOG
+
+                               *> Exit inner loop since the profile was found
+                               EXIT PERFORM
+                           END-IF
+                       END-PERFORM
+
+                       *> Fallback case if a profile is missing for a connected user
+                       IF PROFILE-NOT-FOUND
+                           MOVE SPACES TO WS-MSG
+                           STRING "Connected with: " FUNCTION TRIM(WS-TARGET-USERNAME)
+                                  " (Profile not found)"
+                                  INTO WS-MSG
+                           PERFORM DISPLAY-AND-LOG
+                       END-IF
+                   END-IF
+               END-IF
+           END-PERFORM
+
+           *> If loop completes and no connections were found, display a message
+           IF WS-TMP-COUNT = 0
+               MOVE MSG-NO-CONNECTIONS TO WS-MSG PERFORM DISPLAY-AND-LOG
+           ELSE
+               *> Otherwise, display a final separator line to match the sample output
+               MOVE MSG-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
+           END-IF
+           EXIT.
+
+       GET-FULL-NAME.
+       *> Purpose: Lookup full name for username from profiles table
+       *> Input: WS-TARGET-USERNAME - username to lookup
+       *> Output: WS-DISPLAY-NAME - "First Last" or username if not found
+       *> Side Effects: None (read-only operation)
+           SET PROFILE-NOT-FOUND TO TRUE
+           INITIALIZE WS-DISPLAY-NAME
+
+           PERFORM VARYING PROF-IDX FROM 1 BY 1
+                   UNTIL PROF-IDX > WS-PROFILES-COUNT
+               IF WS-PROF-USERNAME(PROF-IDX) = WS-TARGET-USERNAME
+                   SET PROFILE-FOUND TO TRUE
+                   STRING
+                       FUNCTION TRIM(WS-PROF-FIRST(PROF-IDX))
+                       " "
+                       FUNCTION TRIM(WS-PROF-LAST(PROF-IDX))
+                       INTO WS-DISPLAY-NAME
+                   END-STRING
+                   EXIT PERFORM
+               END-IF
+           END-PERFORM
+
+           IF PROFILE-NOT-FOUND
+               MOVE WS-TARGET-USERNAME TO WS-DISPLAY-NAME
+           END-IF
+           EXIT.
+
+       ACCEPT-CONNECTION.
+       *> Purpose: Accept a pending connection request
+       *> Inputs:
+       *>   - WS-I: Index of connection in WS-CONNECTIONS-TABLE
+       *>   - WS-CURRENT-USERNAME: Current logged-in user
+       *>   - WS-DISPLAY-NAME: Full name of requester (from GET-FULL-NAME)
+       *> Outputs:
+       *>   - WS-CONN-STATUS(WS-I): Changed from 'P' to 'A'
+       *>   - data/connections.txt: Updated with new status
+       *> Side Effects:
+       *>   - Displays confirmation message
+       *>   - Writes to connections file
+       *> Error Handling:
+       *>   - Validates status is 'P' before accepting
+       *>   - Rolls back if file save fails
+
+           *> Validate preconditions
+           IF WS-CONN-STATUS(WS-I) NOT = 'P'
+               MOVE "Error: This request has already been processed." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           IF WS-CONN-RECEIVER(WS-I) NOT = WS-CURRENT-USERNAME
+               MOVE "Error: You cannot accept this request." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Update status in memory
+           MOVE 'A' TO WS-CONN-STATUS(WS-I)
+
+           *> Persist to file
+           PERFORM SAVE-CONNECTIONS
+
+           *> Check for errors and rollback if needed
+           IF WS-CONN-FILE-STATUS NOT = "00"
+               *> Rollback in-memory change
+               MOVE 'P' TO WS-CONN-STATUS(WS-I)
+               MOVE "Error: Could not save connection. Please try again." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Display confirmation with full name
+           MOVE SPACES TO WS-MSG
+           STRING "Connection accepted with " DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-DISPLAY-NAME) DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
+           EXIT.
+
+       REJECT-CONNECTION.
+       *> Purpose: Reject a pending connection request by removing it
+       *> Inputs:
+       *>   - WS-I: Index of connection to reject in WS-CONNECTIONS-TABLE
+       *>   - WS-CURRENT-USERNAME: Current logged-in user
+       *>   - WS-DISPLAY-NAME: Full name of requester (from GET-FULL-NAME)
+       *> Outputs:
+       *>   - WS-CONNECTIONS-TABLE: Connection removed, remaining shifted down
+       *>   - WS-CONNECTIONS-COUNT: Decremented by 1
+       *>   - data/connections.txt: Updated without rejected connection
+       *> Side Effects:
+       *>   - Displays confirmation message
+       *>   - Modifies connection array structure
+       *>   - Writes to connections file
+       *> Error Handling:
+       *>   - Validates status is 'P' before rejecting
+       *>   - Handles array boundaries carefully
+
+           *> Validate preconditions
+           IF WS-CONN-STATUS(WS-I) NOT = 'P'
+               MOVE "Error: This request has already been processed." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           IF WS-CONN-RECEIVER(WS-I) NOT = WS-CURRENT-USERNAME
+               MOVE "Error: You cannot reject this request." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Shift all subsequent connections down to remove this one
+           *> Note: WS-J is used as loop variable (already exists in working storage)
+           PERFORM VARYING WS-J FROM WS-I BY 1
+                   UNTIL WS-J >= WS-CONNECTIONS-COUNT
+               MOVE WS-CONN-SENDER(WS-J + 1) TO WS-CONN-SENDER(WS-J)
+               MOVE WS-CONN-RECEIVER(WS-J + 1) TO WS-CONN-RECEIVER(WS-J)
+               MOVE WS-CONN-STATUS(WS-J + 1) TO WS-CONN-STATUS(WS-J)
+           END-PERFORM
+
+           *> Decrement count (last element now duplicated but won't be written)
+           SUBTRACT 1 FROM WS-CONNECTIONS-COUNT
+
+           *> Persist to file
+           PERFORM SAVE-CONNECTIONS
+
+           *> Check for errors (rollback difficult for array removal)
+           IF WS-CONN-FILE-STATUS NOT = "00"
+               MOVE "Error: Could not save changes. Please restart program." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Display confirmation with full name
+           MOVE SPACES TO WS-MSG
+           STRING "Connection request from " DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-DISPLAY-NAME) DELIMITED BY SIZE
+                  " rejected" DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
            EXIT.
 
        INIT-LOAD-CONNECTIONS.
@@ -1154,7 +1437,7 @@
                       FUNCTION TRIM(WS-EXP-DESC(WS-I)) DELIMITED BY SIZE
                       INTO WS-EXPS-STR
                       WITH POINTER WS-J
-                END-STRING
+               END-STRING
            END-PERFORM
            EXIT.
 
@@ -1209,19 +1492,19 @@
                END-UNSTRING
 
                MOVE SPACES TO WS-MSG
-               STRING "    Title: " FUNCTION TRIM(WS-T1) INTO WS-MSG
+               STRING "   Title: " FUNCTION TRIM(WS-T1) INTO WS-MSG
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "    Company: " FUNCTION TRIM(WS-T2) INTO WS-MSG
+               STRING "   Company: " FUNCTION TRIM(WS-T2) INTO WS-MSG
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "    Dates: " FUNCTION TRIM(WS-T3) INTO WS-MSG
+               STRING "   Dates: " FUNCTION TRIM(WS-T3) INTO WS-MSG
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "    Description: " FUNCTION TRIM(WS-T4) INTO WS-MSG
+               STRING "   Description: " FUNCTION TRIM(WS-T4) INTO WS-MSG
                PERFORM DISPLAY-AND-LOG
            END-PERFORM.
            EXIT.
@@ -1254,15 +1537,15 @@
                END-UNSTRING
 
                MOVE SPACES TO WS-MSG
-               STRING "    Degree: " FUNCTION TRIM(WS-T1) INTO WS-MSG
+               STRING "   Degree: " FUNCTION TRIM(WS-T1) INTO WS-MSG
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "    University: " FUNCTION TRIM(WS-T2) INTO WS-MSG
+               STRING "   University: " FUNCTION TRIM(WS-T2) INTO WS-MSG
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "    Years: " FUNCTION TRIM(WS-T3) INTO WS-MSG
+               STRING "   Years: " FUNCTION TRIM(WS-T3) INTO WS-MSG
                PERFORM DISPLAY-AND-LOG
            END-PERFORM.
            EXIT.
@@ -1663,11 +1946,11 @@
            MOVE MSG-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
 
-    
+
        REQUESTS-SECTION.
        VIEW-PENDING-REQUESTS-FILE.
            MOVE MSG-PENDING-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
-           
+
            *> Read through requests file and show pending requests for current user
            OPEN INPUT REQUEST-FILE
            IF WS-REQ-STATUS = "00"
@@ -1680,17 +1963,17 @@
                  END-READ
               END-PERFORM
               CLOSE REQUEST-FILE
-              
+
               IF WS-I = 0
                  MOVE MSG-NO-PENDING-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG
               END-IF
            ELSE
               MOVE MSG-NO-PENDING-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG
            END-IF
-           
+
            MOVE "-----------------------------------" TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
-           
+
        CHECK-PENDING-REQUEST.
            *> Parse request record: sender|receiver|status
            MOVE SPACES TO WS-REQ-SENDER WS-REQ-RECEIVER WS-REQ-STATUS-VALUE
@@ -1699,22 +1982,22 @@
                     WS-REQ-RECEIVER
                     WS-REQ-STATUS-VALUE
            END-UNSTRING
-           
+
            *> Check if this is a pending request TO the current user
            IF FUNCTION TRIM(WS-REQ-RECEIVER) = FUNCTION TRIM(WS-CURRENT-USERNAME) AND FUNCTION TRIM(WS-REQ-STATUS-VALUE) = "PENDING"
-               ADD 1 TO WS-I
+              ADD 1 TO WS-I
               *> Find sender's profile to get their real name
-               PERFORM FIND-SENDER-NAME
-               MOVE SPACES TO WS-MSG
-               STRING "Connection request from " DELIMITED BY SIZE
-                      FUNCTION TRIM(WS-T1) DELIMITED BY SIZE
-                      "." DELIMITED BY SIZE
-                      INTO WS-MSG
-               END-STRING         
-               PERFORM DISPLAY-AND-LOG
+              PERFORM FIND-SENDER-NAME
+              MOVE SPACES TO WS-MSG
+              STRING "Connection request from " DELIMITED BY SIZE
+                     FUNCTION TRIM(WS-T1) DELIMITED BY SIZE
+                     "." DELIMITED BY SIZE
+                     INTO WS-MSG
+              END-STRING
+              PERFORM DISPLAY-AND-LOG
            END-IF
            EXIT.
-       
+
        FIND-SENDER-NAME.
            *> Look up sender's profile to get their first and last name
            MOVE SPACES TO WS-T1
@@ -1728,7 +2011,7 @@
                    EXIT PERFORM
                END-IF
            END-PERFORM
-           
+
            *> If no profile found, fall back to username
            IF WS-T1 = SPACES
                MOVE FUNCTION TRIM(WS-REQ-SENDER) TO WS-T1
@@ -1739,19 +2022,19 @@
            MOVE MSG-REQUEST-MENU-1 TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-REQUEST-MENU-2 TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
-           
+
            PERFORM READ-NEXT-LINE
            MOVE WS-LINE TO WS-REQUEST-CHOICE
-           
+
            IF EOF-IN
                EXIT PARAGRAPH
            END-IF
-           
+
            EVALUATE WS-REQUEST-CHOICE
                WHEN '1'
                *> TODO: Implement SEND-REQUEST logic
-      *>             PERFORM SEND-REQUEST
-                     EXIT PARAGRAPH
+       *>            PERFORM SEND-REQUEST
+                    EXIT PARAGRAPH
                WHEN '2'
                    EXIT PARAGRAPH  *> Back to main menu
                WHEN OTHER
@@ -1763,12 +2046,12 @@
            *> Save a connection request to requests.txt file
            *> Format: sender|receiver|status
            *> TODO: Call this from SEND-REQUEST after validation
-       
-           *> Get the target user's username from the found profile  
+
+           *> Get the target user's username from the found profile
            MOVE WS-PROF-USERNAME(WS-SEARCH-RESULT-IDX) TO WS-REQ-RECEIVER
-           MOVE WS-CURRENT-USERNAME TO WS-REQ-SENDER  
+           MOVE WS-CURRENT-USERNAME TO WS-REQ-SENDER
            MOVE "PENDING" TO WS-REQ-STATUS-VALUE
-           
+
            *> Open file in append mode to add new request
            OPEN EXTEND REQUEST-FILE
            IF WS-REQ-STATUS = "00"
@@ -1777,11 +2060,11 @@
                STRING FUNCTION TRIM(WS-REQ-SENDER) DELIMITED BY SIZE
                       "|" DELIMITED BY SIZE
                       FUNCTION TRIM(WS-REQ-RECEIVER) DELIMITED BY SIZE
-                      "|" DELIMITED BY SIZE  
+                      "|" DELIMITED BY SIZE
                       FUNCTION TRIM(WS-REQ-STATUS-VALUE) DELIMITED BY SIZE
                       INTO REQUEST-REC
                END-STRING
-               
+
                *> Write the record to file
                WRITE REQUEST-REC
                CLOSE REQUEST-FILE
@@ -1790,11 +2073,11 @@
                IF WS-REQ-STATUS NOT = "05"  *> Not "file not found"
                    CLOSE REQUEST-FILE
                END-IF
-               MOVE "Error: Unable to save connection request." TO WS-MSG 
+               MOVE "Error: Unable to save connection request." TO WS-MSG
                PERFORM DISPLAY-AND-LOG
            END-IF
            EXIT.
-    
+
        HELPER-SECTION.
        DISPLAY-AND-LOG.
            *> Write message to output file and display it (preserve indentation)
