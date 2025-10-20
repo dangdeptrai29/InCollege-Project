@@ -46,6 +46,11 @@
                 ORGANIZATION IS LINE SEQUENTIAL
                 FILE STATUS IS WS-REQ-STATUS.
 
+       *> New file for jobs
+           SELECT JOBS-FILE ASSIGN TO "data/jobs.txt"
+               ORGANIZATION IS LINE SEQUENTIAL
+               FILE STATUS IS WS-JOBS-FILE-STATUS.
+
        DATA DIVISION.
        FILE SECTION.
         FD  INPUT-FILE.
@@ -72,6 +77,10 @@
         FD  CONNECTIONS-FILE.
         01  CONNECTION-REC                PIC X(258).
 
+       *> New FD for jobs file
+        FD  JOBS-FILE.
+        01  JOB-REC                       PIC X(1024).
+
 
 
        WORKING-STORAGE SECTION.
@@ -82,6 +91,7 @@
        01  WS-UEX-STATUS                 PIC XX VALUE "00".
        01  WS-PROF-STATUS                PIC XX VALUE "00".
        01  WS-CONN-FILE-STATUS           PIC XX VALUE "00".
+       01  WS-JOBS-FILE-STATUS           PIC XX VALUE "00".
        01  WS-J-DISP                     PIC 9.
 
 
@@ -100,6 +110,9 @@
        01  WS-EOF-CONN                   PIC X  VALUE 'N'.
            88  EOF-CONN                          VALUE 'Y'.
            88  NOT-EOF-CONN                      VALUE 'N'.
+       01  WS-EOF-JOBS                   PIC X  VALUE 'N'.
+           88 EOF-JOBS                           VALUE 'Y'.
+           88 NOT-EOF-JOBS                       VALUE 'N'.
 
        *> Generic Input buffer
        01 WS-LINE                      PIC X(256) VALUE SPACES.
@@ -167,6 +180,27 @@
                10  WS-CONN-SENDER        PIC X(128).
                10  WS-CONN-RECEIVER      PIC X(128).
                10  WS-CONN-STATUS        PIC X. *> 'P'ending, 'A'ccepted
+
+       *> Table for job postings
+       01  WS-JOBS-MAX                     PIC 9(4) VALUE 200.
+       01  WS-JOBS-COUNT                   PIC 9(4) VALUE 0.
+       01  WS-JOBS-TABLE.
+           05  WS-JOB-ENTRY OCCURS 0 TO 200 TIMES
+                   DEPENDING ON WS-JOBS-COUNT
+                   INDEXED BY JOB-IDX.
+               10  WS-JOB-POSTER-USER      PIC X(128).
+               10  WS-JOB-TITLE            PIC X(128).
+               10  WS-JOB-DESC             PIC X(256).
+               10  WS-JOB-EMPLOYER         PIC X(128).
+               10  WS-JOB-LOCATION         PIC X(128).
+               10  WS-JOB-SALARY           PIC X(128).
+
+       *> Variables for handling job input
+       01  WS-NEW-JOB-TITLE                PIC X(128).
+       01  WS-NEW-JOB-DESC                 PIC X(256).
+       01  WS-NEW-JOB-EMPLOYER             PIC X(128).
+       01  WS-NEW-JOB-LOCATION             PIC X(128).
+       01  WS-NEW-JOB-SALARY               PIC X(128).
 
            *> --- Connection requests variables --
        01  WS-REQ-STATUS                 PIC XX VALUE "00".
@@ -261,9 +295,13 @@
        01  WS-LOGGED-CHOICE              PIC X(8) VALUE SPACES.
        01  WS-SKILL-CHOICE               PIC X(8) VALUE SPACES.
 
+       *> New choice variable for the jobs sub-menu
+       01  WS-JOB-CHOICE                 PIC X(8) VALUE SPACES.
+
        *> Main menu messages
        01  MSG-MENU-VIEW-PROFILE         PIC X(32) VALUE "1. View My Profile".
-       01  MSG-MENU-SEARCH-USER          PIC X(32) VALUE "2. Search for User".
+       01  MSG-MENU-JOBS                 PIC X(32) VALUE "1. Search for a job".
+       01  MSG-MENU-SEARCH-USER          PIC X(32) VALUE "2. Find someone you know".
        01  MSG-MENU-LEARN-SKILL          PIC X(32) VALUE "3. Learn a New Skill".
        01  MSG-MENU-VIEW-PENDING         PIC X(48) VALUE "4. View My Pending Connection Requests".
        01  MSG-MENU-VIEW-NETWORK         PIC X(32) VALUE "5. View My Network".
@@ -373,6 +411,24 @@
        01  MSG-REQUEST-SENT      PIC X(64) VALUE "Connection request sent to".
        01  WS-REQUEST-CHOICE             PIC X(8) VALUE SPACES.
 
+       *> EPIC 6: Job postings messages
+       *> NEW: Messages for the Jobs/Internships sub-menu
+       01  MSG-JOBS-HEADER                 PIC X(40) VALUE "--- Job Search/Internship Menu ---".
+       01  MSG-JOBS-POST                   PIC X(32) VALUE "1. Post a Job/Internship".
+       01  MSG-JOBS-BROWSE                 PIC X(32) VALUE "2. Browse Jobs/Internships".
+       01  MSG-JOBS-BACK                   PIC X(32) VALUE "3. Back to Main Menu".
+       01  MSG-BROWSE-UNDER-CONST          PIC X(48) VALUE "Browse Jobs/Internships is under construction.".
+
+       01  MSG-POST-JOB-HEADER             PIC X(40) VALUE "--- Post a New Job/Internship ---".
+       01  MSG-POST-JOB-TITLE              PIC X(32) VALUE "Enter Job Title:".
+       01  MSG-POST-JOB-DESC               PIC X(40) VALUE "Enter Description (max 200 chars):".
+       01  MSG-POST-JOB-EMPLOYER           PIC X(32) VALUE "Enter Employer Name:".
+       01  MSG-POST-JOB-LOCATION           PIC X(32) VALUE "Enter Location:".
+       01  MSG-POST-JOB-SALARY             PIC X(48) VALUE "Enter Salary (optional, enter 'NONE' to skip):".
+       01  MSG-POST-SUCCESS                PIC X(32) VALUE "Job posted successfully!".
+       01  MSG-SEPARATOR-LINE              PIC X(40) VALUE "----------------------------------".
+
+
 
 
        PROCEDURE DIVISION.
@@ -394,6 +450,8 @@
            PERFORM INIT-LOAD-PROFILES
        *> New: Load connections
            PERFORM INIT-LOAD-CONNECTIONS
+       *> Epic 6: Load job data
+           PERFORM INIT-LOAD-JOBS
 
            EXIT.
 
@@ -597,7 +655,8 @@
            PERFORM UNTIL EOF-IN
 
            *> Display the post-login menu (single, consistent set)
-           MOVE MSG-MENU-VIEW-PROFILE  TO WS-MSG PERFORM DISPLAY-AND-LOG
+           *>MOVE MSG-MENU-VIEW-PROFILE  TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-MENU-JOBS          TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-MENU-SEARCH-USER   TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-MENU-LEARN-SKILL   TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-MENU-VIEW-PENDING  TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -634,9 +693,25 @@
        *>               MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
        *>       END-EVALUATE
 
+       *>        EVALUATE WS-LOGGED-CHOICE
+       *>            WHEN '1'
+       *>                PERFORM VIEW-MY-PROFILE
+       *>            WHEN '2'
+       *>                PERFORM USER-SEARCH-MENU
+       *>            WHEN '3'
+       *>                PERFORM SKILL-MENU
+       *>            WHEN '4'
+       *>                PERFORM VIEW-PENDING-REQUESTS
+       *>            WHEN '5'
+       *>                PERFORM VIEW-MY-NETWORK
+       *>            WHEN OTHER
+       *>                MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+       *>        END-EVALUATE
+
+       *> EPIC 6 Menu
                EVALUATE WS-LOGGED-CHOICE
                    WHEN '1'
-                       PERFORM VIEW-MY-PROFILE
+                       PERFORM JOBS-MENU
                    WHEN '2'
                        PERFORM USER-SEARCH-MENU
                    WHEN '3'
@@ -2077,6 +2152,172 @@
                PERFORM DISPLAY-AND-LOG
            END-IF
            EXIT.
+
+       *> EPIC 6: Sub-menu for job/internship functionalities:
+       JOBS-MENU.
+           PERFORM UNTIL WS-JOB-CHOICE = '3' OR EOF-IN
+               MOVE MSG-JOBS-HEADER    TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-JOBS-POST      TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-JOBS-BROWSE    TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-JOBS-BACK      TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-ENTER-CHOICE   TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-JOB-CHOICE
+
+               IF EOF-IN
+                   EXIT PERFORM
+               END-IF
+
+               EVALUATE WS-JOB-CHOICE
+                   WHEN '1'
+                       PERFORM POST-NEW-JOB
+                   WHEN '2'
+                       MOVE MSG-BROWSE-UNDER-CONST TO WS-MSG
+                       PERFORM DISPLAY-AND-LOG
+                   WHEN '3'
+                       EXIT PERFORM
+                   WHEN OTHER
+                       MOVE MSG-INVALID-CHOICE TO WS-MSG
+                       PERFORM DISPLAY-AND-LOG
+               END-EVALUATE
+           END-PERFORM
+           MOVE SPACES TO WS-JOB-CHOICE *> Reset for next time
+           EXIT.
+
+       POST-NEW-JOB.
+       *> Display header
+           MOVE MSG-POST-JOB-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG.
+
+       *> Initialize input holders
+           INITIALIZE WS-NEW-JOB-TITLE WS-NEW-JOB-DESC
+                      WS-NEW-JOB-EMPLOYER WS-NEW-JOB-LOCATION
+                      WS-NEW-JOB-SALARY.
+
+           *> Get Job Title (Required)
+           PERFORM UNTIL FUNCTION TRIM(WS-NEW-JOB-TITLE) NOT = SPACES
+               MOVE MSG-POST-JOB-TITLE TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-NEW-JOB-TITLE
+               IF EOF-IN EXIT PARAGRAPH END-IF
+               IF FUNCTION TRIM(WS-NEW-JOB-TITLE) = SPACES
+                   MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-IF
+           END-PERFORM
+
+           *> Get Description (Required)
+           PERFORM UNTIL FUNCTION TRIM(WS-NEW-JOB-DESC) NOT = SPACES
+               MOVE MSG-POST-JOB-DESC TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-NEW-JOB-DESC
+               IF EOF-IN EXIT PARAGRAPH END-IF
+               IF FUNCTION TRIM(WS-NEW-JOB-DESC) = SPACES
+                   MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-IF
+           END-PERFORM
+
+           *> Get Employer (Required)
+           PERFORM UNTIL FUNCTION TRIM(WS-NEW-JOB-EMPLOYER) NOT = SPACES
+               MOVE MSG-POST-JOB-EMPLOYER TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-NEW-JOB-EMPLOYER
+               IF EOF-IN EXIT PARAGRAPH END-IF
+               IF FUNCTION TRIM(WS-NEW-JOB-EMPLOYER) = SPACES
+                   MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-IF
+           END-PERFORM
+
+           *> Get Location (Required)
+           PERFORM UNTIL FUNCTION TRIM(WS-NEW-JOB-LOCATION) NOT = SPACES
+               MOVE MSG-POST-JOB-LOCATION TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-NEW-JOB-LOCATION
+               IF EOF-IN EXIT PARAGRAPH END-IF
+               IF FUNCTION TRIM(WS-NEW-JOB-LOCATION) = SPACES
+                   MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-IF
+           END-PERFORM
+
+           *> Get Salary (Optional)
+           PERFORM UNTIL FUNCTION TRIM(WS-NEW-JOB-SALARY) NOT = SPACES
+               MOVE MSG-POST-JOB-SALARY TO WS-MSG PERFORM DISPLAY-AND-LOG
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-NEW-JOB-SALARY
+               IF EOF-IN EXIT PARAGRAPH END-IF
+               IF FUNCTION TRIM(WS-NEW-JOB-SALARY) = SPACES
+                   MOVE "Enter 'NONE' to skip this field." TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-IF
+           END-PERFORM
+
+           *> Save the new job to the in-memory table
+           ADD 1 TO WS-JOBS-COUNT
+           MOVE WS-CURRENT-USERNAME TO WS-JOB-POSTER-USER(WS-JOBS-COUNT)
+           MOVE WS-NEW-JOB-TITLE    TO WS-JOB-TITLE(WS-JOBS-COUNT)
+           MOVE WS-NEW-JOB-DESC     TO WS-JOB-DESC(WS-JOBS-COUNT)
+           MOVE WS-NEW-JOB-EMPLOYER TO WS-JOB-EMPLOYER(WS-JOBS-COUNT)
+           MOVE WS-NEW-JOB-LOCATION TO WS-JOB-LOCATION(WS-JOBS-COUNT)
+           MOVE WS-NEW-JOB-SALARY    TO WS-JOB-SALARY(WS-JOBS-COUNT)
+
+           *> Persist the new job to the file
+           PERFORM SAVE-JOBS
+
+           MOVE MSG-POST-SUCCESS TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-SEPARATOR-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG.
+           EXIT.
+
+       JOBS-IO-SECTION.
+       INIT-LOAD-JOBS.
+           OPEN INPUT JOBS-FILE
+           IF WS-JOBS-FILE-STATUS = "00"
+               SET NOT-EOF-JOBS TO TRUE
+               PERFORM UNTIL EOF-JOBS
+                   READ JOBS-FILE
+                       AT END SET EOF-JOBS TO TRUE
+                       NOT AT END PERFORM PARSE-JOB-REC
+                   END-READ
+               END-PERFORM
+               CLOSE JOBS-FILE
+           END-IF
+           EXIT.
+
+       PARSE-JOB-REC.
+           *> Format: poster|title|desc|employer|location|salary
+           IF WS-JOBS-COUNT < WS-JOBS-MAX
+               ADD 1 TO WS-JOBS-COUNT
+               UNSTRING JOB-REC DELIMITED BY '|'
+                   INTO WS-JOB-POSTER-USER(WS-JOBS-COUNT)
+                        WS-JOB-TITLE(WS-JOBS-COUNT)
+                        WS-JOB-DESC(WS-JOBS-COUNT)
+                        WS-JOB-EMPLOYER(WS-JOBS-COUNT)
+                        WS-JOB-LOCATION(WS-JOBS-COUNT)
+                        WS-JOB-SALARY(WS-JOBS-COUNT)
+               END-UNSTRING
+           END-IF
+           EXIT.
+
+       SAVE-JOBS.
+           OPEN OUTPUT JOBS-FILE
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-JOBS-COUNT
+               MOVE SPACES TO JOB-REC
+               STRING
+                   FUNCTION TRIM(WS-JOB-POSTER-USER(WS-I)) DELIMITED BY SIZE
+                   "|" DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-TITLE(WS-I))       DELIMITED BY SIZE
+                   "|" DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-DESC(WS-I))        DELIMITED BY SIZE
+                   "|" DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))    DELIMITED BY SIZE
+                   "|" DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-LOCATION(WS-I))    DELIMITED BY SIZE
+                   "|" DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-SALARY(WS-I))      DELIMITED BY SIZE
+                   INTO JOB-REC
+               END-STRING
+               WRITE JOB-REC
+           END-PERFORM
+           CLOSE JOBS-FILE
+           EXIT.
+
 
        HELPER-SECTION.
        DISPLAY-AND-LOG.

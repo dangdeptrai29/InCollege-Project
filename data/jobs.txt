@@ -1,0 +1,3 @@
+testuser|Software Engineer|Front-end Developer|Moffitt|Tampa, FL|90000
+testuser|Lab Assistant|Work in the wet lab|Moffitt|Tampa, FL|82000
+testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
