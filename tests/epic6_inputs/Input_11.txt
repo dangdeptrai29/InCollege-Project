@@ -1,6 +1,6 @@
 1
-MyUser
-MyPassword
+testuser
+Password123!
 1
 1
 Senior Developer
@@ -8,4 +8,9 @@ Lead development of new features.
 Innovatech
 New York, NY
 $150,000/year
-2
+1
+Product Manager
+Oversee product lifecycle.
+Innovatech
+Remote
+NONE
