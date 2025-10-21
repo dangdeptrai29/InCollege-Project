@@ -1,0 +1,18 @@
+1
+testuser
+Password123!
+1
+1
+Software Engineer Intern
+Build front-end features
+TechCorp
+Remote
+70000/year
+1
+Data Analyst Intern
+Analyze datasets
+DataCorp
+New York, NY
+65000/year
+3
+3
