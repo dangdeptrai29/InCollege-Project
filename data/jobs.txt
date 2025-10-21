@@ -1,3 +1,13 @@
-testuser|Software Engineer|Front-end Developer|Moffitt|Tampa, FL|90000
-testuser|Lab Assistant|Work in the wet lab|Moffitt|Tampa, FL|82000
-testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
+1|testuser|Software Engineer|Front-end Developer|Moffitt|Tampa, FL|90000
+2|testuser|Lab Assistant|Work in the wet lab|Moffitt|Tampa, FL|82000
+3|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
+4|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
+5|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
+6|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
+7|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
+8|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
+9|testuser|Software Engineer Intern|Build front-end features|TechCorp|Remote|70000/year
+10|testuser|Data Analyst Intern|Analyze datasets|DataCorp|New York, NY|65000/year
+11|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
+12|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
+13|MyUser|Sample Job|Short description|SampleCorp|Sample City|50000/year

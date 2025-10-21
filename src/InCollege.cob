@@ -184,10 +184,12 @@
        *> Table for job postings
        01  WS-JOBS-MAX                     PIC 9(4) VALUE 200.
        01  WS-JOBS-COUNT                   PIC 9(4) VALUE 0.
+       01  WS-JOBS-HIGHEST-ID              PIC 9(6) VALUE 0.
        01  WS-JOBS-TABLE.
            05  WS-JOB-ENTRY OCCURS 0 TO 200 TIMES
                    DEPENDING ON WS-JOBS-COUNT
                    INDEXED BY JOB-IDX.
+               10  WS-JOB-ID               PIC 9(6).
                10  WS-JOB-POSTER-USER      PIC X(128).
                10  WS-JOB-TITLE            PIC X(128).
                10  WS-JOB-DESC             PIC X(256).
@@ -196,11 +198,20 @@
                10  WS-JOB-SALARY           PIC X(128).
 
        *> Variables for handling job input
+       01  WS-NEW-JOB-ID                   PIC 9(6).
        01  WS-NEW-JOB-TITLE                PIC X(128).
        01  WS-NEW-JOB-DESC                 PIC X(256).
        01  WS-NEW-JOB-EMPLOYER             PIC X(128).
        01  WS-NEW-JOB-LOCATION             PIC X(128).
        01  WS-NEW-JOB-SALARY               PIC X(128).
+
+       77  WS-JOB-ID-TEXT                  PIC X(12).
+       77  WS-JOB-DELIM-COUNT              PIC 9(02).
+       77  WS-JOB-ID-DISPLAY               PIC Z(5)9.
+       01  WS-JOBS-ERR-CONTEXT             PIC X(64).
+       01  WS-JOBS-ERROR-FLAG              PIC X VALUE 'N'.
+           88 JOBS-IO-OK                          VALUE 'N'.
+           88 JOBS-IO-ERROR                       VALUE 'Y'.
 
            *> --- Connection requests variables --
        01  WS-REQ-STATUS                 PIC XX VALUE "00".
@@ -2190,7 +2201,8 @@
            MOVE MSG-POST-JOB-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG.
 
        *> Initialize input holders
-           INITIALIZE WS-NEW-JOB-TITLE WS-NEW-JOB-DESC
+           INITIALIZE WS-NEW-JOB-ID
+                      WS-NEW-JOB-TITLE WS-NEW-JOB-DESC
                       WS-NEW-JOB-EMPLOYER WS-NEW-JOB-LOCATION
                       WS-NEW-JOB-SALARY.
 
@@ -2249,8 +2261,11 @@
                END-IF
            END-PERFORM
 
-           *> Save the new job to the in-memory table
+       *> Save the new job to the in-memory table
            ADD 1 TO WS-JOBS-COUNT
+           ADD 1 TO WS-JOBS-HIGHEST-ID
+           MOVE WS-JOBS-HIGHEST-ID TO WS-NEW-JOB-ID
+           MOVE WS-NEW-JOB-ID      TO WS-JOB-ID(WS-JOBS-COUNT)
            MOVE WS-CURRENT-USERNAME TO WS-JOB-POSTER-USER(WS-JOBS-COUNT)
            MOVE WS-NEW-JOB-TITLE    TO WS-JOB-TITLE(WS-JOBS-COUNT)
            MOVE WS-NEW-JOB-DESC     TO WS-JOB-DESC(WS-JOBS-COUNT)
@@ -2258,64 +2273,162 @@
            MOVE WS-NEW-JOB-LOCATION TO WS-JOB-LOCATION(WS-JOBS-COUNT)
            MOVE WS-NEW-JOB-SALARY    TO WS-JOB-SALARY(WS-JOBS-COUNT)
 
-           *> Persist the new job to the file
+       *> Persist the new job to the file
            PERFORM SAVE-JOBS
 
-           MOVE MSG-POST-SUCCESS TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE WS-NEW-JOB-ID TO WS-JOB-ID-DISPLAY
+           MOVE SPACES TO WS-JOB-ID-TEXT
+           MOVE WS-JOB-ID-DISPLAY TO WS-JOB-ID-TEXT
+           MOVE SPACES TO WS-MSG
+           STRING
+               FUNCTION TRIM(MSG-POST-SUCCESS)      DELIMITED BY SIZE
+               " (ID: "                             DELIMITED BY SIZE
+               FUNCTION TRIM(WS-JOB-ID-TEXT)        DELIMITED BY SIZE
+               ")"                                   DELIMITED BY SIZE
+               INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
            MOVE MSG-SEPARATOR-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG.
            EXIT.
 
        JOBS-IO-SECTION.
        INIT-LOAD-JOBS.
+           SET JOBS-IO-OK TO TRUE
+           MOVE 0 TO WS-JOBS-COUNT
+           MOVE 0 TO WS-JOBS-HIGHEST-ID
            OPEN INPUT JOBS-FILE
-           IF WS-JOBS-FILE-STATUS = "00"
-               SET NOT-EOF-JOBS TO TRUE
-               PERFORM UNTIL EOF-JOBS
-                   READ JOBS-FILE
-                       AT END SET EOF-JOBS TO TRUE
-                       NOT AT END PERFORM PARSE-JOB-REC
-                   END-READ
-               END-PERFORM
-               CLOSE JOBS-FILE
-           END-IF
+           EVALUATE WS-JOBS-FILE-STATUS
+               WHEN "00"
+                   SET NOT-EOF-JOBS TO TRUE
+                   PERFORM UNTIL EOF-JOBS
+                       READ JOBS-FILE
+                           AT END SET EOF-JOBS TO TRUE
+                           NOT AT END PERFORM PARSE-JOB-REC
+                       END-READ
+                       IF WS-JOBS-FILE-STATUS NOT = "00"
+                          AND WS-JOBS-FILE-STATUS NOT = "10"
+                           SET JOBS-IO-ERROR TO TRUE
+                           MOVE "reading jobs file" TO WS-JOBS-ERR-CONTEXT
+                           PERFORM REPORT-JOBS-FILE-ERROR
+                           SET EOF-JOBS TO TRUE
+                       END-IF
+                   END-PERFORM
+                   CLOSE JOBS-FILE
+                   IF WS-JOBS-FILE-STATUS NOT = "00"
+                       SET JOBS-IO-ERROR TO TRUE
+                       MOVE "closing jobs file after load" TO WS-JOBS-ERR-CONTEXT
+                       PERFORM REPORT-JOBS-FILE-ERROR
+                   END-IF
+               WHEN "05"
+                   CONTINUE *> Optional file missing; treat as empty
+               WHEN "35"
+                   CONTINUE *> Optional file missing; treat as empty
+               WHEN OTHER
+                   SET JOBS-IO-ERROR TO TRUE
+                   MOVE "opening jobs file for load" TO WS-JOBS-ERR-CONTEXT
+                   PERFORM REPORT-JOBS-FILE-ERROR
+           END-EVALUATE
            EXIT.
 
        PARSE-JOB-REC.
-           *> Format: poster|title|desc|employer|location|salary
+           *> Format: id|poster|title|desc|employer|location|salary
            IF WS-JOBS-COUNT < WS-JOBS-MAX
                ADD 1 TO WS-JOBS-COUNT
-               UNSTRING JOB-REC DELIMITED BY '|'
-                   INTO WS-JOB-POSTER-USER(WS-JOBS-COUNT)
-                        WS-JOB-TITLE(WS-JOBS-COUNT)
-                        WS-JOB-DESC(WS-JOBS-COUNT)
-                        WS-JOB-EMPLOYER(WS-JOBS-COUNT)
-                        WS-JOB-LOCATION(WS-JOBS-COUNT)
-                        WS-JOB-SALARY(WS-JOBS-COUNT)
-               END-UNSTRING
+               MOVE 0 TO WS-JOB-DELIM-COUNT
+               INSPECT JOB-REC TALLYING WS-JOB-DELIM-COUNT FOR ALL "|"
+               MOVE SPACES TO WS-JOB-ID-TEXT
+               IF WS-JOB-DELIM-COUNT >= 6
+                   UNSTRING JOB-REC DELIMITED BY '|'
+                       INTO WS-JOB-ID-TEXT
+                            WS-JOB-POSTER-USER(WS-JOBS-COUNT)
+                            WS-JOB-TITLE(WS-JOBS-COUNT)
+                            WS-JOB-DESC(WS-JOBS-COUNT)
+                            WS-JOB-EMPLOYER(WS-JOBS-COUNT)
+                            WS-JOB-LOCATION(WS-JOBS-COUNT)
+                            WS-JOB-SALARY(WS-JOBS-COUNT)
+                   END-UNSTRING
+                   IF FUNCTION TRIM(WS-JOB-ID-TEXT) = SPACES
+                       ADD 1 TO WS-JOBS-HIGHEST-ID
+                       MOVE WS-JOBS-HIGHEST-ID TO WS-JOB-ID(WS-JOBS-COUNT)
+                   ELSE
+                       MOVE FUNCTION NUMVAL(WS-JOB-ID-TEXT)
+                           TO WS-JOB-ID(WS-JOBS-COUNT)
+                       IF WS-JOB-ID(WS-JOBS-COUNT) > WS-JOBS-HIGHEST-ID
+                           MOVE WS-JOB-ID(WS-JOBS-COUNT) TO WS-JOBS-HIGHEST-ID
+                       END-IF
+                   END-IF
+               ELSE
+                   UNSTRING JOB-REC DELIMITED BY '|'
+                       INTO WS-JOB-POSTER-USER(WS-JOBS-COUNT)
+                            WS-JOB-TITLE(WS-JOBS-COUNT)
+                            WS-JOB-DESC(WS-JOBS-COUNT)
+                            WS-JOB-EMPLOYER(WS-JOBS-COUNT)
+                            WS-JOB-LOCATION(WS-JOBS-COUNT)
+                            WS-JOB-SALARY(WS-JOBS-COUNT)
+                   END-UNSTRING
+                   ADD 1 TO WS-JOBS-HIGHEST-ID
+                   MOVE WS-JOBS-HIGHEST-ID TO WS-JOB-ID(WS-JOBS-COUNT)
+               END-IF
            END-IF
            EXIT.
 
        SAVE-JOBS.
+           SET JOBS-IO-OK TO TRUE
            OPEN OUTPUT JOBS-FILE
-           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-JOBS-COUNT
-               MOVE SPACES TO JOB-REC
-               STRING
-                   FUNCTION TRIM(WS-JOB-POSTER-USER(WS-I)) DELIMITED BY SIZE
-                   "|" DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-TITLE(WS-I))       DELIMITED BY SIZE
-                   "|" DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-DESC(WS-I))        DELIMITED BY SIZE
-                   "|" DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))    DELIMITED BY SIZE
-                   "|" DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-LOCATION(WS-I))    DELIMITED BY SIZE
-                   "|" DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-SALARY(WS-I))      DELIMITED BY SIZE
-                   INTO JOB-REC
-               END-STRING
-               WRITE JOB-REC
-           END-PERFORM
-           CLOSE JOBS-FILE
+           IF WS-JOBS-FILE-STATUS = "00"
+               PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-JOBS-COUNT
+                   MOVE SPACES TO JOB-REC
+                   MOVE WS-JOB-ID(WS-I) TO WS-JOB-ID-DISPLAY
+                   MOVE SPACES TO WS-JOB-ID-TEXT
+                   MOVE WS-JOB-ID-DISPLAY TO WS-JOB-ID-TEXT
+                   STRING
+                       FUNCTION TRIM(WS-JOB-ID-TEXT)         DELIMITED BY SIZE
+                       "|"                                   DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-POSTER-USER(WS-I)) DELIMITED BY SIZE
+                       "|" DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-TITLE(WS-I))       DELIMITED BY SIZE
+                       "|" DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-DESC(WS-I))        DELIMITED BY SIZE
+                       "|" DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))    DELIMITED BY SIZE
+                       "|" DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-LOCATION(WS-I))    DELIMITED BY SIZE
+                       "|" DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-SALARY(WS-I))      DELIMITED BY SIZE
+                       INTO JOB-REC
+                   END-STRING
+                   WRITE JOB-REC
+                   IF WS-JOBS-FILE-STATUS NOT = "00"
+                       SET JOBS-IO-ERROR TO TRUE
+                       MOVE "writing jobs file" TO WS-JOBS-ERR-CONTEXT
+                       PERFORM REPORT-JOBS-FILE-ERROR
+                       EXIT PERFORM
+                   END-IF
+               END-PERFORM
+               CLOSE JOBS-FILE
+               IF WS-JOBS-FILE-STATUS NOT = "00"
+                   SET JOBS-IO-ERROR TO TRUE
+                   MOVE "closing jobs file after save" TO WS-JOBS-ERR-CONTEXT
+                   PERFORM REPORT-JOBS-FILE-ERROR
+               END-IF
+           ELSE
+               SET JOBS-IO-ERROR TO TRUE
+               MOVE "opening jobs file for save" TO WS-JOBS-ERR-CONTEXT
+               PERFORM REPORT-JOBS-FILE-ERROR
+           END-IF
+           EXIT.
+
+       REPORT-JOBS-FILE-ERROR.
+           MOVE SPACES TO WS-MSG
+           STRING
+               "Error: "                         DELIMITED BY SIZE
+               FUNCTION TRIM(WS-JOBS-ERR-CONTEXT) DELIMITED BY SIZE
+               " (status "                        DELIMITED BY SIZE
+               WS-JOBS-FILE-STATUS                DELIMITED BY SIZE
+               ")."                               DELIMITED BY SIZE
+               INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
            EXIT.
 
 
