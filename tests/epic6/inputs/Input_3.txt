@@ -1,0 +1,11 @@
+1
+testuser1
+Password1!
+1
+1
+Data Analyst
+Analyze business metrics and provide insights
+Data Corp
+New York, NY
+$70000/year
+3

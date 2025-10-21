@@ -3,6 +3,8 @@
 
 # Build artifact
 incollege
+inCollege
+inCollegeTest
 
 # Temporary test files
 io/result.txt
