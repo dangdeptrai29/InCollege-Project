@@ -1,0 +1,17 @@
+1
+testuser1
+Password1!
+1
+1
+Software Engineer
+Develop enterprise applications
+Tech Corp
+San Jose, CA
+$90000/year
+1
+Data Scientist
+Analyze large datasets using ML
+Data Analytics Co
+Boston, MA
+$95000/year
+3

@@ -1,0 +1,29 @@
+1
+testuser1
+Password1!
+1
+1
+Marketing Intern
+Create social media campaigns
+Marketing Pro
+Chicago, IL
+NONE
+1
+Sales Associate
+Manage client relationships
+Sales Corp
+Miami, FL
+$50000/year
+1
+Product Manager
+Define product roadmap and strategy
+Product Innovations
+San Francisco, CA
+$110000/year
+1
+UX Designer
+Design user-friendly interfaces
+Design Studio
+Portland, OR
+$75000/year
+3
