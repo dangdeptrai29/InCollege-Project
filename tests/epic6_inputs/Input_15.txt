@@ -1,7 +1,0 @@
-1
-testuser
-Password123!
-1
-5
-abc
-3
