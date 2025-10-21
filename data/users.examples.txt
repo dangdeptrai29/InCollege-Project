@@ -1,2 +1,0 @@
-testuser|Password1!
-testuser1|Password1!
