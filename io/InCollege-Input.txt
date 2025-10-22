@@ -1,6 +1,11 @@
 1
-testuser
-Password123!
-4
+MyUser
+MyPassword
 1
-5
+1
+Senior Developer
+Lead development of new features.
+Innovatech
+New York, NY
+$150,000/year
+2

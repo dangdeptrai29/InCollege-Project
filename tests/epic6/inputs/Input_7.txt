@@ -1,0 +1,23 @@
+1
+testuser1
+Password1!
+1
+1
+Frontend Developer
+Build responsive web interfaces
+Web Solutions Inc
+Austin, TX
+$65000/year
+1
+Backend Developer
+Develop REST APIs and microservices
+API Systems LLC
+Seattle, WA
+$80000/year
+1
+FullStack Developer
+Work on both frontend and backend technologies
+Tech Innovators
+Remote
+$75000/year
+3

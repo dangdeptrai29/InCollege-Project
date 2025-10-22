@@ -1,0 +1,11 @@
+1
+testuser1
+Password1!
+1
+1
+Software Engineer Intern
+Develop and maintain web applications using modern frameworks
+Tech Solutions Inc
+San Francisco, CA
+$25/hour
+3
