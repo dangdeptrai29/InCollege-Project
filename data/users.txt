@@ -1,6 +1,1 @@
-alice|alice123
-bob|bob123
-testuser|Password123!
-otheruser|testpass
-friendb|fbpass
-MyUser|MyPassword
+alice|Abcdef1!
