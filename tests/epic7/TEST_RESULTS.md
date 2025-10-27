@@ -3,7 +3,7 @@
 | Test | Description | Status | Notes |
 |------|-------------|--------|-------|
 | TC01 | Browse empty job list | ✅ PASS | Shows "No jobs/internships available." correctly |
-| TC02 | Browse single job | | |
+| TC02 | Browse single job | ✅ PASS | Shows 1 job with correct format |
 | TC03 | Browse multiple jobs | | |
 | TC04 | View valid job details | | |
 | TC05 | View invalid job | | |
@@ -14,4 +14,4 @@
 | TC10 | Save persistence | | |
 | TC11 | Load persistence | | |
 
-**Progress:** 1/11 tests complete
+**Progress:** 2/11 tests complete
