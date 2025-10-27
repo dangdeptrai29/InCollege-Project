@@ -1,1 +1,7 @@
 1|alice|Software Intern|Build tools for a COBOL project.|Acme Corp|Tampa, FL|NONE
+2|bob|Test Intern|Testing products.|Moffitt|Tampa, FL|NONE
+3|john|Testing Intern|Testing code|Moffitt|Tampa, FL|9000
+4|alice|Frontend Dev|Build interfaces for websites|DataCorp|New York, NY|20000
+5|testuser|Product Manager|Manages technical projects.|MataData|Dallas, TX|50000
+6|john|Software Intern|Develop tools for internal testing and automation.|TechCorp|New York, NY|$25/hour
+7|alice|Data Analyst|Analyze data for business problems.|DataSolutions|Remote|$15/hour

@@ -2,21 +2,87 @@ Welcome to InCollege!
 1. Log In
 2. Create New Account
 Enter your choice:
-=== RUN UNIT TESTS: JOBS ===
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, testuser!
+1. Search for a job
+2. Find someone you know
+3. Learn a New Skill
+4. View My Pending Connection Requests
+5. View My Network
+Enter your choice:
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. View My Applications
+4. Back to Main Menu
+Enter your choice:
 --- Available Jobs/Internships ---
-No jobs/internships available.
-----------------------------------
-TEST 1 (empty browse): PASS
+1. Software Intern | Acme Corp — Tampa, FL
+2. Test Intern | Moffitt — Tampa, FL
+3. Testing Intern | Moffitt — Tampa, FL
+4. Frontend Dev | DataCorp — New York, NY
+5. Product Manager | MataData — Dallas, TX
+6. Software Intern | TechCorp — New York, NY
+7. Data Analyst | DataSolutions — Remote
+Enter job # to view (0 to go back):
 --- Job Details ---
 Title: Software Intern
+Employer: TechCorp
+Location: New York, NY
+Description: Develop tools for internal testing and automation.
+Salary: $25/hour
+--------
+1. Apply for this Job
+2. Back to Job List
+Enter your choice:
+You have already applied for this job.
+----------------------------------
+--- Available Jobs/Internships ---
+1. Software Intern | Acme Corp — Tampa, FL
+2. Test Intern | Moffitt — Tampa, FL
+3. Testing Intern | Moffitt — Tampa, FL
+4. Frontend Dev | DataCorp — New York, NY
+5. Product Manager | MataData — Dallas, TX
+6. Software Intern | TechCorp — New York, NY
+7. Data Analyst | DataSolutions — Remote
+Enter job # to view (0 to go back):
+----------------------------------
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. View My Applications
+4. Back to Main Menu
+Enter your choice:
+--- Your Job Applications ---
+Application Summary for testuser
+--------
+Job Title: Software Intern
 Employer: Acme Corp
 Location: Tampa, FL
-Description: Build tools for a COBOL project.
-----------------------------------
-TEST 2 (details view): PASS
-Application submitted successfully.
-TEST 3a (first apply): PASS
-You have already applied for this job.
-TEST 3b (duplicate apply blocked): PASS
-=== UNIT TESTS DONE ===
+---
+Job Title: Product Manager
+Employer: MataData
+Location: Dallas, TX
+Salary: 50000
+---
+Job Title: Frontend Dev
+Employer: DataCorp
+Location: New York, NY
+Salary: 20000
+---
+Job Title: Software Intern
+Employer: TechCorp
+Location: New York, NY
+Salary: $25/hour
+--------
+Total Applications: 4
+--------
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. View My Applications
+4. Back to Main Menu
+Enter your choice:
 --- END_OF_PROGRAM_EXECUTION ---

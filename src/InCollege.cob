@@ -452,7 +452,8 @@
            VALUE "--- Job Search/Internship Menu ---".
        01  MSG-JOBS-POST                  PIC X(32) VALUE "1. Post a Job/Internship".
        01  MSG-JOBS-BROWSE                PIC X(32) VALUE "2. Browse Jobs/Internships".
-       01  MSG-JOBS-BACK                  PIC X(32) VALUE "3. Back to Main Menu".
+       01  MSG-JOBS-VIEW-APPS             PIC X(32) VALUE "3. View My Applications".
+       01  MSG-JOBS-BACK                  PIC X(32) VALUE "4. Back to Main Menu".
        01  MSG-BROWSE-UNDER-CONST         PIC X(48)
            VALUE "Browse Jobs/Internships is under construction.".
 
@@ -472,10 +473,20 @@
        01  MSG-ENTER-JOB                  PIC X(40) VALUE "Enter job # to view (0 to go back):".
        01  MSG-INVALID-JOB                PIC X(32) VALUE "Invalid job selection.".
        01  MSG-JOB-DETAILS-HEADER         PIC X(24) VALUE "--- Job Details ---".
+       01  MSG-JOB-DETAILS-DIVIDER        PIC X(16) VALUE "--------".
        01  MSG-APPLY-OPT                  PIC X(24) VALUE "1. Apply for this Job".
-       01  MSG-BACK-OPT                   PIC X(24) VALUE "2. Back".
-       01  MSG-APPLY-SUCCESS              PIC X(64) VALUE "Application submitted successfully.".
+       01  MSG-BACK-OPT                   PIC X(24) VALUE "2. Back to Job List".
+       01  MSG-APPLY-SUCCESS              PIC X(64) VALUE "Your application for ".
        01  MSG-APPLY-DUPLICATE            PIC X(64) VALUE "You have already applied for this job.".
+
+       *> EPIC 7: View Applications messages
+       01  MSG-APPS-HEADER                 PIC X(32) VALUE "--- Your Job Applications ---".
+       01  MSG-APPS-USER-SUMMARY           PIC X(32) VALUE "Application Summary for ".
+       01  MSG-APPS-SEP-TOP                PIC X(16) VALUE "--------".
+       01  MSG-APPS-SEP-ITEM               PIC X(16) VALUE "---".
+       01  MSG-APPS-SEP-FOOTER             PIC X(16) VALUE "--------".
+       01  MSG-APPS-TOTAL                  PIC X(20) VALUE "Total Applications: ".
+       01  MSG-NO-APPS-FOUND               PIC X(40) VALUE "You have not applied to any jobs yet.".
 
        01  WS-BROWSE-CHOICE               PIC X(8)  VALUE SPACES.
        77  WS-SEL-NUM                     PIC 9(6)  VALUE 0.
@@ -2059,10 +2070,11 @@
            EXIT.
 
        JOBS-MENU.
-           PERFORM UNTIL WS-JOB-CHOICE = '3' OR EOF-IN
+           PERFORM UNTIL WS-JOB-CHOICE = '4' OR EOF-IN
                MOVE MSG-JOBS-HEADER   TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-JOBS-POST     TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-JOBS-BROWSE   TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-JOBS-VIEW-APPS TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-JOBS-BACK     TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
 
@@ -2075,7 +2087,8 @@
                EVALUATE WS-JOB-CHOICE
                    WHEN '1'  PERFORM POST-NEW-JOB
                    WHEN '2'  PERFORM BROWSE-JOBS
-                   WHEN '3'  EXIT PERFORM
+                   WHEN '3'  PERFORM VIEW-MY-APPLICATIONS
+                   WHEN '4'  EXIT PERFORM
                    WHEN OTHER
                        MOVE MSG-INVALID-CHOICE TO WS-MSG
                        PERFORM DISPLAY-AND-LOG
@@ -2088,30 +2101,15 @@
        *> JOBS BROWSE / DETAILS / APPLY
        *> ===============================================================
        BROWSE-JOBS.
-           MOVE MSG-JOBS-LIST-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
            IF WS-JOBS-COUNT = 0
                MOVE MSG-NO-JOBS        TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SEPARATOR-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
            END-IF
 
-           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-JOBS-COUNT
-               MOVE WS-I TO WS-IDX-DISPLAY
-               MOVE SPACES TO WS-MSG
-               STRING
-                   FUNCTION TRIM(WS-IDX-DISPLAY)         DELIMITED BY SIZE
-                   ". "                                  DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-TITLE(WS-I))     DELIMITED BY SIZE
-                   " | "                                 DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))  DELIMITED BY SIZE
-                   " — "                                 DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-LOCATION(WS-I))  DELIMITED BY SIZE
-                   INTO WS-MSG
-               END-STRING
-               PERFORM DISPLAY-AND-LOG
-           END-PERFORM
-
            PERFORM UNTIL EOF-IN
+               PERFORM DISPLAY-JOB-LIST
+
                MOVE MSG-ENTER-JOB TO WS-MSG PERFORM DISPLAY-AND-LOG
                PERFORM READ-NEXT-LINE
                IF EOF-IN
@@ -2165,6 +2163,9 @@
                EXIT PARAGRAPH
            END-IF
 
+           MOVE SPACES TO WS-MSG
+           MOVE MSG-JOB-DETAILS-DIVIDER TO WS-MSG PERFORM DISPLAY-AND-LOG
+
            MOVE MSG-APPLY-OPT    TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-BACK-OPT     TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -2205,7 +2206,17 @@
                PERFORM SAVE-APPLICATION-REC
            END-IF
 
-           MOVE MSG-APPLY-SUCCESS TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING MSG-APPLY-SUCCESS                DELIMITED BY '  '
+                  " "                              DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-JOB-TITLE(WS-I))
+                  " at "                           DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))
+                  " has been submitted."            DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
+
            EXIT.
 
        POST-NEW-JOB.
@@ -2431,6 +2442,99 @@
                INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
+           EXIT.
+
+       DISPLAY-JOB-LIST.
+           MOVE MSG-JOBS-LIST-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-JOBS-COUNT
+               MOVE WS-I TO WS-IDX-DISPLAY
+               MOVE SPACES TO WS-MSG
+               STRING
+                   FUNCTION TRIM(WS-IDX-DISPLAY)         DELIMITED BY SIZE
+                   ". "                                  DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-TITLE(WS-I))     DELIMITED BY SIZE
+                   " | "                                 DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))  DELIMITED BY SIZE
+                   " — "                                 DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-LOCATION(WS-I))  DELIMITED BY SIZE
+                   INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
+           END-PERFORM
+           EXIT.
+
+       VIEW-MY-APPLICATIONS.
+           MOVE MSG-APPS-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING MSG-APPS-USER-SUMMARY         DELIMITED BY '  '
+                  " "                           DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-CURRENT-USERNAME) DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
+
+           MOVE MSG-APPS-SEP-TOP TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+           MOVE 0 TO WS-TMP-COUNT
+
+           *> Loop through all applications
+           PERFORM VARYING APP-IDX FROM 1 BY 1 UNTIL APP-IDX > WS-APPLICATIONS-COUNT
+               *> Check if the application belongs to the current user
+               IF FUNCTION TRIM(WS-APP-USER(APP-IDX)) = FUNCTION TRIM(WS-CURRENT-USERNAME)
+                   *> Found an application. Now find the job details.
+                   SET MATCH-NOT-FOUND TO TRUE
+                   PERFORM VARYING JOB-IDX FROM 1 BY 1
+                       UNTIL JOB-IDX > WS-JOBS-COUNT OR MATCH-FOUND
+                       IF WS-JOB-ID(JOB-IDX) = WS-APP-JOB-ID(APP-IDX)
+                           SET MATCH-FOUND TO TRUE
+
+                           *> Display separator if this is not the first job found
+                           IF WS-TMP-COUNT > 0
+                               MOVE MSG-APPS-SEP-ITEM TO WS-MSG
+                               PERFORM DISPLAY-AND-LOG
+                           END-IF
+                           ADD 1 TO WS-TMP-COUNT
+
+                           *> Display Job Details
+                           MOVE SPACES TO WS-MSG
+                           STRING "Job Title: " FUNCTION TRIM(WS-JOB-TITLE(JOB-IDX))
+                                  INTO WS-MSG END-STRING
+                           PERFORM DISPLAY-AND-LOG
+
+                           MOVE SPACES TO WS-MSG
+                           STRING "Employer: " FUNCTION TRIM(WS-JOB-EMPLOYER(JOB-IDX))
+                                  INTO WS-MSG END-STRING
+                           PERFORM DISPLAY-AND-LOG
+
+                           MOVE SPACES TO WS-MSG
+                           STRING "Location: " FUNCTION TRIM(WS-JOB-LOCATION(JOB-IDX))
+                                  INTO WS-MSG END-STRING
+                           PERFORM DISPLAY-AND-LOG
+
+                           MOVE FUNCTION TRIM(WS-JOB-SALARY(JOB-IDX)) TO WS-SALARY-TRIM
+                           IF WS-SALARY-TRIM NOT = SPACES AND WS-SALARY-TRIM NOT = "NONE"
+                               MOVE SPACES TO WS-MSG
+                               STRING "Salary: " WS-SALARY-TRIM INTO WS-MSG END-STRING
+                               PERFORM DISPLAY-AND-LOG
+                           END-IF
+                       END-IF
+                   END-PERFORM
+               END-IF
+           END-PERFORM
+
+           MOVE MSG-APPS-SEP-FOOTER TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+           *> Display total count and final separator
+           IF WS-TMP-COUNT = 0
+               MOVE MSG-NO-APPS-FOUND TO WS-MSG PERFORM DISPLAY-AND-LOG
+           ELSE
+               MOVE SPACES TO WS-MSG
+               MOVE WS-TMP-COUNT TO WS-IDX-DISPLAY
+               STRING MSG-APPS-TOTAL FUNCTION TRIM(WS-IDX-DISPLAY) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+
+           MOVE MSG-APPS-SEP-FOOTER TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
 
        *> ===============================================================
