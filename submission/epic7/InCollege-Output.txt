@@ -1,0 +1,87 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, testuser!
+    Search for a job
+    Find someone you know
+    Learn a new skill
+    View My Pending Connection Requests
+    View My Network
+Enter your choice:
+--- Job Search/Internship Menu ---
+    Post a Job/Internship
+    Browse Jobs/Internships
+    View My Applications
+    Back to Main Menu
+Enter your choice:
+--- Available Jobs Listings ---
+    Software Intern at Acme Corp (Tampa, FL)
+    Test Intern at Moffitt (Tampa, FL)
+    Testing Intern at Moffitt (Tampa, FL)
+    Frontend Dev at DataCorp (New York, NY)
+    Product Manager at MataData (Dallas, TX)
+    Software Intern at TechCorp (New York, NY)
+    Data Analyst at DataSolutions (Remote)
+-----------------------------
+Enter job number to view details, or 0 to go back:
+--- Job Details ---
+Title: Software Intern
+Employer: Acme Corp
+Location: Tampa, FL
+Description: Build tools for a COBOL project.
+-------------------
+    Apply for this Job
+    Back to Job List
+Enter your choice:
+Your application for Software Intern at Acme Corp has been submitted.
+--- Available Jobs Listings ---
+    Software Intern at Acme Corp (Tampa, FL)
+    Test Intern at Moffitt (Tampa, FL)
+    Testing Intern at Moffitt (Tampa, FL)
+    Frontend Dev at DataCorp (New York, NY)
+    Product Manager at MataData (Dallas, TX)
+    Software Intern at TechCorp (New York, NY)
+    Data Analyst at DataSolutions (Remote)
+-----------------------------
+Enter job number to view details, or 0 to go back:
+----------------------------------
+--- Job Search/Internship Menu ---
+    Post a Job/Internship
+    Browse Jobs/Internships
+    View My Applications
+    Back to Main Menu
+Enter your choice:
+--- Your Job Applications ---
+Application Summary for testuser
+------------------------------
+Job Title: Software Intern
+Employer: Acme Corp
+Location: Tampa, FL
+---
+Job Title: Software Intern
+Employer: TechCorp
+Location: New York, NY
+---
+Job Title: Data Analyst
+Employer: DataSolutions
+Location: Remote
+------------------------------
+Total Applications: 3
+------------------------------
+--- Job Search/Internship Menu ---
+    Post a Job/Internship
+    Browse Jobs/Internships
+    View My Applications
+    Back to Main Menu
+Enter your choice:
+    Search for a job
+    Find someone you know
+    Learn a new skill
+    View My Pending Connection Requests
+    View My Network
+Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---
