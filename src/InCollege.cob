@@ -322,12 +322,12 @@
 
        *> Main menu messages
        01  MSG-MENU-VIEW-PROFILE          PIC X(32) VALUE "1. View My Profile".
-       01  MSG-MENU-JOBS                  PIC X(32) VALUE "1. Search for a job".
-       01  MSG-MENU-SEARCH-USER           PIC X(32) VALUE "2. Find someone you know".
-       01  MSG-MENU-LEARN-SKILL           PIC X(32) VALUE "3. Learn a New Skill".
+       01  MSG-MENU-JOBS                  PIC X(32) VALUE "Search for a job".
+       01  MSG-MENU-SEARCH-USER           PIC X(32) VALUE "Find someone you know".
+       01  MSG-MENU-LEARN-SKILL           PIC X(32) VALUE "Learn a new skill".
        01  MSG-MENU-VIEW-PENDING          PIC X(48) VALUE
-           "4. View My Pending Connection Requests".
-       01  MSG-MENU-VIEW-NETWORK          PIC X(32) VALUE "5. View My Network".
+           "View My Pending Connection Requests".
+       01  MSG-MENU-VIEW-NETWORK          PIC X(32) VALUE "View My Network".
        01  MSG-ENTER-CHOICE2              PIC X(20) VALUE "Enter your choice: ".
 
        *> Skills
@@ -450,10 +450,10 @@
        *> EPIC 6: Jobs / Internships
        01  MSG-JOBS-HEADER                PIC X(40)
            VALUE "--- Job Search/Internship Menu ---".
-       01  MSG-JOBS-POST                  PIC X(32) VALUE "1. Post a Job/Internship".
-       01  MSG-JOBS-BROWSE                PIC X(32) VALUE "2. Browse Jobs/Internships".
-       01  MSG-JOBS-VIEW-APPS             PIC X(32) VALUE "3. View My Applications".
-       01  MSG-JOBS-BACK                  PIC X(32) VALUE "4. Back to Main Menu".
+       01  MSG-JOBS-POST                  PIC X(32) VALUE "Post a Job/Internship".
+       01  MSG-JOBS-BROWSE                PIC X(32) VALUE "Browse Jobs/Internships".
+       01  MSG-JOBS-VIEW-APPS             PIC X(32) VALUE "View My Applications".
+       01  MSG-JOBS-BACK                  PIC X(32) VALUE "Back to Main Menu".
        01  MSG-BROWSE-UNDER-CONST         PIC X(48)
            VALUE "Browse Jobs/Internships is under construction.".
 
@@ -468,23 +468,23 @@
        01  MSG-SEPARATOR-LINE             PIC X(40) VALUE "----------------------------------".
 
        *> Browse/details
-       01  MSG-JOBS-LIST-HEADER           PIC X(40) VALUE "--- Available Jobs/Internships ---".
+       01  MSG-JOBS-LIST-HEADER           PIC X(40) VALUE "--- Available Jobs Listings ---".
        01  MSG-NO-JOBS                    PIC X(40) VALUE "No jobs/internships available.".
-       01  MSG-ENTER-JOB                  PIC X(40) VALUE "Enter job # to view (0 to go back):".
+       01  MSG-ENTER-JOB                  PIC X(80) VALUE "Enter job number to view details, or 0 to go back:".
        01  MSG-INVALID-JOB                PIC X(32) VALUE "Invalid job selection.".
        01  MSG-JOB-DETAILS-HEADER         PIC X(24) VALUE "--- Job Details ---".
-       01  MSG-JOB-DETAILS-DIVIDER        PIC X(16) VALUE "--------".
-       01  MSG-APPLY-OPT                  PIC X(24) VALUE "1. Apply for this Job".
-       01  MSG-BACK-OPT                   PIC X(24) VALUE "2. Back to Job List".
+       01  MSG-JOB-DETAILS-DIVIDER        PIC X(40) VALUE "-------------------".
+       01  MSG-APPLY-OPT                  PIC X(24) VALUE "Apply for this Job".
+       01  MSG-BACK-OPT                   PIC X(24) VALUE "Back to Job List".
        01  MSG-APPLY-SUCCESS              PIC X(64) VALUE "Your application for ".
        01  MSG-APPLY-DUPLICATE            PIC X(64) VALUE "You have already applied for this job.".
 
        *> EPIC 7: View Applications messages
        01  MSG-APPS-HEADER                 PIC X(32) VALUE "--- Your Job Applications ---".
        01  MSG-APPS-USER-SUMMARY           PIC X(32) VALUE "Application Summary for ".
-       01  MSG-APPS-SEP-TOP                PIC X(16) VALUE "--------".
+       01  MSG-APPS-SEP-TOP                PIC X(32) VALUE "------------------------------".
        01  MSG-APPS-SEP-ITEM               PIC X(16) VALUE "---".
-       01  MSG-APPS-SEP-FOOTER             PIC X(16) VALUE "--------".
+       01  MSG-APPS-SEP-FOOTER             PIC X(32) VALUE "------------------------------".
        01  MSG-APPS-TOTAL                  PIC X(20) VALUE "Total Applications: ".
        01  MSG-NO-APPS-FOUND               PIC X(40) VALUE "You have not applied to any jobs yet.".
 
@@ -716,11 +716,34 @@
        LOGGED-IN-SECTION.
        LOGGED-IN-MENU.
            PERFORM UNTIL EOF-IN
-               MOVE MSG-MENU-JOBS         TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-SEARCH-USER  TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-LEARN-SKILL  TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-VIEW-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-VIEW-NETWORK TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+               *>MOVE MSG-MENU-JOBS         TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-MENU-SEARCH-USER  TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-MENU-LEARN-SKILL  TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-MENU-VIEW-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-MENU-VIEW-NETWORK TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-ENTER-CHOICE2     TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-MENU-JOBS) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-MENU-SEARCH-USER) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-MENU-LEARN-SKILL) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-MENU-VIEW-PENDING) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-MENU-VIEW-NETWORK) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
                MOVE MSG-ENTER-CHOICE2     TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEXT-LINE
@@ -2072,10 +2095,28 @@
        JOBS-MENU.
            PERFORM UNTIL WS-JOB-CHOICE = '4' OR EOF-IN
                MOVE MSG-JOBS-HEADER   TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-JOBS-POST     TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-JOBS-BROWSE   TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-JOBS-VIEW-APPS TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-JOBS-BACK     TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-JOBS-POST     TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-JOBS-BROWSE   TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-JOBS-VIEW-APPS TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-JOBS-BACK     TO WS-MSG PERFORM DISPLAY-AND-LOG
+               *>MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-JOBS-POST) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-JOBS-BROWSE) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-JOBS-VIEW-APPS) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-JOBS-BACK) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
                MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEXT-LINE
@@ -2110,6 +2151,7 @@
            PERFORM UNTIL EOF-IN
                PERFORM DISPLAY-JOB-LIST
 
+               MOVE "-----------------------------" TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-ENTER-JOB TO WS-MSG PERFORM DISPLAY-AND-LOG
                PERFORM READ-NEXT-LINE
                IF EOF-IN
@@ -2166,8 +2208,16 @@
            MOVE SPACES TO WS-MSG
            MOVE MSG-JOB-DETAILS-DIVIDER TO WS-MSG PERFORM DISPLAY-AND-LOG
 
-           MOVE MSG-APPLY-OPT    TO WS-MSG PERFORM DISPLAY-AND-LOG
-           MOVE MSG-BACK-OPT     TO WS-MSG PERFORM DISPLAY-AND-LOG
+           *>MOVE MSG-APPLY-OPT    TO WS-MSG PERFORM DISPLAY-AND-LOG
+           *>MOVE MSG-BACK-OPT     TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+           MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-APPLY-OPT) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+               STRING "    " FUNCTION TRIM(MSG-BACK-OPT) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
            MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            PERFORM READ-NEXT-LINE
@@ -2182,7 +2232,7 @@
                    MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
            END-EVALUATE
 
-           MOVE MSG-SEPARATOR-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
+           *>MOVE MSG-SEPARATOR-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
 
        APPLY-FOR-JOB.
@@ -2450,13 +2500,13 @@
                MOVE WS-I TO WS-IDX-DISPLAY
                MOVE SPACES TO WS-MSG
                STRING
-                   FUNCTION TRIM(WS-IDX-DISPLAY)         DELIMITED BY SIZE
-                   ". "                                  DELIMITED BY SIZE
+                   "    "                                DELIMITED BY SIZE
                    FUNCTION TRIM(WS-JOB-TITLE(WS-I))     DELIMITED BY SIZE
-                   " | "                                 DELIMITED BY SIZE
+                   " at "                                DELIMITED BY SIZE
                    FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))  DELIMITED BY SIZE
-                   " — "                                 DELIMITED BY SIZE
+                   " ("                                  DELIMITED BY SIZE
                    FUNCTION TRIM(WS-JOB-LOCATION(WS-I))  DELIMITED BY SIZE
+                   ")"                                   DELIMITED BY SIZE
                    INTO WS-MSG
                END-STRING
                PERFORM DISPLAY-AND-LOG
@@ -2478,7 +2528,7 @@
            MOVE 0 TO WS-TMP-COUNT
 
            *> Loop through all applications
-           PERFORM VARYING APP-IDX FROM 1 BY 1 UNTIL APP-IDX > WS-APPLICATIONS-COUNT
+           PERFORM VARYING APP-IDX FROM WS-APPLICATIONS-COUNT BY -1 UNTIL APP-IDX < 1
                *> Check if the application belongs to the current user
                IF FUNCTION TRIM(WS-APP-USER(APP-IDX)) = FUNCTION TRIM(WS-CURRENT-USERNAME)
                    *> Found an application. Now find the job details.
@@ -2510,13 +2560,6 @@
                            STRING "Location: " FUNCTION TRIM(WS-JOB-LOCATION(JOB-IDX))
                                   INTO WS-MSG END-STRING
                            PERFORM DISPLAY-AND-LOG
-
-                           MOVE FUNCTION TRIM(WS-JOB-SALARY(JOB-IDX)) TO WS-SALARY-TRIM
-                           IF WS-SALARY-TRIM NOT = SPACES AND WS-SALARY-TRIM NOT = "NONE"
-                               MOVE SPACES TO WS-MSG
-                               STRING "Salary: " WS-SALARY-TRIM INTO WS-MSG END-STRING
-                               PERFORM DISPLAY-AND-LOG
-                           END-IF
                        END-IF
                    END-PERFORM
                END-IF
