@@ -4,3 +4,7 @@
 4|alice
 7|testuser
 6|testuser
+1|UserOneApp
+1|UserMultiApp
+2|UserMultiApp
+1|user2
