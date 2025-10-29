@@ -1,0 +1,37 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, alice!
+1. Search for a job
+2. Find someone you know
+3. Learn a New Skill
+4. View My Pending Connection Requests
+5. View My Network
+Enter your choice:
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
+--- Available Jobs/Internships ---
+1. Software Intern | Acme Corp — Tampa, FL
+2. Data Analyst | DataCo — New York, NY
+3. Marketing Intern | BrandInc — Chicago, IL
+Enter job # to view (0 to go back):
+----------------------------------
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
+1. Search for a job
+2. Find someone you know
+3. Learn a New Skill
+4. View My Pending Connection Requests
+5. View My Network
+Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---

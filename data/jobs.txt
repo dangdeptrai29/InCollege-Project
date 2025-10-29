@@ -1,58 +1,7 @@
-1|testuser|Software Engineer|Front-end Developer|Moffitt|Tampa, FL|90000
-2|testuser|Lab Assistant|Work in the wet lab|Moffitt|Tampa, FL|82000
-3|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
-4|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
-5|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
-6|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
-7|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
-8|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
-9|testuser|Software Engineer Intern|Build front-end features|TechCorp|Remote|70000/year
-10|testuser|Data Analyst Intern|Analyze datasets|DataCorp|New York, NY|65000/year
-11|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
-12|testuser|Teacher|K-12|Hillsborough High School|Tampa, FL|NONE
-13|MyUser|Sample Job|Short description|SampleCorp|Sample City|50000/year
-14|testuser|Software Engineer|Develops and maintains web applications using COBOL.|Tech Solutions Inc.|Tampa, FL|$90,000/year
-15|testuser|Data Analyst|Analyzes large datasets to find trends.|Data Corp|Remote|NONE
-16|testuser|//missing job tile|Develops and maintains web applications.|Tech Solutions Inc.|Tampa, FL|$90,000/year
-17|testuser|QA Tester|//missing job description then success after re-enter|Bug Busters LLC|Austin, TX|$75,000/year
-18|testuser|DevOps Engineer|Manages deployment pipelines.|New York, NY|$110,000/year|Cloud Innovations
-19|testuser|UI/UX Designer|Creates user-friendly interfaces.|Creative Designs Co.|$82,000/year|San Francisco, CA
-20|testuser|This is an excessively long job title designed specifically to test the character limits of the input field for the job title to|A normal description.|A normal employer.|A normal location.|A normal salary.
-21|testuser|Normal Title|This description is intentionally made extremely long to verify that the program can handle inputs that exceed the predefined length for the description field. The primary goal is to ensure application stability and prevent crashes or buffer overflows. The|A normal employer.|A normal location.|A normal salary.
-22|testuser|Normal Title|A normal description.|An Unbelievably Long and Convoluted Company Name International Global Enterprises Corporation Holdings Ltd. That Goes On And On.|A normal location.|A normal salary.
-23|testuser|Normal Title|A normal description.|A normal employer.|A Really Far Away and Hard to Spell City, Near the Big Mountains, In a Very Specific State, United States of America, Planet Ear|A normal salary.
-24|testuser|R&D Tester #3|Responsible for testing new R&D projects.|AT&T|St. Petersburg|$123,456.78
-25|testuser|A description for the corrected job.|Error Flow Inc.|Correctionville, USA|$1/hour|Corrected Title
-26|testuser|Software Intern|First job posting in sequence.|Sequential Jobs Co.|First City|$10/hour
-27|testuser|QA Analyst|Second job posting in sequence.|Sequential Jobs Co.|Second City|$20/hour
-28|testuser|a|b|c|d|e
-29|testuser|Final Test Job|Final test description.|Final Test Company|Final Test Location|Final Test Salary
-30|testuser|Software Engineer|Develops and maintains web applications using COBOL.|Tech Solutions Inc.|Tampa, FL|$90,000/year
-31|testuser|Data Analyst|Analyzes large datasets to find trends.|Data Corp|Remote|NONE
-32|testuser|Develops and maintains web applications.|Tech Solutions Inc.|Tampa, FL|$90,000/year|Project Manager
-33|testuser|QA Tester|Bug Busters LLC|Austin, TX|$75,000/year|Tests software for defects and reports issues.
-34|testuser|DevOps Engineer|Manages deployment pipelines.|New York, NY|$110,000/year|Cloud Innovations
-35|testuser|UI/UX Designer|Creates user-friendly interfaces.|Creative Designs Co.|$82,000/year|San Francisco, CA
-36|testuser|This is an excessively long job title designed specifically to test the character limits of the input field for the job title to|A normal description.|A normal employer.|A normal location.|A normal salary.
-37|testuser|Normal Title|This description is intentionally made extremely long to verify that the program can handle inputs that exceed the predefined length for the description field. The primary goal is to ensure application stability and prevent crashes or buffer overflows. The|A normal employer.|A normal location.|A normal salary.
-38|testuser|Normal Title|A normal description.|An Unbelievably Long and Convoluted Company Name International Global Enterprises Corporation Holdings Ltd. That Goes On And On.|A normal location.|A normal salary.
-39|testuser|Normal Title|A normal description.|A normal employer.|A Really Far Away and Hard to Spell City, Near the Big Mountains, In a Very Specific State, United States of America, Planet Ear|A normal salary.
-40|testuser|R&D Tester #3|Responsible for testing new R&D projects.|AT&T|St. Petersburg|$123,456.78
-41|testuser|A description for the corrected job.|Error Flow Inc.|Correctionville, USA|$1/hour|Corrected Title
-42|testuser|Software Intern|First job posting in sequence.|Sequential Jobs Co.|First City|$10/hour
-43|testuser|QA Analyst|Second job posting in sequence.|Sequential Jobs Co.|Second City|$20/hour
-44|testuser|a|b|c|d|e
-45|testuser|Final Test Job|Final test description.|Final Test Company|Final Test Location|Final Test Salary
-46|testuser|Senior Developer|Lead development of new features.|Innovatech|New York, NY|$150,000/year
-47|testuser|Product Manager|Oversee product lifecycle.|Innovatech|Remote|NONE
-48|testuser|Senior Developer|Lead development of new features.|Innovatech|New York, NY|$150,000/year
-49|testuser|Product Manager|Oversee product lifecycle.|Innovatech|Remote|NONE
-50|testuser|Technical Writer|Manuals & More|Chicago, IL|$60,000/year|Creates helpful documentation for users.
-51|testuser|This Job Title Is Intentionally And Unnecessarily Long To Test The Limits Of The Input Field And Ensure That The Application Can|A normal description for the long title job.|Long Entry Testers|A normal location.|A normal salary.
-52|testuser|R&D Engineer #5|Work on "next-gen" projects!|AT&T|St. Louis, MO|$99,999
-53|testuser|A|B|C|D|E
-54|testuser|First Sequential Job|First of two jobs posted in one session.|MultiPost Inc.|City A|$1000
-55|testuser|Second Sequential Job|Second of two jobs posted in one session.|MultiPost Inc.|City B|$2000
-56|testuser|I/O Test Analyst|Tests input/output consistency.|Testville|$55,000/year|Consistent Coders LLC
-57|testuser|Senior Developer|Lead development of new features.|Innovatech|New York, NY|$150,000/year
-58|MyUser|Senior Developer|Lead development of new features.|Innovatech|New York, NY|$150,000/year
+1|alice|Software Intern|Build tools for a COBOL project.|Acme Corp|Tampa, FL|NONE
+2|bob|Test Intern|Testing products.|Moffitt|Tampa, FL|NONE
+3|john|Testing Intern|Testing code|Moffitt|Tampa, FL|9000
+4|alice|Frontend Dev|Build interfaces for websites|DataCorp|New York, NY|20000
+5|testuser|Product Manager|Manages technical projects.|MataData|Dallas, TX|50000
+6|john|Software Intern|Develop tools for internal testing and automation.|TechCorp|New York, NY|$25/hour
+7|alice|Data Analyst|Analyze data for business problems.|DataSolutions|Remote|$15/hour

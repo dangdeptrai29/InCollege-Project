@@ -1,6 +1,9 @@
-alice|alice123
+alice|Abcdef1!
+testuser|TestUser1!
+john|Password1!
 bob|bob123
-testuser|Password123!
-otheruser|testpass
-friendb|fbpass
-MyUser|MyPassword
+UserEmpty|TestUser1!
+UserOneApp|TestUser1!
+UserMultiApp|TestUser1!
+user1|Password1!
+user2|Password1!

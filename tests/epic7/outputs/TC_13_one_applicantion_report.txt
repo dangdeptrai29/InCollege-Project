@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, testuser!
+Welcome, UserOneApp!
     Search for a job
     Find someone you know
     Learn a new skill
@@ -30,15 +30,33 @@ Enter your choice:
 Enter job number to view details, or 0 to go back:
 --- Job Details ---
 Title: Software Intern
-Employer: TechCorp
-Location: New York, NY
-Description: Develop tools for internal testing and automation.
-Salary: $25/hour
+Employer: Acme Corp
+Location: Tampa, FL
+Description: Build tools for a COBOL project.
 -------------------
     Apply for this Job
     Back to Job List
 Enter your choice:
-You have already applied for this job.
+Your application for Software Intern at Acme Corp has been submitted.
+--- Available Jobs Listings ---
+    Software Intern at Acme Corp (Tampa, FL)
+    Test Intern at Moffitt (Tampa, FL)
+    Testing Intern at Moffitt (Tampa, FL)
+    Frontend Dev at DataCorp (New York, NY)
+    Product Manager at MataData (Dallas, TX)
+    Software Intern at TechCorp (New York, NY)
+    Data Analyst at DataSolutions (Remote)
+-----------------------------
+Enter job number to view details, or 0 to go back:
+--- Job Details ---
+Title: Test Intern
+Employer: Moffitt
+Location: Tampa, FL
+Description: Testing products.
+-------------------
+    Apply for this Job
+    Back to Job List
+Enter your choice:
 --- Available Jobs Listings ---
     Software Intern at Acme Corp (Tampa, FL)
     Test Intern at Moffitt (Tampa, FL)
@@ -57,22 +75,24 @@ Enter job number to view details, or 0 to go back:
     Back to Main Menu
 Enter your choice:
 --- Your Job Applications ---
-Application Summary for testuser
+Application Summary for UserOneApp
 ------------------------------
 Job Title: Software Intern
-Employer: TechCorp
-Location: New York, NY
----
-Job Title: Data Analyst
-Employer: DataSolutions
-Location: Remote
+Employer: Acme Corp
+Location: Tampa, FL
 ------------------------------
-Total Applications: 2
+Total Applications: 1
 ------------------------------
 --- Job Search/Internship Menu ---
     Post a Job/Internship
     Browse Jobs/Internships
     View My Applications
     Back to Main Menu
+Enter your choice:
+    Search for a job
+    Find someone you know
+    Learn a new skill
+    View My Pending Connection Requests
+    View My Network
 Enter your choice:
 --- END_OF_PROGRAM_EXECUTION ---
