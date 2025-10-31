@@ -1,59 +1,67 @@
-# InCollege Project – Week 5 Deliverable
+## InCollege Project – Week 8 Deliverable
 
-## Description
+### Description
 
-This repository contains the **Week 5 deliverable** for the InCollege Project.  
-The objective of this milestone is to complete the connection system by enabling users to **accept or reject pending connection requests** and **view their established network**.  
-All inputs are read from file, all outputs are displayed on screen and duplicated into a file for validation.
+This repository contains the Week 8 deliverable for the InCollege Project. The objective of this milestone is to implement the Basic Messaging System (Part 1), enabling users to send private messages to other users they are already connected with.
 
----
+All inputs are read from file, and all outputs are displayed on screen and duplicated into an output file for verification and automated testing.
 
-## Key Features
+### Key Features
 
-### ✅ Manage Pending Connection Requests
-- View all pending connection requests (from Week 4).  
-- Accept or reject each request individually.
-- Accepting a request:
-  - Creates a permanent connection between the two users.
-  - Removes that request from the pending list.
-- Rejecting a request:
-  - Simply removes it from the pending list.
-- The user receives confirmation after each action.
+- **Messaging System – Part 1 (Send Message)**
+  - A new Messages option is added to the main post-login menu.
+  - Upon selecting Messages, users will see:
+    1. Send a New Message
+    2. View My Messages (under construction for this week)
 
-### ✅ Display Established Network
-- A new menu option `5. View My Network` shows all users currently connected to the logged-in user.
-- Each connection displays at least the connected user's full name and may include their University and Major.
+- **Sending a Message**
+  - The user selects Send a New Message and enters the recipient’s username.
+  - The program verifies:
+    - The recipient exists and is already connected to the sender.
+    - If not connected or not found, an appropriate error is displayed.
+  - After validation, the user is prompted to enter message content (free-form text).
+  - Once entered:
+    - The message is persistently saved in a data file.
+    - Confirmation is displayed on screen and recorded in the output file.
 
-### ✅ File I/O Requirements
-- **Input**: All inputs are read from `io/InCollege-Input.txt`.
-- **Output**: All screen output is mirrored to `io/InCollege-Output.txt`.
-- This ensures reproducible, automated testing.
+- **Message Persistence**
+  - Each message record includes:
+    - Sender’s Username
+    - Recipient’s Username
+    - Message Content
+    - (Optional) Timestamp of when the message was sent
+  - Messages remain available even after the program exits (for Week 9 retrieval).
 
----
+- **File I/O Requirements**
+  - Input: All inputs are read from `io/InCollege-Input.txt`.
+  - Output: All screen output is mirrored to `io/InCollege-Output.txt`.
+  - Ensures reproducible and verifiable test runs.
 
-## Tester Responsibilities
+### Tester Responsibilities
 
-Testers are responsible for verifying every new feature end-to-end:
+Testers are responsible for verifying all new message-sending functionality end-to-end.
 
-1. **Develop Test Cases**:
-   - Accept single connection.
-   - Reject single connection.
-   - Mixed accept/reject scenario.
-   - Network display after accepted requests.
-   - Edge cases (no pending requests, multiple requests).
+- **Develop Test Cases**
+  -  Positive cases (sending messages to valid connections)
+  -  Negative cases:
+    - Sending to non-existent users
+    - Sending to users not in network
+    - Sending to pending connections
+    - Sending overly long messages (edge case)
+  - Persistence test: Verify that sent messages are saved correctly.
 
-2. **Run Automated Tests**:
-   Use the helper script to compile, seed test data, and run each case.
+- **Run Automated Tests**
+  - Use the provided script to compile, seed data, and run each case.
 
-3. **Verify Outputs**:
-   Compare program console vs. output files — they must be identical.
+- **Verify Outputs**
+  - Compare the console and output files — they must be identical.
 
----
+### Installation & Usage
 
-## Installation & Usage
+#### Prerequisites
 
-### Prerequisites
 Install GnuCOBOL on Linux/macOS/WSL:
+
 ```bash
 sudo apt-get install open-cobol
 # or
@@ -61,171 +69,82 @@ brew install gnu-cobol
 ```
 
 Check version:
+
 ```bash
 cobc -v
 ```
 
----
+#### Compile Program
 
-### Compile Program
 ```bash
 cobc -x -free -o InCollegeTest src/InCollege.cob
 ```
 
----
+#### Run Program
 
-### Run Program
 ```bash
 ./InCollegeTest
 ```
 
----
+### Automated Testing (Recommended)
 
-## Automated Testing (Recommended)
+#### Run All Epic 8 Test Cases
 
-### Run All Epic 5 Test Cases
-
-To automatically compile, seed data, and run every Epic 5 test case:
+To automatically compile, seed data, and run every Epic 8 test case:
 
 ```bash
-scripts/run_epic5_generate_outputs.sh
+scripts/run_epic8_generate_outputs.sh
 ```
 
 This will:
-- Reset persistent data (`data/users.txt`, `data/requests.txt`, `data/connections.txt`).
-- Automatically execute every file in `tests/epic5_inputs/`.
-- Save corresponding results in `tests/epic5_outputs/`.
 
-Each run prints confirmation lines like:
-```
-🟩 Generated: tests/epic5_outputs/TC01_accept_single.out.txt
-```
+- Reset persistent data (`data/users.txt`, `data/connections.txt`, `data/messages.txt`)
+- Automatically execute every file in `tests/epic8/inputs/`
+- Save outputs to `tests/epic8/outputs/`
 
----
+Each successful test shows:
 
-### Manual Testing
-
-To test individual cases:
-```bash
-cp tests/epic5_inputs/TC01_accept_single.txt io/InCollege-Input.txt
-:> io/InCollege-Output.txt
-./InCollegeTest
-diff -u tests/epic5_expected/TC01_accept_single.out.txt io/InCollege-Output.txt
+```text
+🟩 Generated: tests/epic8_outputs/TC01_send_valid_connection.out.txt
 ```
 
-If there’s no difference, the test passes silently.
-If there’s a mismatch, `diff` will print the differing lines.
+### Sample Input/Output
 
----
+#### Sample Input (`io/InCollege-Input.txt`)
 
-## Sample Input/Output
-
-### Sample Input (`InCollege-Input.txt`)
-```
+```text
 1
-TestUser
+SendingUser
 Password123!
-4
-5
+6
+1
+ConnectedUser
+Hello there! How are you?
+3
 ```
 
-### Sample Output (`InCollege-Output.txt`)
-```
-Welcome to InCollege!
-1. Log In
-2. Create New Account
-Enter your choice:
-Please enter your username:
-Please enter your password:
-You have successfully logged in.
-Welcome, TestUser!
-1. View My Profile
-2. Search for User
-3. Learn a New Skill
-4. View My Pending Connection Requests
-5. View My Network
-Enter your choice:
---- Pending Connection Requests ---
-Request from: OtherUser
-1. Accept
-2. Reject
-Enter your choice for OtherUser:
-Connection request from OtherUser accepted!
------------------------------------
-1. View My Profile
-2. Search for User
-3. Learn a New Skill
-4. View My Pending Connection Requests
-5. View My Network
-Enter your choice:
---- Your Network ---
-Connected with: OtherUser (University: Another U, Major: Marketing)
-Connected with: FriendB (University: Big State, Major: Engineering)
---------------------
-1. View My Profile
-2. Search for User
-3. Learn a New Skill
-4. View My Pending Connection Requests
-5. View My Network
-Enter your choice:
---- END_OF_PROGRAM_EXECUTION ---
-```
+#### Sample Output (`io/InCollege-Output.txt`)
 
----
 
-## Repository Structure
+### Repository Structure
 
-```
-src/                     → COBOL source files
-data/                    → User, profile, request, connection data
-io/                      → Active input/output files for program runs
-tests/epic5_inputs/      → Input test cases for Week 5
-tests/epic5_outputs/     → Generated outputs
-scripts/                 → Automation scripts (including run_epic5_generate_outputs.sh)
-submission/epic5/        → Zipped deliverables for final submission
-```
+- `src/` → COBOL source files
+- `data/` → Users, connections, and messages data
+- `io/` → Active input/output files for program runs
+- `tests/epic8/inputs/` → Input test cases for Week 8
+- `tests/epic8/outputs/` → Generated outputs
+- `scripts/`
+- `submission/epic8/` → Zipped deliverables for submission
 
----
+### Deliverables Summary
 
-## Deliverables Summary
-
-| # | Deliverable | Description |
-|---|--------------|-------------|
-| 1 | `Roles.txt` | Roles of all team members |
-| 2 | `InCollege.cob` | Working COBOL source file |
-| 3 | `InCollege-Input.txt` | Sample input |
-| 4 | `InCollege-Output.txt` | Sample output |
-| 5 | `Epic5-Storyx-Test-Input.zip` | Compressed test input set |
-| 6 | `Epic5-Storyx-Test-Output.zip` | Actual generated test outputs |
-| 7 | `Jira.jpg` | Screenshot of updated Jira board |
-| 8 | `GitHub.jpg` | Screenshot of GitHub commit history |
-
----
-
-## Submission Instructions
-
-1. Ensure all tests pass:
-   ```bash
-   scripts/run_epic5_generate_outputs.sh
-   ```
-2. Zip deliverables:
-   ```bash
-   zip -r submission/epic5/Epic5-Storyx-Test-Input.zip tests/epic5_inputs
-   zip -r submission/epic5/Epic5-Storyx-Test-Output.zip tests/epic5_outputs
-   ```
-3. Commit & push your final work:
-   ```bash
-   git add .
-   git commit -m "Finalize Week 5 deliverable: Connection acceptance/rejection & network display"
-   git push origin epic5/test
-   ```
-4. Upload your zipped files and screenshots to Canvas.
-
----
-
-## Documentation
-
-- **Architecture Notes:** `docs/epic5/architecture.md`
-- **Test Cases:** `docs/epic5/test_cases.md`
-- **Automation Script:** `scripts/run_epic5_generate_outputs.sh`
-- **Data Samples:** `data/users.txt`, `data/profiles.txt`, `data/requests.txt`, `data/connections.txt`
+| # | Deliverable                    | Description                                       |
+|---|--------------------------------|---------------------------------------------------|
+| 1 | `Roles.txt`                    | Roles of all team members                         |
+| 2 | `InCollege.cob`                | Working COBOL program with Messaging menu         |
+| 3 | `InCollege-Input.txt`          | Sample input demonstrating message sending        |
+| 4 | `InCollege-Output.txt`         | Sample output of message sent successfully        |
+| 5 | `Epic8-Storyx-Test-Input.zip`  | Compressed test input files                       |
+| 6 | `Epic8-Storyx-Test-Output.zip` | Actual generated test outputs                     |
+| 7 | `Jira.jpg`                      | Screenshot of updated Jira board (Epic #8)        |
+| 8 | `GitHub.jpg`                    | Screenshot of GitHub commit history               |
