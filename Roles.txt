@@ -1,7 +1,7 @@
-WEEK 7 ROLES
-Epic #7:	
-   	Scrum Master:	Tam Nguyen
-	Coder #1:	Dang Nguyen
-	Coder #2:	Hieu Nguyen
-	Tester #1:	Minh Thien Nguyen
-	Tester #2:	Phong Nguyen
+WEEK 8 ROLES
+Epic #8:	
+   	Scrum Master:	Phong Nguyen
+	Coder #1:		Tam Nguyen
+	Coder #2:		Dang Nguyen
+	Tester #1:		Hieu Nguyen
+	Tester #2:		Minh Thien Nguyen
