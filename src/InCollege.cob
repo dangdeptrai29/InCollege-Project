@@ -36,6 +36,10 @@
            SELECT APPLICATIONS-FILE ASSIGN TO "data/applications.txt"
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-APP-STATUS.
+           *> New file for messages
+           SELECT MESSAGES-FILE ASSIGN TO "data/messages.txt"
+               ORGANIZATION IS LINE SEQUENTIAL
+               FILE STATUS IS WS-MSG-FILE-STATUS.
 
        DATA DIVISION.
        FILE SECTION.
@@ -67,6 +71,9 @@
 
        FD  APPLICATIONS-FILE.
        01  APPLICATION-REC                PIC X(256).
+
+       FD  MESSAGES-FILE.
+       01  MESSAGE-REC                    PIC X(512).
 
        WORKING-STORAGE SECTION.
        *> File status codes
@@ -510,7 +517,7 @@
     
        01  WS-MESSAGE-CHOICE              PIC X(8) VALUE SPACES.
        77  WS-RECEIVER             PIC X(128) VALUE SPACES.
-       77  WS-CONTENT              PIC X(200) VALUE SPACES.
+       77  WS-CONTENT              PIC X(256) VALUE SPACES.
        77  WS-CONTENT-LENGTH       PIC 9(4)   VALUE 0.
 
        PROCEDURE DIVISION.
