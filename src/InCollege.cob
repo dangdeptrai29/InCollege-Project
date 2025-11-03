@@ -1,23 +1,7 @@
        >>SOURCE FORMAT FREE
        IDENTIFICATION DIVISION.
        PROGRAM-ID. INCOLLEGE.
-       AUTHOR. InCollege Team.
-       *> Epic 1 – Task 1: Notify user on unsuccessful login
-       *> Follow PDF requirements: read input from file, display output to
-       *> screen and also write identical output to an output file.
-       *>
-       *> Epic 5 – Connection Management & Network Display
-       *> Phase 1 (Developer 1):
-       *>   - Added GET-FULL-NAME helper for profile lookups
-       *>   - Enhanced VIEW-PENDING-REQUESTS with interactive accept/reject
-       *>   - Implemented ACCEPT-CONNECTION with status update and file persistence
-       *>   - Implemented REJECT-CONNECTION with array shifting and file persistence
-       *>   - Added WS-DISPLAY-NAME and WS-TARGET-USERNAME working storage variables
-       *>   - Added message constants for accept/reject options
-       *> Phase 2 (Developer 2):
-       *>   - Added VIEW-MY-NETWORK paragraph to display established connections.
-       *>   - Added "View My Network" option to the post-login menu.
-       *>   - Added message constants for network display.
+       AUTHOR. Wisconsin Team.
 
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
@@ -137,7 +121,6 @@
        01  MSG-WELCOME-PFX                PIC X(9)   VALUE "Welcome, ".
        01  MSG-ENTER-USER                 PIC X(64)  VALUE "Please enter your username:".
        01  MSG-ENTER-PASS                 PIC X(64)  VALUE "Please enter your password:".
-       01  MSG-UNDER-CONST                PIC X(32)  VALUE "Under construction".
        01  MSG-INVALID-CHOICE             PIC X(32)  VALUE "Invalid option".
 
        *> In-memory users table
@@ -323,12 +306,12 @@
        *> Main menu messages
        01  MSG-MENU-VIEW-PROFILE          PIC X(32) VALUE "1. View My Profile".
        01  MSG-MENU-JOBS                  PIC X(32) VALUE "Search for a job".
-       01  MSG-MENU-SEARCH-USER           PIC X(32) VALUE "Find someone you know".
-       01  MSG-MENU-LEARN-SKILL           PIC X(32) VALUE "Learn a new skill".
+       01  MSG-MENU-SEARCH-USER           PIC X(32) VALUE "2. Search for User".
+       01  MSG-MENU-LEARN-SKILL           PIC X(32) VALUE "3. Learn a New Skill".
        01  MSG-MENU-VIEW-PENDING          PIC X(48) VALUE
-           "View My Pending Connection Requests".
-       01  MSG-MENU-VIEW-NETWORK          PIC X(32) VALUE "View My Network".
-       01  MSG-ENTER-CHOICE2              PIC X(20) VALUE "Enter your choice: ".
+           "4. View My Pending Connection Requests".
+       01  MSG-MENU-VIEW-NETWORK          PIC X(32) VALUE "5. View My Network".
+       01  MSG-MENU-MESSAGE               PIC X(32) VALUE "6. Messages".
 
        *> Skills
        01  MSG-SKILL1                     PIC X(32) VALUE "Skill 1".
@@ -337,7 +320,6 @@
        01  MSG-SKILL4                     PIC X(32) VALUE "Skill 4".
        01  MSG-SKILL5                     PIC X(32) VALUE "Skill 5".
        01  MSG-SKILL6                     PIC X(32) VALUE "Go Back".
-       01  MSG-ENTER-SKILL                PIC X(19) VALUE "Enter your choice: ".
        01  MSG-SKILL-UNDER                PIC X(64) VALUE
            "This skill is under construction.".
 
@@ -454,8 +436,6 @@
        01  MSG-JOBS-BROWSE                PIC X(32) VALUE "Browse Jobs/Internships".
        01  MSG-JOBS-VIEW-APPS             PIC X(32) VALUE "View My Applications".
        01  MSG-JOBS-BACK                  PIC X(32) VALUE "Back to Main Menu".
-       01  MSG-BROWSE-UNDER-CONST         PIC X(48)
-           VALUE "Browse Jobs/Internships is under construction.".
 
        01  MSG-POST-JOB-HEADER            PIC X(40) VALUE "--- Post a New Job/Internship ---".
        01  MSG-POST-JOB-TITLE             PIC X(32) VALUE "Enter Job Title:".
@@ -497,7 +477,26 @@
        01  WS-TEST-MODE                   PIC X VALUE 'N'.
            88  TEST-MODE-ON                      VALUE 'Y'.
            88  TEST-MODE-OFF                     VALUE 'N'.
+    
+       *> EPIC 8: Send/Receive Messages
+       01  MSG-MESSAGES-HEADER            PIC X(21) VALUE "--- Messages Menu ---".
+       01  MSG-MESSAGES-FOOTER            PIC X(32) VALUE "---------------------".  
+       01  MSG-MESSAGES-SEND              PIC X(22) VALUE "1. Send a New Message".
+       01  MSG-MESSAGES-VIEW              PIC X(21) VALUE "2. View My Messages".
+       01  MSG-MESSAGES-BACK              PIC X(22) VALUE "3. Back to Main Menu".
+    
+       01  MSG-ENTER-RECEIVER             PIC X(64) VALUE "Enter recipient's username (must be a connection):".
+       01  MSG-ENTER-CONTENT              PIC X(64) VALUE "Enter your message (max 200 chars):".
+       01  MSG-SEND-SUCCESS-1             PIC X(16) VALUE "Message sent to ".
+       01  MSG-SEND-SUCCESS-2             PIC X(16) VALUE " successfully!".
 
+       01  MSG-NOT-CONNECTED              PIC X(32) VALUE "User not found in your network.".
+       01  MSG-VIEW-CONSTRUCTION          PIC X(100) VALUE "View My Messages is under construction.".
+    
+       01  WS-MESSAGE-CHOICE              PIC X(8) VALUE SPACES.
+       77  WS-RECEIVER             PIC X(128) VALUE SPACES.
+       77  WS-CONTENT              PIC X(200) VALUE SPACES.
+    
        PROCEDURE DIVISION.
        MAIN-SECTION.
            PERFORM INIT-FILES
@@ -717,34 +716,14 @@
        LOGGED-IN-MENU.
            PERFORM UNTIL EOF-IN
 
-               *>MOVE MSG-MENU-JOBS         TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-MENU-SEARCH-USER  TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-MENU-LEARN-SKILL  TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-MENU-VIEW-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-MENU-VIEW-NETWORK TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-ENTER-CHOICE2     TO WS-MSG PERFORM DISPLAY-AND-LOG
-
-               MOVE SPACES TO WS-MSG
-               STRING "    " FUNCTION TRIM(MSG-MENU-JOBS) INTO WS-MSG END-STRING
-               PERFORM DISPLAY-AND-LOG
-
-               MOVE SPACES TO WS-MSG
-               STRING "    " FUNCTION TRIM(MSG-MENU-SEARCH-USER) INTO WS-MSG END-STRING
-               PERFORM DISPLAY-AND-LOG
-
-               MOVE SPACES TO WS-MSG
-               STRING "    " FUNCTION TRIM(MSG-MENU-LEARN-SKILL) INTO WS-MSG END-STRING
-               PERFORM DISPLAY-AND-LOG
-
-               MOVE SPACES TO WS-MSG
-               STRING "    " FUNCTION TRIM(MSG-MENU-VIEW-PENDING) INTO WS-MSG END-STRING
-               PERFORM DISPLAY-AND-LOG
-
-               MOVE SPACES TO WS-MSG
-               STRING "    " FUNCTION TRIM(MSG-MENU-VIEW-NETWORK) INTO WS-MSG END-STRING
-               PERFORM DISPLAY-AND-LOG
-
-               MOVE MSG-ENTER-CHOICE2     TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-VIEW-PROFILE TO WS-MSG PERFORM DISPLAY-AND-LOG
+      *>         MOVE MSG-MENU-JOBS         TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-SEARCH-USER  TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-LEARN-SKILL  TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-VIEW-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-VIEW-NETWORK TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-MESSAGE     TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-ENTER-CHOICE     TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-LOGGED-CHOICE
@@ -753,11 +732,13 @@
                END-IF
 
                EVALUATE WS-LOGGED-CHOICE
-                   WHEN '1'  PERFORM JOBS-MENU
+      *>             WHEN '1'  PERFORM JOBS-MENU
+                   WHEN '1'  PERFORM VIEW-MY-PROFILE
                    WHEN '2'  PERFORM USER-SEARCH-MENU
                    WHEN '3'  PERFORM SKILL-MENU
                    WHEN '4'  PERFORM VIEW-PENDING-REQUESTS
                    WHEN '5'  PERFORM VIEW-MY-NETWORK
+                   WHEN '6'  PERFORM MESSAGE-MENU
                    WHEN OTHER
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
@@ -766,14 +747,14 @@
 
        SKILL-MENU.
            PERFORM UNTIL WS-SKILL-CHOICE = '6' OR EOF-IN
-               MOVE "Learn a new skill:" TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-LEARN-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL1 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL3 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL4 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL5 TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL6 TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-ENTER-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-SKILL-CHOICE
@@ -2092,6 +2073,7 @@
            END-IF
            EXIT.
 
+       JOBS-SECTION.
        JOBS-MENU.
            PERFORM UNTIL WS-JOB-CHOICE = '4' OR EOF-IN
                MOVE MSG-JOBS-HEADER   TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -2625,6 +2607,128 @@
            SET TEST-MODE-OFF TO TRUE
            MOVE "=== UNIT TESTS DONE ===" TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
+    
+       MESSAGES-SECTION.
+       MESSAGE-MENU.
+           MOVE MSG-MESSAGES-HEADER TO WS-MSG 
+           PERFORM DISPLAY-AND-LOG
+           PERFORM UNTIL WS-MESSAGE-CHOICE = '3' OR EOF-IN
+               MOVE MSG-MESSAGES-SEND TO WS-MSG 
+               PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MESSAGES-VIEW TO WS-MSG 
+               PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MESSAGES-BACK TO WS-MSG 
+               PERFORM DISPLAY-AND-LOG
+               
+               MOVE MSG-ENTER-CHOICE TO WS-MSG 
+               PERFORM DISPLAY-AND-LOG
+               PERFORM READ-NEXT-LINE
+               MOVE WS-LINE TO WS-MESSAGE-CHOICE
+               IF EOF-IN
+                   EXIT PERFORM
+               END-IF
+               
+               EVALUATE WS-MESSAGE-CHOICE
+                   WHEN '1'
+                       PERFORM SEND-MESSAGE
+                   WHEN '2'
+                       PERFORM VIEW-MESSAGES
+                   WHEN '3'
+                       EXIT PERFORM
+                   WHEN OTHER
+                       MOVE MSG-INVALID-CHOICE TO WS-MSG 
+                       PERFORM DISPLAY-AND-LOG
+               END-EVALUATE
+           END-PERFORM
+           MOVE SPACES TO WS-MESSAGE-CHOICE
+           EXIT.
+    
+       SEND-MESSAGE.
+           MOVE MSG-ENTER-RECEIVER TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+
+           PERFORM READ-NEXT-LINE
+           MOVE WS-LINE TO WS-RECEIVER
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+
+           MOVE MSG-ENTER-CONTENT TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+
+           PERFORM READ-NEXT-LINE
+           MOVE WS-LINE TO WS-CONTENT
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Validate receiver exists and is a connection
+           PERFORM VALIDATE-RECEIVER
+
+           IF MATCH-FOUND
+               *> TODO (Dev2): Save message to file
+               *> Format: sender|receiver|content|timestamp
+               *> PERFORM SAVE-MESSAGE
+
+               *> Display success message
+               MOVE SPACES TO WS-MSG
+               STRING
+                   MSG-SEND-SUCCESS-1           DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-RECEIVER)   DELIMITED BY SIZE
+                   MSG-SEND-SUCCESS-2           DELIMITED BY SIZE
+                   INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+
+           MOVE MSG-MESSAGES-FOOTER TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+           EXIT.
+
+       VALIDATE-RECEIVER.
+           SET MATCH-NOT-FOUND TO TRUE
+
+           *> Step 1: Check if recipient exists in users table
+           PERFORM VARYING WS-I FROM 1 BY 1
+                   UNTIL WS-I > WS-USERS-COUNT OR MATCH-FOUND
+               IF FUNCTION TRIM(WS-TBL-USERNAME(WS-I)) = 
+                  FUNCTION TRIM(WS-RECEIVER)
+                   SET MATCH-FOUND TO TRUE
+               END-IF
+           END-PERFORM
+
+           IF MATCH-NOT-FOUND
+               MOVE MSG-NOT-CONNECTED TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Step 2: Check if they are connected (status = 'A')
+           SET MATCH-NOT-FOUND TO TRUE
+           PERFORM VARYING WS-I FROM 1 BY 1
+                   UNTIL WS-I > WS-CONNECTIONS-COUNT OR MATCH-FOUND
+               IF WS-CONN-STATUS(WS-I) = 'A'
+                   IF (WS-CONN-SENDER(WS-I) = WS-CURRENT-USERNAME AND
+                       WS-CONN-RECEIVER(WS-I) = WS-RECEIVER)
+                   OR (WS-CONN-SENDER(WS-I) = WS-RECEIVER AND
+                       WS-CONN-RECEIVER(WS-I) = WS-CURRENT-USERNAME)
+                       SET MATCH-FOUND TO TRUE
+                   END-IF
+               END-IF
+           END-PERFORM
+
+           IF MATCH-NOT-FOUND
+               MOVE MSG-NOT-CONNECTED TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+
+           EXIT.
+    
+       VIEW-MESSAGES.
+           MOVE MSG-VIEW-CONSTRUCTION TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+           EXIT.
+       
 
        HELPER-SECTION.
        DISPLAY-AND-LOG.
