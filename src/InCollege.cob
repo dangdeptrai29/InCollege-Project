@@ -80,6 +80,7 @@
        01  WS-J-DISP                      PIC 9.
        01  WS-APP-STATUS                  PIC XX VALUE "00".
        01  WS-APPL-STATUS                 PIC XX VALUE "00".
+       01  WS-MSG-FILE-STATUS             PIC XX VALUE "00".
 
        *> End-of-file flags with condition names
        01  WS-EOF-IN                      PIC X VALUE 'N'.
@@ -100,6 +101,9 @@
        01  WS-EOF-APPS                    PIC X VALUE 'N'.
            88  EOF-APPS                          VALUE 'Y'.
            88  NOT-EOF-APPS                      VALUE 'N'.
+       01  WS-EOF-MSG                     PIC X VALUE 'N'.
+           88  EOF-MSG                           VALUE 'Y'.
+           88  NOT-EOF-MSG                       VALUE 'N'.
 
        *> Generic Input buffer
        01  WS-LINE                        PIC X(256) VALUE SPACES.
@@ -186,6 +190,17 @@
                    INDEXED BY APP-IDX.
                10  WS-APP-JOB-ID          PIC 9(6).
                10  WS-APP-USER            PIC X(128).
+
+       *> Messages table (sender | receiver | content)
+       01  WS-MESSAGES-MAX                PIC 9(4) VALUE 500.
+       01  WS-MESSAGES-COUNT              PIC 9(4) VALUE 0.
+       01  WS-MESSAGES-TABLE.
+           05  WS-MESSAGE-ENTRY OCCURS 0 TO 500 TIMES
+                   DEPENDING ON WS-MESSAGES-COUNT
+                   INDEXED BY MSG-IDX.
+               10  WS-MSG-SENDER-ENTRY    PIC X(128).
+               10  WS-MSG-RECEIVER-ENTRY  PIC X(128).
+               10  WS-MSG-CONTENT-ENTRY   PIC X(200).
 
        *> Variables for handling job input
        01  WS-NEW-JOB-ID                  PIC 9(6).
@@ -496,7 +511,8 @@
        01  WS-MESSAGE-CHOICE              PIC X(8) VALUE SPACES.
        77  WS-RECEIVER             PIC X(128) VALUE SPACES.
        77  WS-CONTENT              PIC X(200) VALUE SPACES.
-    
+       77  WS-CONTENT-LENGTH       PIC 9(4)   VALUE 0.
+
        PROCEDURE DIVISION.
        MAIN-SECTION.
            PERFORM INIT-FILES
@@ -522,6 +538,8 @@
            PERFORM INIT-LOAD-JOBS
            *> Epic 7: Load applications
            PERFORM INIT-LOAD-APPLICATIONS
+           *> Epic 8: Load messages
+           PERFORM INIT-LOAD-MESSAGES
 
            EXIT.
 
@@ -2665,21 +2683,49 @@
            *> Validate receiver exists and is a connection
            PERFORM VALIDATE-RECEIVER
 
-           IF MATCH-FOUND
-               *> TODO (Dev2): Save message to file
-               *> Format: sender|receiver|content|timestamp
-               *> PERFORM SAVE-MESSAGE
-
-               *> Display success message
-               MOVE SPACES TO WS-MSG
-               STRING
-                   MSG-SEND-SUCCESS-1           DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-RECEIVER)   DELIMITED BY SIZE
-                   MSG-SEND-SUCCESS-2           DELIMITED BY SIZE
-                   INTO WS-MSG
-               END-STRING
-               PERFORM DISPLAY-AND-LOG
+           IF MATCH-NOT-FOUND
+               EXIT PARAGRAPH
            END-IF
+
+           *> Validate message content (empty check)
+           MOVE FUNCTION LENGTH(FUNCTION TRIM(WS-CONTENT))
+               TO WS-CONTENT-LENGTH
+
+           IF WS-CONTENT-LENGTH = 0
+               MOVE "Message cannot be empty. Please try again." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Validate message length (200 char max)
+           IF WS-CONTENT-LENGTH > 200
+               MOVE "Message exceeds 200 characters. Please try again." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PARAGRAPH
+           END-IF
+
+           *> Save message to table
+           IF WS-MESSAGES-COUNT < WS-MESSAGES-MAX
+               ADD 1 TO WS-MESSAGES-COUNT
+               MOVE WS-CURRENT-USERNAME TO WS-MSG-SENDER-ENTRY(WS-MESSAGES-COUNT)
+               MOVE FUNCTION TRIM(WS-RECEIVER)
+                   TO WS-MSG-RECEIVER-ENTRY(WS-MESSAGES-COUNT)
+               MOVE FUNCTION TRIM(WS-CONTENT)
+                   TO WS-MSG-CONTENT-ENTRY(WS-MESSAGES-COUNT)
+           END-IF
+
+           *> Save to file
+           PERFORM SAVE-MESSAGES
+
+           *> Display success message
+           MOVE SPACES TO WS-MSG
+           STRING
+               MSG-SEND-SUCCESS-1           DELIMITED BY SIZE
+               FUNCTION TRIM(WS-RECEIVER)   DELIMITED BY SIZE
+               MSG-SEND-SUCCESS-2           DELIMITED BY SIZE
+               INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
 
            MOVE MSG-MESSAGES-FOOTER TO WS-MSG
            PERFORM DISPLAY-AND-LOG
@@ -2728,7 +2774,52 @@
            MOVE MSG-VIEW-CONSTRUCTION TO WS-MSG
            PERFORM DISPLAY-AND-LOG
            EXIT.
-       
+
+       SAVE-MESSAGES.
+           OPEN OUTPUT MESSAGES-FILE
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-MESSAGES-COUNT
+               MOVE SPACES TO MESSAGE-REC
+               STRING
+                   FUNCTION TRIM(WS-MSG-SENDER-ENTRY(WS-I))   DELIMITED BY SIZE
+                   "|"                                         DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-MSG-RECEIVER-ENTRY(WS-I)) DELIMITED BY SIZE
+                   "|"                                         DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-MSG-CONTENT-ENTRY(WS-I))  DELIMITED BY SIZE
+                   INTO MESSAGE-REC
+               END-STRING
+               WRITE MESSAGE-REC
+           END-PERFORM
+           CLOSE MESSAGES-FILE
+           EXIT.
+
+       INIT-LOAD-MESSAGES.
+           MOVE 0 TO WS-MESSAGES-COUNT
+           OPEN INPUT MESSAGES-FILE
+           IF WS-MSG-FILE-STATUS = "00"
+               SET NOT-EOF-MSG TO TRUE
+               PERFORM UNTIL EOF-MSG
+                   READ MESSAGES-FILE
+                       AT END SET EOF-MSG TO TRUE
+                       NOT AT END PERFORM PARSE-MESSAGE-REC
+                   END-READ
+               END-PERFORM
+               CLOSE MESSAGES-FILE
+           END-IF
+           EXIT.
+
+       PARSE-MESSAGE-REC.
+           INITIALIZE WS-T1 WS-T2 WS-T3
+           UNSTRING MESSAGE-REC DELIMITED BY '|'
+               INTO WS-T1 WS-T2 WS-T3
+           END-UNSTRING
+           IF WS-T1 NOT = SPACES AND WS-MESSAGES-COUNT < WS-MESSAGES-MAX
+               ADD 1 TO WS-MESSAGES-COUNT
+               MOVE FUNCTION TRIM(WS-T1) TO WS-MSG-SENDER-ENTRY(WS-MESSAGES-COUNT)
+               MOVE FUNCTION TRIM(WS-T2) TO WS-MSG-RECEIVER-ENTRY(WS-MESSAGES-COUNT)
+               MOVE FUNCTION TRIM(WS-T3) TO WS-MSG-CONTENT-ENTRY(WS-MESSAGES-COUNT)
+           END-IF
+           EXIT.
+
 
        HELPER-SECTION.
        DISPLAY-AND-LOG.
@@ -2746,3 +2837,4 @@
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-LINE
            END-READ
            EXIT.
+
