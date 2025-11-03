@@ -1,2 +1,3 @@
 alice|Abcdef1!
+bob|TestPass2@
 charlie|SecureP3#

@@ -20,8 +20,7 @@ Enter your choice:
 Enter your choice:
 Enter recipient's username (must be a connection):
 Enter your message (max 200 chars):
-Message sent to charlie successfully!
----------------------
+User not found in your network.
 1. Send a New Message
 2. View My Messages
 3. Back to Main Menu
