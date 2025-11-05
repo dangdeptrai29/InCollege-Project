@@ -1,0 +1,7 @@
+1
+SendingUser
+sendinguser1
+6
+1
+ConnectedUser
+This is a test message.

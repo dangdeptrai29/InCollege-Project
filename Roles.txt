@@ -1,6 +1,6 @@
 WEEK 8 ROLES
 Epic #8:	
-   	Scrum Master:	Phong Nguyen
+   	Scrum Master:		Phong Nguyen
 	Coder #1:		Tam Nguyen
 	Coder #2:		Dang Nguyen
 	Tester #1:		Hieu Nguyen
