@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, SendingUser!
+Welcome, brandon!
 1. View My Profile
 2. Search for User
 3. Learn a New Skill
@@ -20,7 +20,7 @@ Enter your choice:
 Enter your choice:
 Enter recipient's username (must be a connection):
 Enter your message (max 200 chars):
-Message sent to ConnectedUser successfully!
+Message sent to alice successfully!
 ---------------------
 1. Send a New Message
 2. View My Messages
