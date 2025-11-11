@@ -208,6 +208,7 @@
                10  WS-MSG-SENDER-ENTRY   PIC X(128).
                10  WS-MSG-RECEIVER-ENTRY PIC X(128).
                10  WS-MSG-CONTENT-ENTRY  PIC X(200).
+               10  WS-MSG-TIMESTAMP-ENTRY PIC X(20).
 
        *> Variables for handling job input
        01  WS-NEW-JOB-ID                 PIC 9(6).
@@ -531,6 +532,14 @@
        01  WS-MESSAGES-FOUND-FLAG        PIC X     VALUE 'N'.
            88  MESSAGES-FOUND                    VALUE 'Y'.
            88  MESSAGES-NOT-FOUND                VALUE 'N'.
+
+        *> Format for timestamp into YYYY-MM-DD HH:MM
+       77 WS-FORMATTED-TS           PIC X(20) VALUE SPACES.
+       77  WS-TS-YEAR                PIC X(4)  VALUE SPACES.
+       77  WS-TS-MONTH               PIC X(2)  VALUE SPACES.
+       77  WS-TS-DAY                 PIC X(2)  VALUE SPACES.
+       77  WS-TS-HOUR                PIC X(2)  VALUE SPACES.
+       77  WS-TS-MINUTE              PIC X(2)  VALUE SPACES.
 
        PROCEDURE DIVISION.
        MAIN-SECTION.
@@ -2699,7 +2708,7 @@
                EXIT PARAGRAPH
            END-IF
 
-      *> Validate receiver exists and is a connection
+           *> Validate receiver exists and is a connection
            PERFORM VALIDATE-RECEIVER
 
            IF MATCH-NOT-FOUND
@@ -2732,6 +2741,12 @@
                MOVE FUNCTION TRIM(WS-CONTENT)
                    TO WS-MSG-CONTENT-ENTRY(WS-MESSAGES-COUNT)
            END-IF
+
+           *> Get current timestamp using built-in function CURRENT-DATE
+           *> This return a string in the format YYYYMMDDHHMMSSmmmmmm
+           MOVE FUNCTION CURRENT-DATE(1:8) TO WS-T4  *> YYYYMMDD
+           MOVE FUNCTION CURRENT-DATE(9:6) TO WS-T4(9:6)  *> HHMMSS
+           MOVE WS-T4 TO WS-MSG-TIMESTAMP-ENTRY(WS-MESSAGES-COUNT)
 
            *> Save to file
            PERFORM SAVE-MESSAGES
@@ -2788,7 +2803,45 @@
            END-IF
 
            EXIT.
-
+    
+       *> Sort messages chronologically (oldest to newest)
+       *> Uses bubble sort algorithm on timestamp field
+       *> Only sorts messages for current user to maintain efficiency
+       SORT-MESSAGES-BY-TIMESTAMP.
+           MOVE 0 TO WS-J
+           PERFORM VARYING WS-I FROM 1 BY 1 
+               UNTIL WS-I >= WS-MESSAGES-COUNT
+               PERFORM VARYING WS-J FROM 1 BY 1 
+                   UNTIL WS-J > (WS-MESSAGES-COUNT - WS-I)
+                   
+                   *> Compare timestamps of adjacent messages
+                   IF WS-MSG-TIMESTAMP-ENTRY(WS-J) > 
+                      WS-MSG-TIMESTAMP-ENTRY(WS-J + 1)
+                       *> Swap all fields
+                       MOVE WS-MSG-SENDER-ENTRY(WS-J) TO WS-T1
+                       MOVE WS-MSG-SENDER-ENTRY(WS-J + 1) 
+                           TO WS-MSG-SENDER-ENTRY(WS-J)
+                       MOVE WS-T1 TO WS-MSG-SENDER-ENTRY(WS-J + 1)
+                       
+                       MOVE WS-MSG-RECEIVER-ENTRY(WS-J) TO WS-T2
+                       MOVE WS-MSG-RECEIVER-ENTRY(WS-J + 1) 
+                           TO WS-MSG-RECEIVER-ENTRY(WS-J)
+                       MOVE WS-T2 TO WS-MSG-RECEIVER-ENTRY(WS-J + 1)
+                       
+                       MOVE WS-MSG-CONTENT-ENTRY(WS-J) TO WS-T3
+                       MOVE WS-MSG-CONTENT-ENTRY(WS-J + 1) 
+                           TO WS-MSG-CONTENT-ENTRY(WS-J)
+                       MOVE WS-T3 TO WS-MSG-CONTENT-ENTRY(WS-J + 1)
+                       
+                       MOVE WS-MSG-TIMESTAMP-ENTRY(WS-J) TO WS-T4
+                       MOVE WS-MSG-TIMESTAMP-ENTRY(WS-J + 1) 
+                           TO WS-MSG-TIMESTAMP-ENTRY(WS-J)
+                       MOVE WS-T4 TO WS-MSG-TIMESTAMP-ENTRY(WS-J + 1)
+                   END-IF
+               END-PERFORM
+           END-PERFORM
+           EXIT.
+    
        VIEW-MESSAGES.
       *> IMPLEMENTED FOR EPIC 9
       *> Purpose: Displays all messages received by the currently logged-in user
@@ -2819,6 +2872,8 @@
             EXIT PARAGRAPH
         END-IF
 
+        PERFORM SORT-MESSAGES-BY-TIMESTAMP
+
         *> Pass 2: Display all messages for the current user
         *> Loop through messages again, displaying only those for current user
         PERFORM VARYING WS-I FROM 1 BY 1
@@ -2840,6 +2895,15 @@
                     FUNCTION TRIM(WS-MSG-CONTENT-ENTRY(WS-I))
                     DELIMITED BY SIZE
                     INTO WS-MSG
+                END-STRING
+                PERFORM DISPLAY-AND-LOG
+
+                *> Display timestamp
+                PERFORM FORMAT-TIMESTAMP
+                MOVE SPACES TO WS-MSG
+                STRING "Sent: " DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-FORMATTED-TS)
+                   INTO WS-MSG
                 END-STRING
                 PERFORM DISPLAY-AND-LOG
 
@@ -2867,6 +2931,8 @@
                 FUNCTION TRIM(WS-MSG-RECEIVER-ENTRY(WS-I)) DELIMITED BY SIZE
                 "|"                                         DELIMITED BY SIZE
                 FUNCTION TRIM(WS-MSG-CONTENT-ENTRY(WS-I))  DELIMITED BY SIZE
+                "|"                                         DELIMITED BY SIZE
+                FUNCTION TRIM(WS-MSG-TIMESTAMP-ENTRY(WS-I)) DELIMITED BY SIZE
                 INTO MESSAGE-REC
             END-STRING
             WRITE MESSAGE-REC
@@ -2891,18 +2957,54 @@
            EXIT.
 
        PARSE-MESSAGE-REC.
-           INITIALIZE WS-T1 WS-T2 WS-T3
+           INITIALIZE WS-T1 WS-T2 WS-T3 WS-T4
+           *> Format: sender|receiver|content|timestamp
            UNSTRING MESSAGE-REC DELIMITED BY '|'
-               INTO WS-T1 WS-T2 WS-T3
+               INTO WS-T1 WS-T2 WS-T3 WS-T4
            END-UNSTRING
            IF WS-T1 NOT = SPACES AND WS-MESSAGES-COUNT < WS-MESSAGES-MAX
                ADD 1 TO WS-MESSAGES-COUNT
                MOVE FUNCTION TRIM(WS-T1) TO WS-MSG-SENDER-ENTRY(WS-MESSAGES-COUNT)
                MOVE FUNCTION TRIM(WS-T2) TO WS-MSG-RECEIVER-ENTRY(WS-MESSAGES-COUNT)
                MOVE FUNCTION TRIM(WS-T3) TO WS-MSG-CONTENT-ENTRY(WS-MESSAGES-COUNT)
+               MOVE FUNCTION TRIM(WS-T4) TO WS-MSG-TIMESTAMP-ENTRY(WS-MESSAGES-COUNT)
            END-IF
            EXIT.
 
+       FORMAT-TIMESTAMP.
+           *> Input: WS-MSG-TIMESTAMP-ENTRY(WS-I) = YYYYMMDDHHmmSS
+           *> Output: WS-FORMATTED-TS = YYYY-MM-DD HH:MM
+           
+           MOVE SPACES TO WS-FORMATTED-TS
+           
+           IF WS-MSG-TIMESTAMP-ENTRY(WS-I) = SPACES OR
+              WS-MSG-TIMESTAMP-ENTRY(WS-I) = LOW-VALUES
+               MOVE "N/A" TO WS-FORMATTED-TS
+               EXIT PARAGRAPH
+           END-IF
+           
+           *> Extract components from YYYYMMDDHHmmSS (14 chars)
+           MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(1:4)  TO WS-TS-YEAR
+           MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(5:2)  TO WS-TS-MONTH
+           MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(7:2)  TO WS-TS-DAY
+           MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(9:2)  TO WS-TS-HOUR
+           MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(11:2) TO WS-TS-MINUTE
+           
+           *> Build formatted string: YYYY-MM-DD HH:MM
+           STRING
+               WS-TS-YEAR      DELIMITED BY SIZE
+               "-"             DELIMITED BY SIZE
+               WS-TS-MONTH     DELIMITED BY SIZE
+               "-"             DELIMITED BY SIZE
+               WS-TS-DAY       DELIMITED BY SIZE
+               " "             DELIMITED BY SIZE
+               WS-TS-HOUR      DELIMITED BY SIZE
+               ":"             DELIMITED BY SIZE
+               WS-TS-MINUTE    DELIMITED BY SIZE
+               INTO WS-FORMATTED-TS
+           END-STRING
+
+           EXIT.
 
        HELPER-SECTION.
        DISPLAY-AND-LOG.
