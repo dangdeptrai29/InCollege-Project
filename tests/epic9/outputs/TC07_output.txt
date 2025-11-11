@@ -20,34 +20,8 @@ Enter your choice:
 Enter your choice:
 --- Your Messages ---
 From: sender1
-Message: Hi there! Glad we connected on InCollege.
+Message: This is a very long message that contains exactly two hundred characters to test the maximum length handling in the messaging sy
 Sent: 2025-07-28 10:30
----
-From: sender2
-Message: Check out this interesting job posting I found!
-Sent: 2025-07-29 09:15
----
-From: sender1
-Message: Are you available for a quick call today?
-Sent: 2025-07-30 14:00
----
----------------------
-1. Send a New Message
-2. View My Messages
-3. Back to Main Menu
-Enter your choice:
---- Your Messages ---
-From: sender1
-Message: Hi there! Glad we connected on InCollege.
-Sent: 2025-07-28 10:30
----
-From: sender2
-Message: Check out this interesting job posting I found!
-Sent: 2025-07-29 09:15
----
-From: sender1
-Message: Are you available for a quick call today?
-Sent: 2025-07-30 14:00
 ---
 ---------------------
 1. Send a New Message

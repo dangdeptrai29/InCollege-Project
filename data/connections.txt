@@ -1,6 +1,2 @@
-alice|charlie|A
-alice|john|A
-alice|brandon|A
-brandon|john|A
-brandon|bob|A
-SendingUser|ConnectedUser|A
+sender1|receiver|A
+sender2|receiver|A
