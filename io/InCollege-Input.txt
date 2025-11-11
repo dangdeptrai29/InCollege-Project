@@ -1,7 +1,6 @@
 1
-SendingUser
-sendinguser1
+testuser
+Password1!
 6
-1
-ConnectedUser
-This is a test message.
+2
+3

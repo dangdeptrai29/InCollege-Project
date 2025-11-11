@@ -1,11 +1,12 @@
 alice|charlie|Symbols: !@#$%^&*()_+-={}[]:\";'<>?,./\\
 alice|charlie|Symbols: !@#$%^&*()_+-={}[]:\";'<>?,./\\
 alice|brandon|Hi Brandon! This is Alice.
-alice|brandon|Hi Brandon! This is Alice.
+alice|brandon|Hi Brandon! This is Alice 2.
 alice|brandon|Do you wanna study later this weekend?
 brandon|alice|Hi Alice! Yes I'd love to.
 brandon|john|Hi John! Wanna hang this weekend?
 brandon|john|Also I forgot to mention, bring drinks!
 brandon|bob|Hi Bob, nice to meet you!
 john|brandon|Yo Brandon, good to see you!
+SendingUser|ConnectedUser|This is a test message.
 SendingUser|ConnectedUser|This is a test message.
