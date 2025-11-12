@@ -20,7 +20,7 @@ Enter your choice:
 Enter your choice:
 --- Your Messages ---
 From: sender1
-Message: This is a very long message that contains exactly two hundred characters to test the maximum length handling in the messaging sy
+Message: Hello! @receiver - check out: https://incollege.com #networking $opportunity
 Sent: 2025-07-28 10:30
 ---
 ---------------------
