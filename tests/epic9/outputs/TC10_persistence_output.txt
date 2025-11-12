@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, ReceivingUser!
+Welcome, brandon!
 1. View My Profile
 2. Search for User
 3. Learn a New Skill
@@ -19,13 +19,21 @@ Enter your choice:
 3. Back to Main Menu
 Enter your choice:
 --- Your Messages ---
-From: SendingUser
-Message: Hi there! Glad we connected on InCollege.
-Sent: 2025-11-12 03:34
+From: alice
+Message: Hi Brandon! This is Alice.
+Sent: 2025-07-28 10:30
 ---
-From: AnotherConnection
-Message: Check out this interesting job posting I found!
-Sent: 2025-11-12 03:35
+From: alice
+Message: Hi Brandon! This is Alice 2.
+Sent: 2025-07-28 10:30
+---
+From: alice
+Message: Do you wanna study later this weekend?
+Sent: 2025-07-28 10:40
+---
+From: john
+Message: Yo Brandon, good to see you!
+Sent: 2025-07-28 11:45
 ---
 ---------------------
 1. Send a New Message

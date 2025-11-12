@@ -1,2 +1,4 @@
 sender1|receiver|A
 sender2|receiver|A
+ReceivingUser|SendingUser|A
+ReceivingUser|AnotherConnection|A
