@@ -1,3 +1,6 @@
+sender1|Pass123!
+sender2|Pass456!
+receiver|Pass789!
 alice|Abcdef1!
 charlie|SecureP3#
 john|John!123
@@ -5,3 +8,7 @@ brandon|branDon1!
 bob|BobtheBuilder1!
 SendingUser|sendinguser1
 ConnectedUser|connecteduser1
+testuser|Password1!
+aloneuser|AloneUser1!
+AnotherConnection|anotherCon1!
+ReceivingUser|receiveUser1!
