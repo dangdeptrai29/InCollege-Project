@@ -135,7 +135,7 @@
        01  MSG-WELCOME                   PIC X(64)  VALUE "Welcome to InCollege!".
        01  MSG-LOGIN                     PIC X(32)  VALUE "1. Log In".
        01  MSG-CREATE                    PIC X(32)  VALUE "2. Create New Account".
-       01  MSG-ENTER-CHOICE              PIC X(20)  VALUE "Enter your choice: ".
+       01  MSG-ENTER-CHOICE              PIC X(20)  VALUE "Enter Your Choice: ".
        01  MSG-WELCOME-PFX               PIC X(9)   VALUE "Welcome, ".
        01  MSG-ENTER-USER                PIC X(64)  VALUE "Please enter your username:".
        01  MSG-ENTER-PASS                PIC X(64)  VALUE "Please enter your password:".
@@ -608,6 +608,13 @@
            IF EOF-IN
               EXIT PARAGRAPH
            END-IF
+           MOVE SPACES TO WS-MSG
+           STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
+                  " "                                   DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-CHOICE)               DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
 
            EVALUATE WS-CHOICE
               WHEN '1'
@@ -811,6 +818,13 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               MOVE SPACES TO WS-MSG
+               STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
+                      " "                                   DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-LOGGED-CHOICE)        DELIMITED BY SIZE
+                      INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
 
                EVALUATE WS-LOGGED-CHOICE
        *>            WHEN '1'  PERFORM JOBS-MENU
@@ -843,6 +857,13 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               MOVE SPACES TO WS-MSG
+               STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
+                      " "                                   DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-SKILL-CHOICE)        DELIMITED BY SIZE
+                      INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
 
                EVALUATE WS-SKILL-CHOICE
                    WHEN '1' THRU '5'
@@ -2201,6 +2222,13 @@
            IF EOF-IN
                EXIT PARAGRAPH
            END-IF
+           MOVE SPACES TO WS-MSG
+           STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
+                  " "                                   DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-REQUEST-CHOICE)       DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
            EVALUATE WS-REQUEST-CHOICE
                WHEN '1'
                    *> Placeholder for future SEND-REQUEST
@@ -2273,6 +2301,13 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               MOVE SPACES TO WS-MSG
+               STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
+                      " "                                   DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-JOB-CHOICE)           DELIMITED BY SIZE
+                      INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
 
                EVALUATE WS-JOB-CHOICE
                    WHEN '1'  PERFORM POST-NEW-JOB
@@ -2795,6 +2830,13 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               MOVE SPACES TO WS-MSG
+               STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
+                      " "                                   DELIMITED BY SIZE
+                      FUNCTION TRIM(WS-MESSAGE-CHOICE)       DELIMITED BY SIZE
+                      INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
 
                EVALUATE WS-MESSAGE-CHOICE
                    WHEN '1'
