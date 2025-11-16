@@ -1,3 +1,6 @@
+sender1|Alice|Smith|USF|CS|2024|Software Dev||
+sender2|Bob|Jones|USF|IT|2024|Data Analyst||
+receiver|Carol|White|USF|EE|2025|Student||
 alice|Alice|Smith|USF|Computer Science|2025|||
 bob|Bob|Tran|UCF|Cybersecurity|2026|||
 testuser|Test|User|UF|Business|2027|||
