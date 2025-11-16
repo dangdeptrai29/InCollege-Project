@@ -1965,13 +1965,6 @@
                    FUNCTION TRIM(WS-EXP-DATES(WS-I))    DELIMITED BY SIZE
                    "~"                                  DELIMITED BY SIZE
                    FUNCTION TRIM(WS-EXP-DESC(WS-I))     DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-EXP-TITLE(WS-I))    DELIMITED BY SIZE
-                   "~"                                  DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-EXP-COMPANY(WS-I))  DELIMITED BY SIZE
-                   "~"                                  DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-EXP-DATES(WS-I))    DELIMITED BY SIZE
-                   "~"                                  DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-EXP-DESC(WS-I))     DELIMITED BY SIZE
                    INTO WS-EXPS-STR
                    WITH POINTER WS-J
                END-STRING
@@ -1987,11 +1980,6 @@
                    END-STRING
                END-IF
                STRING
-                   FUNCTION TRIM(WS-EDU-DEGREE(WS-I))   DELIMITED BY SIZE
-                   "~"                                  DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-EDU-SCHOOL(WS-I))   DELIMITED BY SIZE
-                   "~"                                  DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-EDU-YEARS(WS-I))    DELIMITED BY SIZE
                    FUNCTION TRIM(WS-EDU-DEGREE(WS-I))   DELIMITED BY SIZE
                    "~"                                  DELIMITED BY SIZE
                    FUNCTION TRIM(WS-EDU-SCHOOL(WS-I))   DELIMITED BY SIZE
@@ -2143,6 +2131,7 @@
              EXIT PARAGRAPH
            END-IF
 
+           PERFORM RESET-PROFILE-INPUTS
            MOVE MSG-EDIT-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-FIRST-IN) NOT = SPACES
@@ -2210,6 +2199,9 @@
            MOVE MSG-ABOUT-ME TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM READ-NEXT-LINE
            MOVE WS-LINE TO WS-PROF-ABOUT-IN
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
 
            PERFORM ADD-EXPERIENCE
            PERFORM ADD-EDUCATION
@@ -2243,6 +2235,22 @@
 
            PERFORM SAVE-PROFILES
            MOVE MSG-PROFILE-SAVED-OK TO WS-MSG PERFORM DISPLAY-AND-LOG
+           EXIT.
+
+       RESET-PROFILE-INPUTS.
+           MOVE SPACES TO
+                WS-PROF-FIRST-IN
+                WS-PROF-LAST-IN
+                WS-PROF-UNIV-IN
+                WS-PROF-MAJOR-IN
+                WS-PROF-GYEAR-IN
+                WS-PROF-ABOUT-IN
+                WS-EXPS-STR
+                WS-EDUS-STR
+           INITIALIZE WS-EXPERIENCE
+           INITIALIZE WS-EDUCATION
+           MOVE 0 TO WS-EXP-COUNT WS-EDU-COUNT
+           MOVE SPACES TO WS-EXP-CHOICE WS-EDU-CHOICE
            EXIT.
 
        ADD-EXPERIENCE.

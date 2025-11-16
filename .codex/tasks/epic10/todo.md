@@ -9,6 +9,9 @@ Plan owner: Developer 1 (logic, input handling, persistence)
   - [x] Enforce 5-account cap via shared constant/load logic
   - Tests: `tests/test_registration.py`, `tests/test_login.py`, plus manual multi-user login attempt
 - [ ] Fix profile create/edit logic (required fields, saving/loading optional data)
+  - [x] Reset profile input buffers/experience data before prompting to avoid stale values
+  - [x] Fix experience/education serialization so persisted data matches entered fields
+  - [x] Guard optional sections (About Me) for EOF/blank handling
   - Tests: `tests/test_profiles.py`, manual profile creation/edit walkthrough
 - [ ] Correct search logic (exact match, record retrieval, profile lookup)
   - Tests: `tests/test_search.py`, manual run through search menu using sample profiles
