@@ -28,14 +28,21 @@ Plan owner: Developer 1 (logic, input handling, persistence)
 
 ## Part 2 — Quality-of-Life Improvements
 - [ ] Improve validation messaging clarity based on logic outcomes
+  - [x] Added explicit “Enter 0/BACK” instruction on login/create/profile/search prompts plus “Returning…” confirmation
+  - [x] Provided dedicated message when search input is blank (vs generic not-found)
   - Tests: Trigger each validation path and confirm updated messages in output logs
 - [ ] Add flow control options (returns/back navigation, no dead ends)
+  - [x] Allow BACK/0 escape at login, account creation, profile fields, and search prompts
+  - [x] Reset submenu choices and echo entered values so scripts/tests can follow the flow
   - Tests: Manual navigation through each submenu to ensure proper escape paths
 - [ ] Simplify logic paths for login/profile/search modules
+  - [x] Added shared helper to detect BACK input and centralized “returning” handling
   - Tests: Run affected unit tests and perform code walkthrough to confirm reduction
 - [ ] Handle edge cases (empty profiles, missing files, invalid inputs)
+  - [x] Treat blank search queries as a special case instead of matching against empty strings
   - Tests: Start app with missing data files, supply invalid inputs, ensure graceful handling
 - [ ] Resolve QOL issues tied to persistence (atomic writes, data integrity)
+  - [x] Auto-create `data/search_history.txt` when logging searches and include username/query/result/timestamp
   - Tests: Force program interruption mid-save and verify recovery strategy works
 
 ## Part 3 — Refactoring & Cleanup

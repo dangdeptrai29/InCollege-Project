@@ -136,6 +136,10 @@
        01  MSG-LOGIN                     PIC X(32)  VALUE "1. Log In".
        01  MSG-CREATE                    PIC X(32)  VALUE "2. Create New Account".
        01  MSG-ENTER-CHOICE              PIC X(20)  VALUE "Enter Your Choice: ".
+       01  MSG-BACK-INSTRUCTION          PIC X(64)
+           VALUE "Enter 0 (or BACK) at any prompt to return to the menu.".
+       01  MSG-RETURNING                 PIC X(48)
+           VALUE "Returning to the previous menu...".
        01  MSG-WELCOME-PFX               PIC X(9)   VALUE "Welcome, ".
        01  MSG-ENTER-USER                PIC X(64)  VALUE "Please enter your username:".
        01  MSG-ENTER-PASS                PIC X(64)  VALUE "Please enter your password:".
@@ -416,10 +420,16 @@
            VALUE "No one by that name could be found.".
        01  MSG-USER-PROFILE-HEADER       PIC X(32)
            VALUE "--- Found User Profile ---".
+       01  MSG-SEARCH-BLANK              PIC X(80)
+           VALUE "Search request skipped: name required to continue.".
        01  WS-SEARCH-FULLNAME            PIC X(128) VALUE SPACES.
        01  WS-SEARCH-FOUND               PIC X VALUE 'N'.
            88  SEARCH-FOUND                  VALUE 'Y'.
            88  SEARCH-NOT-FOUND              VALUE 'N'.
+       01  WS-BACK-FLAG                  PIC X VALUE 'N'.
+           88  BACK-REQUEST                  VALUE 'Y'.
+           88  NO-BACK-REQUEST               VALUE 'N'.
+       01  WS-INPUT-NORMALIZED           PIC X(256) VALUE SPACES.
        01  WS-SEARCH-NAME-NORM           PIC X(256) VALUE SPACES.
        01  WS-CANDIDATE-NAME-NORM        PIC X(256) VALUE SPACES.
        01  WS-NAME-SOURCE                PIC X(256) VALUE SPACES.
@@ -601,6 +611,7 @@
            MOVE MSG-WELCOME       TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-LOGIN         TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-CREATE        TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            PERFORM READ-NEXT-LINE
@@ -631,12 +642,18 @@
        LOGIN-SECTION.
        LOGIN.
            PERFORM RESET-LOGIN-STATE
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM UNTIL MATCH-FOUND OR EOF-IN
              MOVE MSG-ENTER-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
              PERFORM READ-NEXT-LINE
              MOVE WS-LINE TO WS-USERNAME
              IF EOF-IN
                 EXIT PERFORM
+             END-IF
+             PERFORM CHECK-BACK-FROM-LINE
+             IF BACK-REQUEST
+                PERFORM HANDLE-BACK-EXIT
+                EXIT PARAGRAPH
              END-IF
 
              MOVE MSG-ENTER-PASS TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -682,6 +699,7 @@
                MOVE MSG-ACCOUNT-LIMIT TO WS-MSG PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
            END-IF
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            *> Username prompt (with uniqueness)
            PERFORM UNTIL (WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND) OR EOF-IN
@@ -689,6 +707,11 @@
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-NEW-USERNAME
                IF EOF-IN
+                   EXIT PARAGRAPH
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
                    EXIT PARAGRAPH
                END-IF
 
@@ -714,6 +737,11 @@
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-NEW-PASSWORD
                IF EOF-IN
+                   EXIT PARAGRAPH
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
                    EXIT PARAGRAPH
                END-IF
                PERFORM VALIDATE-PASSWORD
@@ -878,21 +906,34 @@
            EXIT.
 
        USER-SEARCH-MENU.
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-ENTER-USER-SEARCH TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM READ-NEXT-LINE
            MOVE WS-LINE TO WS-SEARCH-FULLNAME
            IF EOF-IN
                EXIT PARAGRAPH
            END-IF
+           PERFORM CHECK-BACK-FROM-LINE
+           IF BACK-REQUEST
+               MOVE "BACK" TO WS-SEARCH-RESULT-TEXT
+               PERFORM HANDLE-BACK-EXIT
+               PERFORM LOG-SEARCH-ATTEMPT
+               EXIT PARAGRAPH
+           END-IF
 
            MOVE "NOT_FOUND" TO WS-SEARCH-RESULT-TEXT
            SET SEARCH-INPUT-NOT-BLANK TO TRUE
            PERFORM FIND-USER-BY-NAME
-           IF SEARCH-FOUND
-               MOVE "FOUND" TO WS-SEARCH-RESULT-TEXT
-               PERFORM DISPLAY-FOUND-USER
+           IF SEARCH-INPUT-BLANK
+               MOVE "BLANK_INPUT" TO WS-SEARCH-RESULT-TEXT
+               MOVE MSG-SEARCH-BLANK TO WS-MSG PERFORM DISPLAY-AND-LOG
            ELSE
-               PERFORM DISPLAY-NO-MATCH-MSG
+               IF SEARCH-FOUND
+                   MOVE "FOUND" TO WS-SEARCH-RESULT-TEXT
+                   PERFORM DISPLAY-FOUND-USER
+               ELSE
+                   PERFORM DISPLAY-NO-MATCH-MSG
+               END-IF
            END-IF
            PERFORM LOG-SEARCH-ATTEMPT
            EXIT.
@@ -969,6 +1010,13 @@
 
        LOG-SEARCH-ATTEMPT.
            OPEN EXTEND SEARCH-HISTORY-FILE
+           IF WS-SEARCH-STATUS NOT = "00"
+               OPEN OUTPUT SEARCH-HISTORY-FILE
+               IF WS-SEARCH-STATUS = "00"
+                   CLOSE SEARCH-HISTORY-FILE
+                   OPEN EXTEND SEARCH-HISTORY-FILE
+               END-IF
+           END-IF
            IF WS-SEARCH-STATUS = "00"
                MOVE SPACES TO SEARCH-HISTORY-REC
                MOVE FUNCTION CURRENT-DATE(1:14) TO WS-SEARCH-LOG-TS
@@ -1854,6 +1902,7 @@
 
            PERFORM RESET-PROFILE-INPUTS
            MOVE MSG-EDIT-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-FIRST-IN) NOT = SPACES
                MOVE MSG-ENTER-FIRST TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -1864,6 +1913,11 @@
                END-IF
                IF FUNCTION TRIM(WS-PROF-FIRST-IN) = SPACES
                    MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
                END-IF
            END-PERFORM
 
@@ -1877,6 +1931,11 @@
                IF FUNCTION TRIM(WS-PROF-LAST-IN) = SPACES
                    MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
+               END-IF
            END-PERFORM
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-UNIV-IN) NOT = SPACES
@@ -1889,6 +1948,11 @@
                IF FUNCTION TRIM(WS-PROF-UNIV-IN) = SPACES
                    MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
+               END-IF
            END-PERFORM
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-MAJOR-IN) NOT = SPACES
@@ -1900,6 +1964,11 @@
                END-IF
                IF FUNCTION TRIM(WS-PROF-MAJOR-IN) = SPACES
                    MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
                END-IF
            END-PERFORM
 
@@ -1915,12 +1984,22 @@
                IF YEAR-INVALID
                    MOVE MSG-YEAR-INVALID TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
+               END-IF
            END-PERFORM
 
            MOVE MSG-ABOUT-ME TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM READ-NEXT-LINE
            MOVE WS-LINE TO WS-PROF-ABOUT-IN
            IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM CHECK-BACK-FROM-LINE
+           IF BACK-REQUEST
+               PERFORM HANDLE-BACK-EXIT
                EXIT PARAGRAPH
            END-IF
 
@@ -1984,6 +2063,11 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
+               END-IF
                IF WS-EXP-CHOICE = "DONE"
                    EXIT PERFORM
                ELSE
@@ -1998,6 +2082,11 @@
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
+                   END-IF
                    MOVE WS-TITLE-INPUT TO WS-EXP-TITLE(WS-EXP-COUNT)
 
                    MOVE SPACES TO WS-MSG
@@ -2009,6 +2098,11 @@
                    MOVE WS-LINE TO WS-COMPANY-INPUT
                    IF EOF-IN
                        EXIT PERFORM
+                   END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
                    END-IF
                    MOVE WS-COMPANY-INPUT TO WS-EXP-COMPANY(WS-EXP-COUNT)
 
@@ -2022,6 +2116,11 @@
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
+                   END-IF
                    MOVE WS-DATES-INPUT TO WS-EXP-DATES(WS-EXP-COUNT)
 
                    MOVE SPACES TO WS-MSG
@@ -2034,6 +2133,11 @@
                    MOVE WS-LINE TO WS-DESC-INPUT
                    IF EOF-IN
                        EXIT PERFORM
+                   END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
                    END-IF
                    IF WS-DESC-INPUT NOT = SPACES
                        MOVE WS-DESC-INPUT TO WS-EXP-DESC(WS-EXP-COUNT)
@@ -2052,6 +2156,11 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
+               END-IF
                IF WS-EDU-CHOICE = "DONE"
                    EXIT PERFORM
                ELSE
@@ -2066,6 +2175,11 @@
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
+                   END-IF
                    MOVE WS-DEGREE-INPUT TO WS-EDU-DEGREE(WS-EDU-COUNT)
 
                    MOVE SPACES TO WS-MSG
@@ -2078,6 +2192,11 @@
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
+                   END-IF
                    MOVE WS-SCHOOL-INPUT TO WS-EDU-SCHOOL(WS-EDU-COUNT)
 
                    MOVE SPACES TO WS-MSG
@@ -2089,6 +2208,11 @@
                    MOVE WS-LINE TO WS-YEARS-INPUT
                    IF EOF-IN
                        EXIT PERFORM
+                   END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
                    END-IF
                    MOVE WS-YEARS-INPUT TO WS-EDU-YEARS(WS-EDU-COUNT)
                END-IF
@@ -3185,4 +3309,26 @@
                NOT AT END
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-LINE
            END-READ
+           EXIT.
+
+       CHECK-BACK-REQUEST.
+           MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(WS-INPUT-NORMALIZED))
+               TO WS-INPUT-NORMALIZED
+           IF WS-INPUT-NORMALIZED = "0" OR WS-INPUT-NORMALIZED = "BACK"
+               SET BACK-REQUEST TO TRUE
+           ELSE
+               SET NO-BACK-REQUEST TO TRUE
+           END-IF
+           EXIT.
+
+       CHECK-BACK-FROM-LINE.
+           MOVE WS-LINE TO WS-INPUT-NORMALIZED
+           SET NO-BACK-REQUEST TO TRUE
+           PERFORM CHECK-BACK-REQUEST
+           EXIT.
+
+       HANDLE-BACK-EXIT.
+           IF BACK-REQUEST
+               MOVE MSG-RETURNING TO WS-MSG PERFORM DISPLAY-AND-LOG
+           END-IF
            EXIT.
