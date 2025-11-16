@@ -40,6 +40,9 @@
            SELECT MESSAGES-FILE ASSIGN TO "data/messages.txt"
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-MSG-FILE-STATUS.
+           SELECT SEARCH-HISTORY-FILE ASSIGN TO "data/search_history.txt"
+               ORGANIZATION IS LINE SEQUENTIAL
+               FILE STATUS IS WS-SEARCH-STATUS.
 
        DATA DIVISION.
        FILE SECTION.
@@ -75,6 +78,9 @@
        FD  MESSAGES-FILE.
        01  MESSAGE-REC                   PIC X(512).
 
+       FD  SEARCH-HISTORY-FILE.
+       01  SEARCH-HISTORY-REC            PIC X(256).
+
        WORKING-STORAGE SECTION.
        *> File status codes
        01  WS-IN-STATUS                  PIC XX VALUE "00".
@@ -88,6 +94,7 @@
        01  WS-APP-STATUS                 PIC XX VALUE "00".
        01  WS-APPL-STATUS                PIC XX VALUE "00".
        01  WS-MSG-FILE-STATUS            PIC XX VALUE "00".
+       01  WS-SEARCH-STATUS              PIC XX VALUE "00".
 
        *> End-of-file flags with condition names
        01  WS-EOF-IN                     PIC X VALUE 'N'.
@@ -244,6 +251,7 @@
 
        01  WS-I                          PIC 9(4) VALUE 0.
        01  WS-J                          PIC 9(4) VALUE 0.
+       01  WS-NAME-IDX                   PIC 9(4) VALUE 0.
        01  WS-SEARCH-RESULT-IDX          PIC 9(4) VALUE 0.
 
        *> Scratch area for parsing user file records
@@ -412,6 +420,17 @@
        01  WS-SEARCH-FOUND               PIC X VALUE 'N'.
            88  SEARCH-FOUND                  VALUE 'Y'.
            88  SEARCH-NOT-FOUND              VALUE 'N'.
+       01  WS-SEARCH-NAME-NORM           PIC X(256) VALUE SPACES.
+       01  WS-CANDIDATE-NAME-NORM        PIC X(256) VALUE SPACES.
+       01  WS-NAME-SOURCE                PIC X(256) VALUE SPACES.
+       01  WS-NAME-TARGET                PIC X(256) VALUE SPACES.
+       01  WS-NAME-TGT-IDX               PIC 9(4) VALUE 0.
+       01  WS-NAME-LAST-SPACE            PIC X VALUE 'Y'.
+       01  WS-SEARCH-RESULT-TEXT         PIC X(16) VALUE "NOT_FOUND".
+       01  WS-SEARCH-BLANK-FLAG          PIC X VALUE 'N'.
+           88  SEARCH-INPUT-BLANK            VALUE 'Y'.
+           88  SEARCH-INPUT-NOT-BLANK        VALUE 'N'.
+       01  WS-SEARCH-LOG-TS              PIC X(20) VALUE SPACES.
 
        *> Connection request messages/vars
        01  WS-CONN-CHOICE                PIC X(8)   VALUE SPACES.
@@ -808,6 +827,7 @@
            EXIT.
 
        SKILL-MENU.
+           MOVE SPACES TO WS-SKILL-CHOICE
            PERFORM UNTIL WS-SKILL-CHOICE = '6' OR EOF-IN
                MOVE MSG-MENU-LEARN-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
                MOVE MSG-SKILL1 TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -833,6 +853,7 @@
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
            END-PERFORM
+           MOVE SPACES TO WS-SKILL-CHOICE
            EXIT.
 
        USER-SEARCH-MENU.
@@ -843,17 +864,28 @@
                EXIT PARAGRAPH
            END-IF
 
+           MOVE "NOT_FOUND" TO WS-SEARCH-RESULT-TEXT
+           SET SEARCH-INPUT-NOT-BLANK TO TRUE
            PERFORM FIND-USER-BY-NAME
            IF SEARCH-FOUND
+               MOVE "FOUND" TO WS-SEARCH-RESULT-TEXT
                PERFORM DISPLAY-FOUND-USER
            ELSE
                PERFORM DISPLAY-NO-MATCH-MSG
            END-IF
+           PERFORM LOG-SEARCH-ATTEMPT
            EXIT.
 
        FIND-USER-BY-NAME.
            MOVE 0 TO WS-SEARCH-RESULT-IDX
            SET SEARCH-NOT-FOUND TO TRUE
+           MOVE FUNCTION TRIM(WS-SEARCH-FULLNAME) TO WS-NAME-SOURCE
+           PERFORM NORMALIZE-NAME
+           MOVE WS-NAME-TARGET TO WS-SEARCH-NAME-NORM
+           IF WS-SEARCH-NAME-NORM = SPACES
+               SET SEARCH-INPUT-BLANK TO TRUE
+               EXIT PARAGRAPH
+           END-IF
            PERFORM VARYING WS-I FROM 1 BY 1
                    UNTIL WS-I > WS-PROFILES-COUNT OR SEARCH-FOUND
                MOVE SPACES TO WS-T1
@@ -863,7 +895,10 @@
                    FUNCTION TRIM(WS-PROF-LAST(WS-I))  DELIMITED BY SIZE
                    INTO WS-T1
                END-STRING
-               IF WS-T1 = FUNCTION TRIM(WS-SEARCH-FULLNAME)
+               MOVE WS-T1 TO WS-NAME-SOURCE
+               PERFORM NORMALIZE-NAME
+               MOVE WS-NAME-TARGET TO WS-CANDIDATE-NAME-NORM
+               IF WS-CANDIDATE-NAME-NORM = WS-SEARCH-NAME-NORM
                    SET SEARCH-FOUND TO TRUE
                    MOVE WS-I TO WS-SEARCH-RESULT-IDX
                END-IF
@@ -883,6 +918,55 @@
            IF WS-FOUND-USER-USERNAME NOT = WS-CURRENT-USERNAME
               AND NOT EOF-IN
                PERFORM PROMPT-FOR-CONNECTION
+           END-IF
+           EXIT.
+
+       NORMALIZE-NAME.
+           MOVE SPACES TO WS-NAME-TARGET
+           MOVE 0 TO WS-NAME-TGT-IDX
+           MOVE 'Y' TO WS-NAME-LAST-SPACE
+           MOVE FUNCTION TRIM(WS-NAME-SOURCE) TO WS-NAME-SOURCE
+           IF WS-NAME-SOURCE = SPACES
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM VARYING WS-NAME-IDX FROM 1 BY 1
+                   UNTIL WS-NAME-IDX > FUNCTION LENGTH(WS-NAME-SOURCE)
+               MOVE WS-NAME-SOURCE(WS-NAME-IDX:1) TO WS-CHAR
+               IF WS-CHAR = ' '
+                   IF WS-NAME-LAST-SPACE = 'N'
+                       ADD 1 TO WS-NAME-TGT-IDX
+                       MOVE ' ' TO WS-NAME-TARGET(WS-NAME-TGT-IDX:1)
+                       MOVE 'Y' TO WS-NAME-LAST-SPACE
+                   END-IF
+               ELSE
+                   ADD 1 TO WS-NAME-TGT-IDX
+                   MOVE WS-CHAR TO WS-NAME-TARGET(WS-NAME-TGT-IDX:1)
+                   MOVE 'N' TO WS-NAME-LAST-SPACE
+               END-IF
+           END-PERFORM
+           EXIT.
+
+       LOG-SEARCH-ATTEMPT.
+           OPEN EXTEND SEARCH-HISTORY-FILE
+           IF WS-SEARCH-STATUS = "00"
+               MOVE SPACES TO SEARCH-HISTORY-REC
+               MOVE FUNCTION CURRENT-DATE(1:14) TO WS-SEARCH-LOG-TS
+               STRING
+                   FUNCTION TRIM(WS-CURRENT-USERNAME) DELIMITED BY SIZE
+                   "|"                                DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-SEARCH-FULLNAME)  DELIMITED BY SIZE
+                   "|"                                DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-SEARCH-RESULT-TEXT) DELIMITED BY SIZE
+                   "|"                                DELIMITED BY SIZE
+                   WS-SEARCH-LOG-TS                   DELIMITED BY SIZE
+                   INTO SEARCH-HISTORY-REC
+               END-STRING
+               WRITE SEARCH-HISTORY-REC
+               CLOSE SEARCH-HISTORY-FILE
+           ELSE
+               CLOSE SEARCH-HISTORY-FILE
+               MOVE "Warning: unable to log search attempt." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
            END-IF
            EXIT.
 
@@ -2157,6 +2241,7 @@
 
        JOBS-SECTION.
        JOBS-MENU.
+           MOVE SPACES TO WS-JOB-CHOICE
            PERFORM UNTIL WS-JOB-CHOICE = '4' OR EOF-IN
                MOVE MSG-JOBS-HEADER   TO WS-MSG PERFORM DISPLAY-AND-LOG
                *>MOVE MSG-JOBS-POST     TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -2692,6 +2777,7 @@
 
        MESSAGES-SECTION.
        MESSAGE-MENU.
+           MOVE SPACES TO WS-MESSAGE-CHOICE
            MOVE MSG-MESSAGES-HEADER TO WS-MSG
            PERFORM DISPLAY-AND-LOG
            PERFORM UNTIL WS-MESSAGE-CHOICE = '3' OR EOF-IN

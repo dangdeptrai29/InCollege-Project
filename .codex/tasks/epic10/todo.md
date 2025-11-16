@@ -14,10 +14,14 @@ Plan owner: Developer 1 (logic, input handling, persistence)
   - [x] Guard optional sections (About Me) for EOF/blank handling
   - Tests: `tests/test_profiles.py`, manual profile creation/edit walkthrough
 - [ ] Correct search logic (exact match, record retrieval, profile lookup)
+  - [x] Normalize names (trim + collapse extra spaces) before comparing stored profiles
+  - [x] Capture each search attempt (username/query/result) to a history file for debugging
   - Tests: `tests/test_search.py`, manual run through search menu using sample profiles
 - [ ] Verify persistence files (accounts, profiles, search history) save/load consistently
+  - [x] Persist search history entries via new `data/search_history.txt`
   - Tests: Run full program, inspect `data/` files, rerun and ensure state remains
 - [ ] Stabilize prompt flow/state transitions for all menus
+  - [x] Reset submenu choices (skills/jobs/messages) before loops so they can be revisited
   - Tests: Manual traversal through every menu branch, confirm expected prompts appear
 - [ ] Log deeper logic bugs that surface during fixes in Jira queue
   - Tests: Review logs/observations and ensure each identified issue is captured
