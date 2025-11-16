@@ -550,6 +550,7 @@
        77  WS-RECEIVER                   PIC X(128) VALUE SPACES.
        77  WS-CONTENT                    PIC X(256) VALUE SPACES.
        77  WS-CONTENT-LENGTH             PIC 9(4)   VALUE 0.
+       01  WS-CHOICE-BUFFER              PIC X(32)  VALUE SPACES.
 
        *> EPIC 9: View Messages
        *> Added for Week 9
@@ -598,6 +599,7 @@
            PERFORM INIT-LOAD-APPLICATIONS
            *> Epic 8: Load messages
            PERFORM INIT-LOAD-MESSAGES
+           PERFORM ENSURE-SEARCH-HISTORY-FILE
 
            EXIT.
 
@@ -619,13 +621,8 @@
            IF EOF-IN
               EXIT PARAGRAPH
            END-IF
-           MOVE SPACES TO WS-MSG
-           STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
-                  " "                                   DELIMITED BY SIZE
-                  FUNCTION TRIM(WS-CHOICE)               DELIMITED BY SIZE
-                  INTO WS-MSG
-           END-STRING
-           PERFORM DISPLAY-AND-LOG
+           MOVE WS-CHOICE TO WS-CHOICE-BUFFER
+           PERFORM ECHO-CHOICE-VALUE
 
            EVALUATE WS-CHOICE
               WHEN '1'
@@ -640,6 +637,7 @@
            EXIT.
 
        LOGIN-SECTION.
+       *> LOGIN — Handles repeated credential prompts with optional BACK exit.
        LOGIN.
            PERFORM RESET-LOGIN-STATE
            MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -694,6 +692,7 @@
            MOVE SPACES TO WS-USERNAME WS-PASSWORD
            EXIT.
 
+       *> CREATE-ACCOUNT — Enforces uniqueness, password policy, BACK exit.
        CREATE-ACCOUNT.
            IF WS-USERS-COUNT >= WS-ACCOUNT-LIMIT
                MOVE MSG-ACCOUNT-LIMIT TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -846,13 +845,8 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
-               MOVE SPACES TO WS-MSG
-               STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
-                      " "                                   DELIMITED BY SIZE
-                      FUNCTION TRIM(WS-LOGGED-CHOICE)        DELIMITED BY SIZE
-                      INTO WS-MSG
-               END-STRING
-               PERFORM DISPLAY-AND-LOG
+               MOVE WS-LOGGED-CHOICE TO WS-CHOICE-BUFFER
+               PERFORM ECHO-CHOICE-VALUE
 
                EVALUATE WS-LOGGED-CHOICE
        *>            WHEN '1'  PERFORM JOBS-MENU
@@ -885,13 +879,8 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
-               MOVE SPACES TO WS-MSG
-               STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
-                      " "                                   DELIMITED BY SIZE
-                      FUNCTION TRIM(WS-SKILL-CHOICE)        DELIMITED BY SIZE
-                      INTO WS-MSG
-               END-STRING
-               PERFORM DISPLAY-AND-LOG
+               MOVE WS-SKILL-CHOICE TO WS-CHOICE-BUFFER
+               PERFORM ECHO-CHOICE-VALUE
 
                EVALUATE WS-SKILL-CHOICE
                    WHEN '1' THRU '5'
@@ -905,6 +894,7 @@
            MOVE SPACES TO WS-SKILL-CHOICE
            EXIT.
 
+       *> USER-SEARCH-MENU — Exact-match lookup with logging and BACK support.
        USER-SEARCH-MENU.
            MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-ENTER-USER-SEARCH TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -983,6 +973,7 @@
            END-IF
            EXIT.
 
+       *> NORMALIZE-NAME — Collapses extra spaces to compare search strings.
        NORMALIZE-NAME.
            MOVE SPACES TO WS-NAME-TARGET
            MOVE 0 TO WS-NAME-TGT-IDX
@@ -1008,6 +999,7 @@
            END-PERFORM
            EXIT.
 
+       *> LOG-SEARCH-ATTEMPT — Persists username/query/result/timestamp.
        LOG-SEARCH-ATTEMPT.
            OPEN EXTEND SEARCH-HISTORY-FILE
            IF WS-SEARCH-STATUS NOT = "00"
@@ -1036,6 +1028,19 @@
                CLOSE SEARCH-HISTORY-FILE
                MOVE "Warning: unable to log search attempt." TO WS-MSG
                PERFORM DISPLAY-AND-LOG
+           END-IF
+           EXIT.
+
+       *> ENSURE-SEARCH-HISTORY-FILE — Creates search log if missing at startup.
+       ENSURE-SEARCH-HISTORY-FILE.
+           OPEN I-O SEARCH-HISTORY-FILE
+           IF WS-SEARCH-STATUS = "00"
+               CLOSE SEARCH-HISTORY-FILE
+               EXIT PARAGRAPH
+           END-IF
+           OPEN OUTPUT SEARCH-HISTORY-FILE
+           IF WS-SEARCH-STATUS = "00"
+               CLOSE SEARCH-HISTORY-FILE
            END-IF
            EXIT.
 
@@ -2053,6 +2058,7 @@
            MOVE SPACES TO WS-EXP-CHOICE WS-EDU-CHOICE
            EXIT.
 
+       *> ADD-EXPERIENCE — Collect up to 3 experience entries with optional exit.
        ADD-EXPERIENCE.
            MOVE 0 TO WS-EXP-COUNT
            MOVE SPACES TO WS-EXP-CHOICE
@@ -2146,6 +2152,7 @@
            END-PERFORM
            EXIT.
 
+       *> ADD-EDUCATION — Collect up to 3 education entries with optional exit.
        ADD-EDUCATION.
            MOVE 0 TO WS-EDU-COUNT
            MOVE SPACES TO WS-EDU-CHOICE
@@ -2346,13 +2353,8 @@
            IF EOF-IN
                EXIT PARAGRAPH
            END-IF
-           MOVE SPACES TO WS-MSG
-           STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
-                  " "                                   DELIMITED BY SIZE
-                  FUNCTION TRIM(WS-REQUEST-CHOICE)       DELIMITED BY SIZE
-                  INTO WS-MSG
-           END-STRING
-           PERFORM DISPLAY-AND-LOG
+           MOVE WS-REQUEST-CHOICE TO WS-CHOICE-BUFFER
+           PERFORM ECHO-CHOICE-VALUE
            EVALUATE WS-REQUEST-CHOICE
                WHEN '1'
                    *> Placeholder for future SEND-REQUEST
@@ -2425,13 +2427,8 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
-               MOVE SPACES TO WS-MSG
-               STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
-                      " "                                   DELIMITED BY SIZE
-                      FUNCTION TRIM(WS-JOB-CHOICE)           DELIMITED BY SIZE
-                      INTO WS-MSG
-               END-STRING
-               PERFORM DISPLAY-AND-LOG
+               MOVE WS-JOB-CHOICE TO WS-CHOICE-BUFFER
+               PERFORM ECHO-CHOICE-VALUE
 
                EVALUATE WS-JOB-CHOICE
                    WHEN '1'  PERFORM POST-NEW-JOB
@@ -2954,13 +2951,8 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
-               MOVE SPACES TO WS-MSG
-               STRING FUNCTION TRIM(MSG-ENTER-CHOICE)        DELIMITED BY SIZE
-                      " "                                   DELIMITED BY SIZE
-                      FUNCTION TRIM(WS-MESSAGE-CHOICE)       DELIMITED BY SIZE
-                      INTO WS-MSG
-               END-STRING
-               PERFORM DISPLAY-AND-LOG
+               MOVE WS-MESSAGE-CHOICE TO WS-CHOICE-BUFFER
+               PERFORM ECHO-CHOICE-VALUE
 
                EVALUATE WS-MESSAGE-CHOICE
                    WHEN '1'
@@ -3331,4 +3323,14 @@
            IF BACK-REQUEST
                MOVE MSG-RETURNING TO WS-MSG PERFORM DISPLAY-AND-LOG
            END-IF
+           EXIT.
+
+       ECHO-CHOICE-VALUE.
+           MOVE SPACES TO WS-MSG
+           STRING FUNCTION TRIM(MSG-ENTER-CHOICE) DELIMITED BY SIZE
+                  " "                                   DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-CHOICE-BUFFER)       DELIMITED BY SIZE
+                  INTO WS-MSG
+           END-STRING
+           PERFORM DISPLAY-AND-LOG
            EXIT.

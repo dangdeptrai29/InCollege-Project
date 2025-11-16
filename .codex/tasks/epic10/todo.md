@@ -47,12 +47,17 @@ Plan owner: Developer 1 (logic, input handling, persistence)
 
 ## Part 3 — Refactoring & Cleanup
 - [ ] Refactor core logic modules (login, profile, search) for readability
+  - [x] Added descriptive `*>` docstrings before LOGIN/CREATE-ACCOUNT/search/experience routines
+  - [x] Consolidated “Enter Your Choice” echo into `ECHO-CHOICE-VALUE` helper to reduce duplication
   - Tests: Rerun all module-specific tests; confirm no behavior regression
 - [ ] Remove duplicated conditionals and improve variable naming
+  - [x] Introduced shared BACK-detection helper and centralized choice echo buffer
   - Tests: Static analysis/lint run plus targeted unit tests
 - [ ] Clean up file I/O routines for accounts/profiles/search data
+  - [x] Added `ENSURE-SEARCH-HISTORY-FILE` to create logging file during init + simplified logger
   - Tests: Integration test that creates users, profiles, searches, restarts app, and verifies data
 - [ ] Document new structure and logic decisions as docstrings/comments
+  - [x] Annotated major paragraphs with purpose comments (login, search, experience, education, logging)
   - Tests: Code review check ensuring coverage of updated functions
 
 ## Review & Documentation Checklist
