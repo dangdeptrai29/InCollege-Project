@@ -2,3 +2,7 @@ sender1|receiver|A
 sender2|receiver|A
 ReceivingUser|SendingUser|A
 ReceivingUser|AnotherConnection|A
+aloneuser|receiver|A
+receiver|alice|P
+AdminUser|ProfSmith|A
+AdminUser|FriendA|A

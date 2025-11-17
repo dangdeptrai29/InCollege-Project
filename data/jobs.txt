@@ -1,0 +1,3 @@
+1|sender1|Software Engineer|Develop new features|InCollege|Remote|150000
+1|SomePoster|Senior Developer|Lead backend development for new products.|InnovateTech|Remote|$120,000/year
+2|AnotherPoster|UX Designer|Design user experiences.|CreativeSolutions|San Francisco, CA|$110,000/year
