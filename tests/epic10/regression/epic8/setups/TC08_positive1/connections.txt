@@ -1,0 +1,3 @@
+alice|charlie|A
+alice|john|A
+alice|brandon|A

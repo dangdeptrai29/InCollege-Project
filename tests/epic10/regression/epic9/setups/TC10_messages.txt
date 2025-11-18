@@ -1,0 +1,16 @@
+sender1|receiver|Hi there! Glad we connected on InCollege.|20250728103000
+sender2|receiver|Check out this interesting job posting I found!|20250729091500
+sender1|receiver|Are you available for a quick call today?|20250730140000
+alice|charlie|Symbols: !@#$%^&*()_+-={}[]:\";'<>?,./\\|20250728103000
+alice|charlie|Symbols: !@#$%^&*()_+-={}[]:\";'<>?,./\\|20250728103015
+alice|brandon|Hi Brandon! This is Alice.|20250728103030
+alice|brandon|Hi Brandon! This is Alice 2.|20250728103045
+alice|brandon|Do you wanna study later this weekend?|20250728104000
+brandon|alice|Hi Alice! Yes I'd love to.|20250728105000
+brandon|john|Hi John! Wanna hang this weekend?|20250728110000
+brandon|john|Also I forgot to mention, bring drinks!|20250728111500
+brandon|bob|Hi Bob, nice to meet you!|20250728113000
+john|brandon|Yo Brandon, good to see you!|20250728114500
+SendingUser|ConnectedUser|This is a test message.|20250729091500
+SendingUser|ConnectedUser|This is a test message.|20250729092000
+charlie|alice|Hey Alice! How are you?|20251112003839

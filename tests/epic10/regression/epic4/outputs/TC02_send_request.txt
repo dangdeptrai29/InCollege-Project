@@ -1,0 +1,62 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter 0 (or BACK) at any prompt to return to the menu.
+Enter Your Choice:
+1
+Enter 0 (or BACK) at any prompt to return to the menu.
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+
+Welcome, alice!
+Main Menu:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter Your Choice:
+2
+--- Your Profile ---
+  Name: Alice Smith
+  University: University of Tampa
+  Major: Computer Science
+  Graduation Year: 2025
+  Experience: None
+  Education: None
+--------------------
+Main Menu:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter Your Choice:
+Bob Tran
+Invalid option
+Main Menu:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter Your Choice:
+1
+--- Create/Edit Profile ---
+Enter 0 (or BACK) at any prompt to return to the menu.
+Enter First Name:
+Enter Last Name:
+--- END_OF_PROGRAM_EXECUTION ---

@@ -1,0 +1,19 @@
+1
+testuser1
+Password1!
+1
+1
+Senior Engineer
+Lead development team
+Mega Corp
+New York, NY
+$150000/year
+2
+1
+Junior Developer
+Entry level position
+Startup Inc
+Austin, TX
+$60000/year
+2
+3
