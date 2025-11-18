@@ -1,0 +1,2 @@
+alice|bob|A
+alice|charlie|A

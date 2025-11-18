@@ -1,0 +1,52 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter 0 (or BACK) at any prompt to return to the menu.
+Enter Your Choice:
+1
+Enter 0 (or BACK) at any prompt to return to the menu.
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+
+Welcome, alice!
+Main Menu:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter Your Choice:
+3
+Enter 0 (or BACK) at any prompt to return to the menu.
+Enter the full name of the person you are looking for:
+--- Found User Profile ---
+  Name: John O'Brien-Smith Jr.
+  University: MIT
+  Major: EE
+  Graduation Year: 2023
+  About Me:
+  Experience: None
+  Education: None
+-------------------------
+  1. Send Connection Request
+  2. Back to Main Menu
+Enter Your Choice:
+2
+Main Menu:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter Your Choice:
+9
+--- END_OF_PROGRAM_EXECUTION ---

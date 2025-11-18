@@ -1,0 +1,2 @@
+# Correct: Prevents duplicate connection
+You are already connected with this user.

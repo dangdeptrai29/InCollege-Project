@@ -1,0 +1,2 @@
+# Bug: No validation preventing self-application (should block or warn)
+Your application for Developer at TechCo has been submitted.

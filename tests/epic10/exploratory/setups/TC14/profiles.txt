@@ -1,0 +1,4 @@
+alice|Alice|Smith|USF|CS|2024|||
+bob|Bob|Jones|MIT|EE|2023|||
+charlie|Charlie|Brown|UCLA|Math|2025|||
+dave|Dave|Wilson|Yale|Phys|2022|||

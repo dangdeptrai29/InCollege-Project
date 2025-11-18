@@ -1,0 +1,2 @@
+alice|Alice|Smith|USF|CS|2024|||
+bob|Bob|Jones|MIT|EE|2023|||

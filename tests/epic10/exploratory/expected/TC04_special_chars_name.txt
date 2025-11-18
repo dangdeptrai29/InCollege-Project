@@ -1,0 +1,3 @@
+# Edge: Apostrophe/hyphen in name - tests NORMALIZE-NAME logic
+--- Found User Profile ---
+  Name: John O'Brien-Smith Jr.

@@ -1,0 +1,2 @@
+999998|bob|Job A|Desc|Company|Location|50000
+999999|bob|Job B|Desc|Company|Location|50000

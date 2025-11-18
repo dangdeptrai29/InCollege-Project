@@ -1,0 +1,18 @@
+1
+alice
+Password1!
+1
+Alice
+Smith
+USF
+CS
+2024
+
+Senior~Developer
+Tech|Company
+2020^2024
+Built apps
+DONE
+DONE
+2
+9

@@ -1,0 +1,2 @@
+# Correct: No pending requests to accept
+You have no pending connection requests at this time.

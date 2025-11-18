@@ -1,0 +1,4 @@
+# Bug: Malformed timestamps show as "N/A" or crash
+From: bob
+Message: Test message
+Sent: N/A

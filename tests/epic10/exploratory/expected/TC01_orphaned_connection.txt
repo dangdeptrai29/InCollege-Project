@@ -1,0 +1,2 @@
+# Bug: Shows "bob (Profile not found)" - graceful handling of deleted profile
+Connected with: bob (Profile not found)

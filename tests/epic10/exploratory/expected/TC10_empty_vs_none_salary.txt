@@ -1,0 +1,4 @@
+# Correct: All salary variations (empty/NONE/spaces) properly hidden
+Title: Job Empty
+Description: Desc1
+(no salary line shown)

@@ -1,0 +1,2 @@
+# Bug: ID wraps to 0 when exceeding PIC 9(6) max (999999)
+Job posted successfully! (ID: 0)

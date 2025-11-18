@@ -1,0 +1,3 @@
+# Edge: Year 2100 is valid upper boundary
+Profile saved successfully!
+  Graduation Year: 2100
