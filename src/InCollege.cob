@@ -1,4 +1,4 @@
-        >>SOURCE FORMAT FREE
+>>SOURCE FORMAT FREE
        IDENTIFICATION DIVISION.
        PROGRAM-ID. INCOLLEGE.
        AUTHOR. Wisconsin Team.
@@ -40,6 +40,9 @@
            SELECT MESSAGES-FILE ASSIGN TO "data/messages.txt"
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-MSG-FILE-STATUS.
+           SELECT SEARCH-HISTORY-FILE ASSIGN TO "data/search_history.txt"
+               ORGANIZATION IS LINE SEQUENTIAL
+               FILE STATUS IS WS-SEARCH-STATUS.
 
        DATA DIVISION.
        FILE SECTION.
@@ -75,6 +78,9 @@
        FD  MESSAGES-FILE.
        01  MESSAGE-REC                   PIC X(512).
 
+       FD  SEARCH-HISTORY-FILE.
+       01  SEARCH-HISTORY-REC            PIC X(256).
+
        WORKING-STORAGE SECTION.
        *> File status codes
        01  WS-IN-STATUS                  PIC XX VALUE "00".
@@ -88,6 +94,7 @@
        01  WS-APP-STATUS                 PIC XX VALUE "00".
        01  WS-APPL-STATUS                PIC XX VALUE "00".
        01  WS-MSG-FILE-STATUS            PIC XX VALUE "00".
+       01  WS-SEARCH-STATUS              PIC XX VALUE "00".
 
        *> End-of-file flags with condition names
        01  WS-EOF-IN                     PIC X VALUE 'N'.
@@ -128,7 +135,11 @@
        01  MSG-WELCOME                   PIC X(64)  VALUE "Welcome to InCollege!".
        01  MSG-LOGIN                     PIC X(32)  VALUE "1. Log In".
        01  MSG-CREATE                    PIC X(32)  VALUE "2. Create New Account".
-       01  MSG-ENTER-CHOICE              PIC X(20)  VALUE "Enter your choice: ".
+       01  MSG-ENTER-CHOICE              PIC X(20)  VALUE "Enter Your Choice: ".
+       01  MSG-BACK-INSTRUCTION          PIC X(64)
+           VALUE "Enter 0 (or BACK) at any prompt to return to the menu.".
+       01  MSG-RETURNING                 PIC X(48)
+           VALUE "Returning to the previous menu...".
        01  MSG-WELCOME-PFX               PIC X(9)   VALUE "Welcome, ".
        01  MSG-ENTER-USER                PIC X(64)  VALUE "Please enter your username:".
        01  MSG-ENTER-PASS                PIC X(64)  VALUE "Please enter your password:".
@@ -136,6 +147,7 @@
 
        *> In-memory users table
        01  WS-MAX-USERS                  PIC 9(4) VALUE 200.
+       01  WS-ACCOUNT-LIMIT              PIC 9(4) VALUE 5.
        01  WS-USERS-COUNT                PIC 9(4) VALUE 0.
        01  WS-USERS-TABLE.
            05  WS-USER OCCURS 0 TO 200 TIMES
@@ -243,6 +255,7 @@
 
        01  WS-I                          PIC 9(4) VALUE 0.
        01  WS-J                          PIC 9(4) VALUE 0.
+       01  WS-NAME-IDX                   PIC 9(4) VALUE 0.
        01  WS-SEARCH-RESULT-IDX          PIC 9(4) VALUE 0.
 
        *> Scratch area for parsing user file records
@@ -267,7 +280,7 @@
        01  WS-UPPER-COUNT                PIC 9(4) VALUE 0.
        01  WS-DIGIT-COUNT                PIC 9(4) VALUE 0.
        01  WS-SPECIAL-COUNT              PIC 9(4) VALUE 0.
-       01  WS-SPECIAL-CHARS              PIC X(20) VALUE "!@#$%^&*-_+".
+       01  WS-SPECIAL-CHARS              PIC X(20) VALUE "!@#$%^&*?-_+".
        01  WS-CHAR                       PIC X      VALUE SPACE.
        01  WS-TMP-COUNT                  PIC 9(4)   VALUE 0.
 
@@ -326,15 +339,17 @@
        *> Jobs sub-menu
        01  WS-JOB-CHOICE                 PIC X(8) VALUE SPACES.
 
-       *> Main menu messages
-       01  MSG-MENU-VIEW-PROFILE         PIC X(32) VALUE "1. View My Profile".
-       01  MSG-MENU-JOBS                 PIC X(32) VALUE "Search for a job".
-       01  MSG-MENU-SEARCH-USER          PIC X(32) VALUE "2. Search for User".
-       01  MSG-MENU-LEARN-SKILL          PIC X(32) VALUE "3. Learn a New Skill".
-       01  MSG-MENU-VIEW-PENDING         PIC X(48) VALUE
-           "4. View My Pending Connection Requests".
-       01  MSG-MENU-VIEW-NETWORK         PIC X(32) VALUE "5. View My Network".
-       01  MSG-MENU-MESSAGE              PIC X(32) VALUE "6. Messages".
+       *> Main menu messages (Updated for Week 10)
+       01 MSG-MENU-HEADER        PIC X(32) VALUE "Main Menu:".
+       01 MSG-MENU-1-CREATE      PIC X(32) VALUE "1. Create/Edit My Profile".
+       01 MSG-MENU-2-VIEW        PIC X(32) VALUE "2. View My Profile".
+       01 MSG-MENU-3-SEARCH      PIC X(32) VALUE "3. Search for User".
+       01 MSG-MENU-4-SKILL       PIC X(32) VALUE "4. Learn a New Skill".
+       01 MSG-MENU-5-PENDING     PIC X(48) VALUE "5. View My Pending Connection Requests".
+       01 MSG-MENU-6-NETWORK     PIC X(32) VALUE "6. View My Network".
+       01 MSG-MENU-7-JOBS        PIC X(32) VALUE "7. Job Search/Internship".
+       01 MSG-MENU-8-MESSAGES    PIC X(32) VALUE "8. Messages".
+       01 MSG-MENU-9-EXIT        PIC X(32) VALUE "9. Exit".
 
        *> Skills
        01  MSG-SKILL1                    PIC X(32) VALUE "Skill 1".
@@ -407,10 +422,27 @@
            VALUE "No one by that name could be found.".
        01  MSG-USER-PROFILE-HEADER       PIC X(32)
            VALUE "--- Found User Profile ---".
+       01  MSG-SEARCH-BLANK              PIC X(80)
+           VALUE "Search request skipped: name required to continue.".
        01  WS-SEARCH-FULLNAME            PIC X(128) VALUE SPACES.
        01  WS-SEARCH-FOUND               PIC X VALUE 'N'.
            88  SEARCH-FOUND                  VALUE 'Y'.
            88  SEARCH-NOT-FOUND              VALUE 'N'.
+       01  WS-BACK-FLAG                  PIC X VALUE 'N'.
+           88  BACK-REQUEST                  VALUE 'Y'.
+           88  NO-BACK-REQUEST               VALUE 'N'.
+       01  WS-INPUT-NORMALIZED           PIC X(256) VALUE SPACES.
+       01  WS-SEARCH-NAME-NORM           PIC X(256) VALUE SPACES.
+       01  WS-CANDIDATE-NAME-NORM        PIC X(256) VALUE SPACES.
+       01  WS-NAME-SOURCE                PIC X(256) VALUE SPACES.
+       01  WS-NAME-TARGET                PIC X(256) VALUE SPACES.
+       01  WS-NAME-TGT-IDX               PIC 9(4) VALUE 0.
+       01  WS-NAME-LAST-SPACE            PIC X VALUE 'Y'.
+       01  WS-SEARCH-RESULT-TEXT         PIC X(16) VALUE "NOT_FOUND".
+       01  WS-SEARCH-BLANK-FLAG          PIC X VALUE 'N'.
+           88  SEARCH-INPUT-BLANK            VALUE 'Y'.
+           88  SEARCH-INPUT-NOT-BLANK        VALUE 'N'.
+       01  WS-SEARCH-LOG-TS              PIC X(20) VALUE SPACES.
 
        *> Connection request messages/vars
        01  WS-CONN-CHOICE                PIC X(8)   VALUE SPACES.
@@ -455,10 +487,10 @@
        *> EPIC 6: Jobs / Internships
        01  MSG-JOBS-HEADER               PIC X(40)
            VALUE "--- Job Search/Internship Menu ---".
-       01  MSG-JOBS-POST                 PIC X(32) VALUE "Post a Job/Internship".
-       01  MSG-JOBS-BROWSE               PIC X(32) VALUE "Browse Jobs/Internships".
-       01  MSG-JOBS-VIEW-APPS            PIC X(32) VALUE "View My Applications".
-       01  MSG-JOBS-BACK                 PIC X(32) VALUE "Back to Main Menu".
+       01  MSG-JOBS-POST                 PIC X(32) VALUE "1. Post a Job/Internship".
+       01  MSG-JOBS-BROWSE               PIC X(32) VALUE "2. Browse Jobs/Internships".
+       01  MSG-JOBS-VIEW-APPS            PIC X(32) VALUE "3. View My Applications".
+       01  MSG-JOBS-BACK                 PIC X(32) VALUE "4. Back to Main Menu".
 
        01  MSG-POST-JOB-HEADER           PIC X(40) VALUE "--- Post a New Job/Internship ---".
        01  MSG-POST-JOB-TITLE            PIC X(32) VALUE "Enter Job Title:".
@@ -477,8 +509,8 @@
        01  MSG-INVALID-JOB               PIC X(32) VALUE "Invalid job selection.".
        01  MSG-JOB-DETAILS-HEADER        PIC X(24) VALUE "--- Job Details ---".
        01  MSG-JOB-DETAILS-DIVIDER       PIC X(40) VALUE "-------------------".
-       01  MSG-APPLY-OPT                 PIC X(24) VALUE "Apply for this Job".
-       01  MSG-BACK-OPT                  PIC X(24) VALUE "Back to Job List".
+       01  MSG-APPLY-OPT                 PIC X(24) VALUE "1. Apply for this Job".
+       01  MSG-BACK-OPT                  PIC X(24) VALUE "2. Back to Job List".
        01  MSG-APPLY-SUCCESS             PIC X(64) VALUE "Your application for ".
        01  MSG-APPLY-DUPLICATE           PIC X(64) VALUE "You have already applied for this job.".
 
@@ -520,6 +552,7 @@
        77  WS-RECEIVER                   PIC X(128) VALUE SPACES.
        77  WS-CONTENT                    PIC X(256) VALUE SPACES.
        77  WS-CONTENT-LENGTH             PIC 9(4)   VALUE 0.
+       01  WS-CHOICE-BUFFER              PIC X(32)  VALUE SPACES.
 
        *> EPIC 9: View Messages
        *> Added for Week 9
@@ -530,16 +563,16 @@
        01  MSG-VIEW-CONTENT              PIC X(10) VALUE "Message: ".
 
        01  WS-MESSAGES-FOUND-FLAG        PIC X     VALUE 'N'.
-           88  MESSAGES-FOUND                    VALUE 'Y'.
-           88  MESSAGES-NOT-FOUND                VALUE 'N'.
+           88  MESSAGES-FOUND                VALUE 'Y'.
+           88  MESSAGES-NOT-FOUND            VALUE 'N'.
 
         *> Format for timestamp into YYYY-MM-DD HH:MM
-       77 WS-FORMATTED-TS           PIC X(20) VALUE SPACES.
-       77  WS-TS-YEAR                PIC X(4)  VALUE SPACES.
-       77  WS-TS-MONTH               PIC X(2)  VALUE SPACES.
-       77  WS-TS-DAY                 PIC X(2)  VALUE SPACES.
-       77  WS-TS-HOUR                PIC X(2)  VALUE SPACES.
-       77  WS-TS-MINUTE              PIC X(2)  VALUE SPACES.
+       77 WS-FORMATTED-TS               PIC X(20) VALUE SPACES.
+       77  WS-TS-YEAR                   PIC X(4)  VALUE SPACES.
+       77  WS-TS-MONTH                  PIC X(2)  VALUE SPACES.
+       77  WS-TS-DAY                    PIC X(2)  VALUE SPACES.
+       77  WS-TS-HOUR                   PIC X(2)  VALUE SPACES.
+       77  WS-TS-MINUTE                 PIC X(2)  VALUE SPACES.
 
        PROCEDURE DIVISION.
        MAIN-SECTION.
@@ -568,6 +601,7 @@
            PERFORM INIT-LOAD-APPLICATIONS
            *> Epic 8: Load messages
            PERFORM INIT-LOAD-MESSAGES
+           PERFORM ENSURE-SEARCH-HISTORY-FILE
 
            EXIT.
 
@@ -578,76 +612,100 @@
 
        MENU-SECTION.
        RUN-APP.
-           MOVE MSG-WELCOME       TO WS-MSG PERFORM DISPLAY-AND-LOG
-           MOVE MSG-LOGIN         TO WS-MSG PERFORM DISPLAY-AND-LOG
-           MOVE MSG-CREATE        TO WS-MSG PERFORM DISPLAY-AND-LOG
-           MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-WELCOME        TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-LOGIN          TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-CREATE         TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-ENTER-CHOICE   TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            PERFORM READ-NEXT-LINE
            MOVE WS-LINE TO WS-CHOICE
            IF EOF-IN
               EXIT PARAGRAPH
            END-IF
+           MOVE WS-CHOICE TO WS-CHOICE-BUFFER
+           PERFORM ECHO-CHOICE-VALUE
 
            EVALUATE WS-CHOICE
-              WHEN '1'
+             WHEN '1'
                PERFORM LOGIN
-              WHEN '2'
+             WHEN '2'
                PERFORM CREATE-ACCOUNT
-              WHEN 'TEST-JOBS'
+             WHEN 'TEST-JOBS'
                PERFORM UNIT-TESTS-JOBS
-              WHEN OTHER
+             WHEN OTHER
                MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
            END-EVALUATE
            EXIT.
 
        LOGIN-SECTION.
+       *> LOGIN — Handles repeated credential prompts with optional BACK exit.
        LOGIN.
+           PERFORM RESET-LOGIN-STATE
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM UNTIL MATCH-FOUND OR EOF-IN
              MOVE MSG-ENTER-USER TO WS-MSG PERFORM DISPLAY-AND-LOG
              PERFORM READ-NEXT-LINE
              MOVE WS-LINE TO WS-USERNAME
              IF EOF-IN
-                EXIT PERFORM
+               EXIT PERFORM
+             END-IF
+             PERFORM CHECK-BACK-FROM-LINE
+             IF BACK-REQUEST
+               PERFORM HANDLE-BACK-EXIT
+               EXIT PARAGRAPH
              END-IF
 
              MOVE MSG-ENTER-PASS TO WS-MSG PERFORM DISPLAY-AND-LOG
              PERFORM READ-NEXT-LINE
              MOVE WS-LINE TO WS-PASSWORD
              IF EOF-IN
-                MOVE MSG-FAILURE TO WS-MSG
-                PERFORM DISPLAY-AND-LOG
-                EXIT PERFORM
+               MOVE MSG-FAILURE TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               EXIT PERFORM
              END-IF
 
              PERFORM CHECK-CREDENTIALS
 
              IF MATCH-FOUND
-                MOVE MSG-SUCCESS TO WS-MSG
-                PERFORM DISPLAY-AND-LOG
-                MOVE SPACES TO WS-MSG
-                STRING
-                   MSG-WELCOME-PFX         DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-USERNAME)  DELIMITED BY SIZE
-                   "!"                       DELIMITED BY SIZE
+               MOVE MSG-SUCCESS TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+
+               *> ADD THIS BLANK LINE FOR QOL SPACING
+               MOVE SPACES TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING
+                   MSG-WELCOME-PFX          DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-USERNAME) DELIMITED BY SIZE
+                   "!"                      DELIMITED BY SIZE
                    INTO WS-MSG
-                END-STRING
-                PERFORM DISPLAY-AND-LOG
-                MOVE FUNCTION TRIM(WS-USERNAME) TO WS-CURRENT-USERNAME
-                PERFORM LOGGED-IN-MENU
-                EXIT PERFORM
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
+               MOVE FUNCTION TRIM(WS-USERNAME) TO WS-CURRENT-USERNAME
+               PERFORM LOGGED-IN-MENU
+               EXIT PERFORM
              ELSE
-                MOVE MSG-FAILURE TO WS-MSG
-                PERFORM DISPLAY-AND-LOG
+               MOVE MSG-FAILURE TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+               PERFORM RESET-LOGIN-STATE
              END-IF
            END-PERFORM
            EXIT.
 
+       RESET-LOGIN-STATE.
+           SET MATCH-NOT-FOUND TO TRUE
+           MOVE SPACES TO WS-USERNAME WS-PASSWORD
+           EXIT.
+
+       *> CREATE-ACCOUNT — Enforces uniqueness, password policy, BACK exit.
        CREATE-ACCOUNT.
-           IF WS-USERS-COUNT >= 5
+           IF WS-USERS-COUNT >= WS-ACCOUNT-LIMIT
                MOVE MSG-ACCOUNT-LIMIT TO WS-MSG PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
            END-IF
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            *> Username prompt (with uniqueness)
            PERFORM UNTIL (WS-NEW-USERNAME NOT = SPACES AND MATCH-NOT-FOUND) OR EOF-IN
@@ -655,6 +713,11 @@
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-NEW-USERNAME
                IF EOF-IN
+                   EXIT PARAGRAPH
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
                    EXIT PARAGRAPH
                END-IF
 
@@ -680,6 +743,11 @@
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-NEW-PASSWORD
                IF EOF-IN
+                   EXIT PARAGRAPH
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
                    EXIT PARAGRAPH
                END-IF
                PERFORM VALIDATE-PASSWORD
@@ -717,14 +785,16 @@
        VALIDATE-PASSWORD.
            SET PASS-VALID TO TRUE
            MOVE SPACES TO WS-PASSWORD-ERROR
-           MOVE 0 TO WS-UPPER-COUNT WS-DIGIT-COUNT WS-SPECIAL-COUNT
 
            MOVE FUNCTION LENGTH(FUNCTION TRIM(WS-NEW-PASSWORD)) TO WS-PASS-LEN
            IF WS-PASS-LEN < 8 OR WS-PASS-LEN > 12
                SET PASS-INVALID TO TRUE
-               MOVE "Password must be 8-12 characters." TO WS-PASSWORD-ERROR
+               MOVE "Password must be 8 to 12 characters."
+                   TO WS-PASSWORD-ERROR
+               EXIT PARAGRAPH
            END-IF
 
+           MOVE 0 TO WS-UPPER-COUNT WS-DIGIT-COUNT WS-SPECIAL-COUNT
            PERFORM VARYING WS-I FROM 1 BY 1
                UNTIL WS-I > FUNCTION LENGTH(FUNCTION TRIM(WS-NEW-PASSWORD))
                MOVE WS-NEW-PASSWORD(WS-I:1) TO WS-CHAR
@@ -743,63 +813,92 @@
 
            IF WS-UPPER-COUNT = 0
                SET PASS-INVALID TO TRUE
-               MOVE "Password must contain at least one uppercase letter."
+               MOVE "Password must contain at least one capital letter."
                    TO WS-PASSWORD-ERROR
+               EXIT PARAGRAPH
            END-IF
+
            IF WS-DIGIT-COUNT = 0
                SET PASS-INVALID TO TRUE
                MOVE "Password must contain at least one digit."
                    TO WS-PASSWORD-ERROR
+               EXIT PARAGRAPH
            END-IF
+
            IF WS-SPECIAL-COUNT = 0
                SET PASS-INVALID TO TRUE
-               MOVE "Password must contain at least one special character (!@#$%^&*?-_+)."
+               MOVE "Password must contain at least one special character: !@#$%^&*?-_+"
                    TO WS-PASSWORD-ERROR
+               EXIT PARAGRAPH
            END-IF
+
            EXIT.
 
        LOGGED-IN-SECTION.
        LOGGED-IN-MENU.
-           PERFORM UNTIL EOF-IN
-
-               MOVE MSG-MENU-VIEW-PROFILE TO WS-MSG PERFORM DISPLAY-AND-LOG
-       *>        MOVE MSG-MENU-JOBS         TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-SEARCH-USER  TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-LEARN-SKILL  TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-VIEW-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-VIEW-NETWORK TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MENU-MESSAGE      TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-ENTER-CHOICE      TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-LOGGED-CHOICE
+           PERFORM UNTIL WS-LOGGED-CHOICE = '9' OR EOF-IN
+               MOVE MSG-MENU-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-1-CREATE TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-2-VIEW TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-3-SEARCH TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-4-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-5-PENDING TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-6-NETWORK TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-7-JOBS TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-8-MESSAGES TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-9-EXIT TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEXT-LINE
                MOVE WS-LINE TO WS-LOGGED-CHOICE
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               MOVE WS-LOGGED-CHOICE TO WS-CHOICE-BUFFER
+               PERFORM ECHO-CHOICE-VALUE
 
                EVALUATE WS-LOGGED-CHOICE
-       *>            WHEN '1'  PERFORM JOBS-MENU
-                   WHEN '1'  PERFORM VIEW-MY-PROFILE
-                   WHEN '2'  PERFORM USER-SEARCH-MENU
-                   WHEN '3'  PERFORM SKILL-MENU
-                   WHEN '4'  PERFORM VIEW-PENDING-REQUESTS
-                   WHEN '5'  PERFORM VIEW-MY-NETWORK
-                   WHEN '6'  PERFORM MESSAGE-MENU
+                   WHEN '1' PERFORM CREATE-OR-EDIT-PROFILE
+                   WHEN '2' PERFORM VIEW-MY-PROFILE
+                   WHEN '3' PERFORM USER-SEARCH-MENU
+                   WHEN '4' PERFORM SKILL-MENU
+                   WHEN '5' PERFORM VIEW-PENDING-REQUESTS
+                   WHEN '6' PERFORM VIEW-MY-NETWORK
+                   WHEN '7' PERFORM JOBS-MENU
+                   WHEN '8' PERFORM MESSAGE-MENU
+                   WHEN '9' EXIT PERFORM
                    WHEN OTHER
-                       MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
+                       MOVE MSG-INVALID-CHOICE TO WS-MSG
+                       PERFORM DISPLAY-AND-LOG
                END-EVALUATE
            END-PERFORM
            EXIT.
 
        SKILL-MENU.
+           MOVE SPACES TO WS-SKILL-CHOICE
            PERFORM UNTIL WS-SKILL-CHOICE = '6' OR EOF-IN
-               MOVE MSG-MENU-LEARN-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-SKILL1 TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-SKILL2 TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-SKILL3 TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-SKILL4 TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-SKILL5 TO WS-MSG PERFORM DISPLAY-AND-LOG
-               MOVE MSG-SKILL6 TO WS-MSG PERFORM DISPLAY-AND-LOG
+               MOVE MSG-MENU-4-SKILL TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+               MOVE SPACES TO WS-MSG
+               STRING "  " FUNCTION TRIM(MSG-SKILL1) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+               MOVE SPACES TO WS-MSG
+               STRING "  " FUNCTION TRIM(MSG-SKILL2) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+               MOVE SPACES TO WS-MSG
+               STRING "  " FUNCTION TRIM(MSG-SKILL3) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+               MOVE SPACES TO WS-MSG
+               STRING "  " FUNCTION TRIM(MSG-SKILL4) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+               MOVE SPACES TO WS-MSG
+               STRING "  " FUNCTION TRIM(MSG-SKILL5) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+               MOVE SPACES TO WS-MSG
+               STRING "  " FUNCTION TRIM(MSG-SKILL6) INTO WS-MSG END-STRING
+               PERFORM DISPLAY-AND-LOG
+
                MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                PERFORM READ-NEXT-LINE
@@ -807,6 +906,8 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               MOVE WS-SKILL-CHOICE TO WS-CHOICE-BUFFER
+               PERFORM ECHO-CHOICE-VALUE
 
                EVALUATE WS-SKILL-CHOICE
                    WHEN '1' THRU '5'
@@ -817,27 +918,53 @@
                        MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-EVALUATE
            END-PERFORM
+           MOVE SPACES TO WS-SKILL-CHOICE
            EXIT.
 
+       *> USER-SEARCH-MENU — Exact-match lookup with logging and BACK support.
        USER-SEARCH-MENU.
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
            MOVE MSG-ENTER-USER-SEARCH TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM READ-NEXT-LINE
            MOVE WS-LINE TO WS-SEARCH-FULLNAME
            IF EOF-IN
                EXIT PARAGRAPH
            END-IF
-
-           PERFORM FIND-USER-BY-NAME
-           IF SEARCH-FOUND
-               PERFORM DISPLAY-FOUND-USER
-           ELSE
-               PERFORM DISPLAY-NO-MATCH-MSG
+           PERFORM CHECK-BACK-FROM-LINE
+           IF BACK-REQUEST
+               MOVE "BACK" TO WS-SEARCH-RESULT-TEXT
+               PERFORM HANDLE-BACK-EXIT
+               PERFORM LOG-SEARCH-ATTEMPT
+               EXIT PARAGRAPH
            END-IF
+
+           MOVE "NOT_FOUND" TO WS-SEARCH-RESULT-TEXT
+           SET SEARCH-INPUT-NOT-BLANK TO TRUE
+           PERFORM FIND-USER-BY-NAME
+           IF SEARCH-INPUT-BLANK
+               MOVE "BLANK_INPUT" TO WS-SEARCH-RESULT-TEXT
+               MOVE MSG-SEARCH-BLANK TO WS-MSG PERFORM DISPLAY-AND-LOG
+           ELSE
+               IF SEARCH-FOUND
+                   MOVE "FOUND" TO WS-SEARCH-RESULT-TEXT
+                   PERFORM DISPLAY-FOUND-USER
+               ELSE
+                   PERFORM DISPLAY-NO-MATCH-MSG
+               END-IF
+           END-IF
+           PERFORM LOG-SEARCH-ATTEMPT
            EXIT.
 
        FIND-USER-BY-NAME.
            MOVE 0 TO WS-SEARCH-RESULT-IDX
            SET SEARCH-NOT-FOUND TO TRUE
+           MOVE FUNCTION TRIM(WS-SEARCH-FULLNAME) TO WS-NAME-SOURCE
+           PERFORM NORMALIZE-NAME
+           MOVE WS-NAME-TARGET TO WS-SEARCH-NAME-NORM
+           IF WS-SEARCH-NAME-NORM = SPACES
+               SET SEARCH-INPUT-BLANK TO TRUE
+               EXIT PARAGRAPH
+           END-IF
            PERFORM VARYING WS-I FROM 1 BY 1
                    UNTIL WS-I > WS-PROFILES-COUNT OR SEARCH-FOUND
                MOVE SPACES TO WS-T1
@@ -847,7 +974,10 @@
                    FUNCTION TRIM(WS-PROF-LAST(WS-I))  DELIMITED BY SIZE
                    INTO WS-T1
                END-STRING
-               IF WS-T1 = FUNCTION TRIM(WS-SEARCH-FULLNAME)
+               MOVE WS-T1 TO WS-NAME-SOURCE
+               PERFORM NORMALIZE-NAME
+               MOVE WS-NAME-TARGET TO WS-CANDIDATE-NAME-NORM
+               IF WS-CANDIDATE-NAME-NORM = WS-SEARCH-NAME-NORM
                    SET SEARCH-FOUND TO TRUE
                    MOVE WS-I TO WS-SEARCH-RESULT-IDX
                END-IF
@@ -865,8 +995,79 @@
            MOVE WS-PROF-USERNAME(WS-SEARCH-RESULT-IDX)
                TO WS-FOUND-USER-USERNAME
            IF WS-FOUND-USER-USERNAME NOT = WS-CURRENT-USERNAME
-              AND NOT EOF-IN
+             AND NOT EOF-IN
                PERFORM PROMPT-FOR-CONNECTION
+           END-IF
+           EXIT.
+
+       *> NORMALIZE-NAME — Collapses extra spaces to compare search strings.
+       NORMALIZE-NAME.
+           MOVE SPACES TO WS-NAME-TARGET
+           MOVE 0 TO WS-NAME-TGT-IDX
+           MOVE 'Y' TO WS-NAME-LAST-SPACE
+           MOVE FUNCTION TRIM(WS-NAME-SOURCE) TO WS-NAME-SOURCE
+           IF WS-NAME-SOURCE = SPACES
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM VARYING WS-NAME-IDX FROM 1 BY 1
+                   UNTIL WS-NAME-IDX > FUNCTION LENGTH(WS-NAME-SOURCE)
+               MOVE WS-NAME-SOURCE(WS-NAME-IDX:1) TO WS-CHAR
+               IF WS-CHAR = ' '
+                   IF WS-NAME-LAST-SPACE = 'N'
+                       ADD 1 TO WS-NAME-TGT-IDX
+                       MOVE ' ' TO WS-NAME-TARGET(WS-NAME-TGT-IDX:1)
+                       MOVE 'Y' TO WS-NAME-LAST-SPACE
+                   END-IF
+               ELSE
+                   ADD 1 TO WS-NAME-TGT-IDX
+                   MOVE WS-CHAR TO WS-NAME-TARGET(WS-NAME-TGT-IDX:1)
+                   MOVE 'N' TO WS-NAME-LAST-SPACE
+               END-IF
+           END-PERFORM
+           EXIT.
+
+       *> LOG-SEARCH-ATTEMPT — Persists username/query/result/timestamp.
+       LOG-SEARCH-ATTEMPT.
+           OPEN EXTEND SEARCH-HISTORY-FILE
+           IF WS-SEARCH-STATUS NOT = "00"
+               OPEN OUTPUT SEARCH-HISTORY-FILE
+               IF WS-SEARCH-STATUS = "00"
+                   CLOSE SEARCH-HISTORY-FILE
+                   OPEN EXTEND SEARCH-HISTORY-FILE
+               END-IF
+           END-IF
+           IF WS-SEARCH-STATUS = "00"
+               MOVE SPACES TO SEARCH-HISTORY-REC
+               MOVE FUNCTION CURRENT-DATE(1:14) TO WS-SEARCH-LOG-TS
+               STRING
+                   FUNCTION TRIM(WS-CURRENT-USERNAME) DELIMITED BY SIZE
+                   "|"                                DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-SEARCH-FULLNAME)  DELIMITED BY SIZE
+                   "|"                                DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-SEARCH-RESULT-TEXT) DELIMITED BY SIZE
+                   "|"                                DELIMITED BY SIZE
+                   WS-SEARCH-LOG-TS                     DELIMITED BY SIZE
+                   INTO SEARCH-HISTORY-REC
+               END-STRING
+               WRITE SEARCH-HISTORY-REC
+               CLOSE SEARCH-HISTORY-FILE
+           ELSE
+               CLOSE SEARCH-HISTORY-FILE
+               MOVE "Warning: unable to log search attempt." TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+           EXIT.
+
+       *> ENSURE-SEARCH-HISTORY-FILE — Creates search log if missing at startup.
+       ENSURE-SEARCH-HISTORY-FILE.
+           OPEN INPUT SEARCH-HISTORY-FILE
+           IF WS-SEARCH-STATUS = "00"
+               CLOSE SEARCH-HISTORY-FILE
+               EXIT PARAGRAPH
+           END-IF
+           OPEN OUTPUT SEARCH-HISTORY-FILE
+           IF WS-SEARCH-STATUS = "00"
+               CLOSE SEARCH-HISTORY-FILE
            END-IF
            EXIT.
 
@@ -888,7 +1089,7 @@
            MOVE MSG-USER-PROFILE-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            MOVE SPACES TO WS-MSG
-           STRING "Name: "                         DELIMITED BY SIZE
+           STRING "  Name: "                           DELIMITED BY SIZE
                   FUNCTION TRIM(WS-PROF-FIRST-IN)  DELIMITED BY SIZE
                   " "                              DELIMITED BY SIZE
                   FUNCTION TRIM(WS-PROF-LAST-IN)   DELIMITED BY SIZE
@@ -897,25 +1098,25 @@
            PERFORM DISPLAY-AND-LOG
 
            MOVE SPACES TO WS-MSG
-           STRING "University: " FUNCTION TRIM(WS-PROF-UNIV-IN) DELIMITED BY SIZE
+           STRING "  University: " FUNCTION TRIM(WS-PROF-UNIV-IN) DELIMITED BY SIZE
                   INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
 
            MOVE SPACES TO WS-MSG
-           STRING "Major: " FUNCTION TRIM(WS-PROF-MAJOR-IN) DELIMITED BY SIZE
+           STRING "  Major: " FUNCTION TRIM(WS-PROF-MAJOR-IN) DELIMITED BY SIZE
                   INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
 
            MOVE SPACES TO WS-MSG
-           STRING "Graduation Year: " FUNCTION TRIM(WS-PROF-GYEAR-IN) DELIMITED BY SIZE
+           STRING "  Graduation Year: " FUNCTION TRIM(WS-PROF-GYEAR-IN) DELIMITED BY SIZE
                   INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
 
            MOVE SPACES TO WS-MSG
-           STRING "About Me: " FUNCTION TRIM(WS-PROF-ABOUT-IN) DELIMITED BY SIZE
+           STRING "  About Me: " FUNCTION TRIM(WS-PROF-ABOUT-IN) DELIMITED BY SIZE
                   INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
@@ -934,13 +1135,13 @@
        CHECK-CREDENTIALS.
            SET MATCH-NOT-FOUND TO TRUE
            IF WS-USERS-COUNT = 0
-              EXIT PARAGRAPH
+             EXIT PARAGRAPH
            END-IF
            PERFORM VARYING WS-I FROM 1 BY 1
                    UNTIL WS-I > WS-USERS-COUNT OR MATCH-FOUND
              IF WS-USERNAME = WS-TBL-USERNAME(WS-I)
-                AND WS-PASSWORD = WS-TBL-PASSWORD(WS-I)
-                SET MATCH-FOUND TO TRUE
+               AND WS-PASSWORD = WS-TBL-PASSWORD(WS-I)
+               SET MATCH-FOUND TO TRUE
              END-IF
            END-PERFORM
            EXIT.
@@ -980,12 +1181,12 @@
                  NOT AT END
                    PERFORM PARSE-USER-REC
                    IF WS-USER-FILE-USERNAME NOT = SPACES
-                      AND WS-USER-FILE-PASSWORD NOT = SPACES
-                      IF WS-USERS-COUNT < WS-MAX-USERS
+                     AND WS-USER-FILE-PASSWORD NOT = SPACES
+                     IF WS-USERS-COUNT < WS-ACCOUNT-LIMIT
                          ADD 1 TO WS-USERS-COUNT
                          MOVE WS-USER-FILE-USERNAME TO WS-TBL-USERNAME(WS-USERS-COUNT)
                          MOVE WS-USER-FILE-PASSWORD TO WS-TBL-PASSWORD(WS-USERS-COUNT)
-                      END-IF
+                     END-IF
                    END-IF
              END-READ
            END-PERFORM
@@ -1000,12 +1201,12 @@
                    MOVE USER-REC-EX TO USER-REC
                    PERFORM PARSE-USER-REC
                    IF WS-USER-FILE-USERNAME NOT = SPACES
-                      AND WS-USER-FILE-PASSWORD NOT = SPACES
-                      IF WS-USERS-COUNT < WS-MAX-USERS
+                     AND WS-USER-FILE-PASSWORD NOT = SPACES
+                     IF WS-USERS-COUNT < WS-ACCOUNT-LIMIT
                          ADD 1 TO WS-USERS-COUNT
                          MOVE WS-USER-FILE-USERNAME TO WS-TBL-USERNAME(WS-USERS-COUNT)
                          MOVE WS-USER-FILE-PASSWORD TO WS-TBL-PASSWORD(WS-USERS-COUNT)
-                      END-IF
+                     END-IF
                    END-IF
              END-READ
            END-PERFORM
@@ -1015,14 +1216,14 @@
        INIT-LOAD-PROFILES.
            OPEN INPUT PROFILES-FILE
            IF WS-PROF-STATUS = "00"
-              SET NOT-EOF-PROF TO TRUE
-              PERFORM UNTIL EOF-PROF
-                  READ PROFILES-FILE
-                      AT END SET EOF-PROF TO TRUE
-                      NOT AT END PERFORM PARSE-PROFILE-REC
-                  END-READ
-              END-PERFORM
-              CLOSE PROFILES-FILE
+             SET NOT-EOF-PROF TO TRUE
+             PERFORM UNTIL EOF-PROF
+                 READ PROFILES-FILE
+                     AT END SET EOF-PROF TO TRUE
+                     NOT AT END PERFORM PARSE-PROFILE-REC
+                 END-READ
+             END-PERFORM
+             CLOSE PROFILES-FILE
            END-IF
            EXIT.
 
@@ -1052,30 +1253,30 @@
                  END-IF
              END-PERFORM
              IF WS-LAST-PIPE = 0
-                MOVE FUNCTION TRIM(WS-REST) TO WS-EXPS-STR
+               MOVE FUNCTION TRIM(WS-REST) TO WS-EXPS-STR
              ELSE
-                IF WS-LAST-PIPE > 1
-                   MOVE FUNCTION TRIM(WS-REST(1:WS-LAST-PIPE - 1)) TO WS-EXPS-STR
-                END-IF
-                MOVE FUNCTION TRIM(WS-REST(WS-LAST-PIPE + 1:)) TO WS-EDUS-STR
+               IF WS-LAST-PIPE > 1
+                 MOVE FUNCTION TRIM(WS-REST(1:WS-LAST-PIPE - 1)) TO WS-EXPS-STR
+               END-IF
+               MOVE FUNCTION TRIM(WS-REST(WS-LAST-PIPE + 1:)) TO WS-EDUS-STR
              END-IF
            END-IF
 
            IF WS-PROF-USER = SPACES
-              EXIT PARAGRAPH
+             EXIT PARAGRAPH
            END-IF
 
            IF WS-PROFILES-COUNT < WS-PROFILES-MAX
-              ADD 1 TO WS-PROFILES-COUNT
-              MOVE FUNCTION TRIM(WS-PROF-USER)       TO WS-PROF-USERNAME(WS-PROFILES-COUNT)
-              MOVE FUNCTION TRIM(WS-PROF-FIRST-IN)   TO WS-PROF-FIRST(WS-PROFILES-COUNT)
-              MOVE FUNCTION TRIM(WS-PROF-LAST-IN)    TO WS-PROF-LAST(WS-PROFILES-COUNT)
-              MOVE FUNCTION TRIM(WS-PROF-UNIV-IN)    TO WS-PROF-UNIV(WS-PROFILES-COUNT)
-              MOVE FUNCTION TRIM(WS-PROF-MAJOR-IN)   TO WS-PROF-MAJOR(WS-PROFILES-COUNT)
-              MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN)   TO WS-PROF-GYEAR(WS-PROFILES-COUNT)
-              MOVE FUNCTION TRIM(WS-PROF-ABOUT-IN)   TO WS-PROF-ABOUT(WS-PROFILES-COUNT)
-              MOVE FUNCTION TRIM(WS-EXPS-STR)        TO WS-PROF-EXPERIENCES(WS-PROFILES-COUNT)
-              MOVE FUNCTION TRIM(WS-EDUS-STR)        TO WS-PROF-EDUCATIONS(WS-PROFILES-COUNT)
+             ADD 1 TO WS-PROFILES-COUNT
+             MOVE FUNCTION TRIM(WS-PROF-USER)       TO WS-PROF-USERNAME(WS-PROFILES-COUNT)
+             MOVE FUNCTION TRIM(WS-PROF-FIRST-IN)   TO WS-PROF-FIRST(WS-PROFILES-COUNT)
+             MOVE FUNCTION TRIM(WS-PROF-LAST-IN)    TO WS-PROF-LAST(WS-PROFILES-COUNT)
+             MOVE FUNCTION TRIM(WS-PROF-UNIV-IN)    TO WS-PROF-UNIV(WS-PROFILES-COUNT)
+             MOVE FUNCTION TRIM(WS-PROF-MAJOR-IN)   TO WS-PROF-MAJOR(WS-PROFILES-COUNT)
+             MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN)   TO WS-PROF-GYEAR(WS-PROFILES-COUNT)
+             MOVE FUNCTION TRIM(WS-PROF-ABOUT-IN)   TO WS-PROF-ABOUT(WS-PROFILES-COUNT)
+             MOVE FUNCTION TRIM(WS-EXPS-STR)        TO WS-PROF-EXPERIENCES(WS-PROFILES-COUNT)
+             MOVE FUNCTION TRIM(WS-EDUS-STR)        TO WS-PROF-EDUCATIONS(WS-PROFILES-COUNT)
            END-IF
            EXIT.
 
@@ -1112,15 +1313,15 @@
            SET PROFILE-NOT-FOUND TO TRUE
            MOVE 0 TO WS-PROFILE-IDX
            IF WS-PROFILES-COUNT = 0
-              EXIT PARAGRAPH
+             EXIT PARAGRAPH
            END-IF
            PERFORM VARYING WS-I FROM 1 BY 1
                    UNTIL WS-I > WS-PROFILES-COUNT OR PROFILE-FOUND
-              IF FUNCTION TRIM(WS-CURRENT-USERNAME)
-                   = FUNCTION TRIM(WS-PROF-USERNAME(WS-I))
-                 SET PROFILE-FOUND TO TRUE
-                 MOVE WS-I TO WS-PROFILE-IDX
-              END-IF
+             IF FUNCTION TRIM(WS-CURRENT-USERNAME)
+                 = FUNCTION TRIM(WS-PROF-USERNAME(WS-I))
+               SET PROFILE-FOUND TO TRUE
+               MOVE WS-I TO WS-PROFILE-IDX
+             END-IF
            END-PERFORM
            EXIT.
 
@@ -1128,22 +1329,22 @@
            MOVE FUNCTION TRIM(WS-PROF-GYEAR-IN) TO WS-PROF-GYEAR-IN
            SET YEAR-VALID TO TRUE
            IF FUNCTION LENGTH(FUNCTION TRIM(WS-PROF-GYEAR-IN)) NOT = 4
-              SET YEAR-INVALID TO TRUE
-              EXIT PARAGRAPH
+             SET YEAR-INVALID TO TRUE
+             EXIT PARAGRAPH
            END-IF
            SET YEAR-VALID TO TRUE
            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > 4 OR YEAR-INVALID
              MOVE WS-PROF-GYEAR-IN(WS-I:1) TO WS-CHAR
              IF WS-CHAR < '0' OR WS-CHAR > '9'
-                SET YEAR-INVALID TO TRUE
+               SET YEAR-INVALID TO TRUE
              END-IF
            END-PERFORM
            IF YEAR-INVALID
-              EXIT PARAGRAPH
+             EXIT PARAGRAPH
            END-IF
            MOVE WS-PROF-GYEAR-IN TO WS-GYEAR-NUM
            IF WS-GYEAR-NUM < 1900 OR WS-GYEAR-NUM > 2100
-              SET YEAR-INVALID TO TRUE
+             SET YEAR-INVALID TO TRUE
            END-IF
            EXIT.
 
@@ -1152,8 +1353,14 @@
        *> ===============================================================
        CONNECTION-HANDLING-SECTION.
        PROMPT-FOR-CONNECTION.
-           MOVE MSG-SEND-REQUEST TO WS-MSG PERFORM DISPLAY-AND-LOG
-           MOVE MSG-BACK-TO-MENU TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE SPACES TO WS-MSG
+           STRING "  " FUNCTION TRIM(MSG-SEND-REQUEST) INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+
+           MOVE SPACES TO WS-MSG
+           STRING "  " FUNCTION TRIM(MSG-BACK-TO-MENU) INTO WS-MSG END-STRING
+           PERFORM DISPLAY-AND-LOG
+
            MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            PERFORM READ-NEXT-LINE
@@ -1161,6 +1368,8 @@
            IF EOF-IN
                EXIT PARAGRAPH
            END-IF
+           MOVE WS-CONN-CHOICE TO WS-CHOICE-BUFFER
+           PERFORM ECHO-CHOICE-VALUE
 
            EVALUATE WS-CONN-CHOICE
                WHEN '1'  PERFORM PROCESS-CONNECTION-REQUEST
@@ -1188,11 +1397,11 @@
                    MOVE WS-SEARCH-RESULT-IDX TO WS-I
                    MOVE SPACES TO WS-MSG
                    STRING
-                       "Connection request sent to "     DELIMITED BY SIZE
+                       "Connection request sent to "    DELIMITED BY SIZE
                        FUNCTION TRIM(WS-PROF-FIRST(WS-I))  DELIMITED BY SIZE
-                       " "                               DELIMITED BY SIZE
-                       FUNCTION TRIM(WS-PROF-LAST(WS-I))   DELIMITED BY SIZE
-                       "."                               DELIMITED BY SIZE
+                       " "                              DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-PROF-LAST(WS-I))    DELIMITED BY SIZE
+                       "."                              DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
                    PERFORM DISPLAY-AND-LOG
@@ -1202,7 +1411,7 @@
        CHECK-CONNECTION-STATUS.
            SET CONN-OK TO TRUE
            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-CONNECTIONS-COUNT
-               IF WS-CONN-SENDER(WS-I)   = WS-CURRENT-USERNAME AND
+               IF WS-CONN-SENDER(WS-I)    = WS-CURRENT-USERNAME AND
                   WS-CONN-RECEIVER(WS-I) = WS-FOUND-USER-USERNAME
                    IF WS-CONN-STATUS(WS-I) = 'A'
                        SET CONN-ALREADY-ACCEPTED TO TRUE
@@ -1211,7 +1420,7 @@
                    END-IF
                    EXIT PERFORM
                END-IF
-               IF WS-CONN-SENDER(WS-I)   = WS-FOUND-USER-USERNAME AND
+               IF WS-CONN-SENDER(WS-I)    = WS-FOUND-USER-USERNAME AND
                   WS-CONN-RECEIVER(WS-I) = WS-CURRENT-USERNAME
                    IF WS-CONN-STATUS(WS-I) = 'A'
                        SET CONN-ALREADY-ACCEPTED TO TRUE
@@ -1225,9 +1434,9 @@
 
        ADD-NEW-CONNECTION.
            ADD 1 TO WS-CONNECTIONS-COUNT
-           MOVE WS-CURRENT-USERNAME    TO WS-CONN-SENDER(WS-CONNECTIONS-COUNT)
+           MOVE WS-CURRENT-USERNAME      TO WS-CONN-SENDER(WS-CONNECTIONS-COUNT)
            MOVE WS-FOUND-USER-USERNAME TO WS-CONN-RECEIVER(WS-CONNECTIONS-COUNT)
-           MOVE 'P'                    TO WS-CONN-STATUS(WS-CONNECTIONS-COUNT)
+           MOVE 'P'                      TO WS-CONN-STATUS(WS-CONNECTIONS-COUNT)
            EXIT.
 
        *> View and act on pending requests
@@ -1252,8 +1461,11 @@
 
                    MOVE MSG-ACCEPT-OPTION TO WS-MSG PERFORM DISPLAY-AND-LOG
                    MOVE MSG-REJECT-OPTION TO WS-MSG PERFORM DISPLAY-AND-LOG
+                   MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                    PERFORM READ-NEXT-LINE
+                   MOVE WS-LINE TO WS-CHOICE-BUFFER
+                   PERFORM ECHO-CHOICE-VALUE
 
                    IF WS-LINE = "1"
                        PERFORM ACCEPT-CONNECTION
@@ -1300,15 +1512,15 @@
                                SET PROFILE-FOUND TO TRUE
                                MOVE SPACES TO WS-MSG
                                STRING
-                                   "Connected with: "                DELIMITED BY SIZE
-                                   FUNCTION TRIM(WS-PROF-FIRST(WS-J))  DELIMITED BY SIZE
-                                   " "                               DELIMITED BY SIZE
-                                   FUNCTION TRIM(WS-PROF-LAST(WS-J))   DELIMITED BY SIZE
-                                   " (University: "                  DELIMITED BY SIZE
-                                   FUNCTION TRIM(WS-PROF-UNIV(WS-J))   DELIMITED BY SIZE
-                                   ", Major: "                       DELIMITED BY SIZE
-                                   FUNCTION TRIM(WS-PROF-MAJOR(WS-J))  DELIMITED BY SIZE
-                                   ")"                               DELIMITED BY SIZE
+                                   "Connected with: "             DELIMITED BY SIZE
+                                   FUNCTION TRIM(WS-PROF-FIRST(WS-J)) DELIMITED BY SIZE
+                                   " "                            DELIMITED BY SIZE
+                                   FUNCTION TRIM(WS-PROF-LAST(WS-J))  DELIMITED BY SIZE
+                                   " (University: "               DELIMITED BY SIZE
+                                   FUNCTION TRIM(WS-PROF-UNIV(WS-J))  DELIMITED BY SIZE
+                                   ", Major: "                    DELIMITED BY SIZE
+                                   FUNCTION TRIM(WS-PROF-MAJOR(WS-J)) DELIMITED BY SIZE
+                                   ")"                            DELIMITED BY SIZE
                                    INTO WS-MSG
                                END-STRING
                                PERFORM DISPLAY-AND-LOG
@@ -1452,11 +1664,11 @@
            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-CONNECTIONS-COUNT
                MOVE SPACES TO CONNECTION-REC
                STRING
-                   FUNCTION TRIM(WS-CONN-SENDER(WS-I))   DELIMITED BY SIZE
-                   "|"                                   DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-CONN-RECEIVER(WS-I)) DELIMITED BY SIZE
-                   "|"                                   DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-CONN-STATUS(WS-I))   DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-CONN-SENDER(WS-I))    DELIMITED BY SIZE
+                   "|"                                    DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-CONN-RECEIVER(WS-I))  DELIMITED BY SIZE
+                   "|"                                    DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-CONN-STATUS(WS-I))    DELIMITED BY SIZE
                    INTO CONNECTION-REC
                END-STRING
                WRITE CONNECTION-REC
@@ -1486,7 +1698,7 @@
                    MOVE SPACES TO WS-MSG
                    STRING
                        "Error opening applications file (status " DELIMITED BY SIZE
-                       WS-APP-STATUS                           DELIMITED BY SIZE
+                       WS-APP-STATUS                             DELIMITED BY SIZE
                        ")."                                     DELIMITED BY SIZE
                        INTO WS-MSG
                    END-STRING
@@ -1515,12 +1727,12 @@
            IF WS-APP-STATUS = "00"
                MOVE SPACES TO APPLICATION-REC
                MOVE WS-JOB-ID(WS-I) TO WS-JOB-ID-DISPLAY
-               MOVE SPACES           TO WS-JOB-ID-TEXT
+               MOVE SPACES            TO WS-JOB-ID-TEXT
                MOVE WS-JOB-ID-DISPLAY TO WS-JOB-ID-TEXT
                STRING
-                   FUNCTION TRIM(WS-JOB-ID-TEXT)       DELIMITED BY SIZE
-                   "|"                                 DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-CURRENT-USERNAME)  DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-ID-TEXT)      DELIMITED BY SIZE
+                   "|"                                DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-CURRENT-USERNAME) DELIMITED BY SIZE
                    INTO APPLICATION-REC
                END-STRING
                WRITE APPLICATION-REC
@@ -1541,8 +1753,8 @@
            PERFORM VARYING WS-J FROM 1 BY 1
                    UNTIL WS-J > WS-APPLICATIONS-COUNT OR MATCH-FOUND
                IF WS-APP-JOB-ID(WS-J) = WS-JOB-ID(WS-I)
-                  AND FUNCTION TRIM(WS-APP-USER(WS-J))
-                      = FUNCTION TRIM(WS-CURRENT-USERNAME)
+                 AND FUNCTION TRIM(WS-APP-USER(WS-J))
+                     = FUNCTION TRIM(WS-CURRENT-USERNAME)
                    SET MATCH-FOUND TO TRUE
                END-IF
            END-PERFORM
@@ -1594,14 +1806,14 @@
        DISPLAY-EXPERIENCES.
            IF WS-EXPS-STR = SPACES
                MOVE SPACES TO WS-MSG
-               STRING "Experience: None" INTO WS-MSG
+               STRING "  Experience: None" INTO WS-MSG
                END-STRING
                PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
            END-IF
 
            MOVE SPACES TO WS-MSG
-           STRING "Experience:" INTO WS-MSG END-STRING
+           STRING "  Experience:" INTO WS-MSG END-STRING
            PERFORM DISPLAY-AND-LOG
 
            MOVE 1 TO WS-J
@@ -1618,19 +1830,19 @@
                END-UNSTRING
 
                MOVE SPACES TO WS-MSG
-               STRING "   Title: " FUNCTION TRIM(WS-T1) INTO WS-MSG END-STRING
+               STRING "    Title: " FUNCTION TRIM(WS-T1) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "   Company: " FUNCTION TRIM(WS-T2) INTO WS-MSG END-STRING
+               STRING "    Company: " FUNCTION TRIM(WS-T2) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "   Dates: " FUNCTION TRIM(WS-T3) INTO WS-MSG END-STRING
+               STRING "    Dates: " FUNCTION TRIM(WS-T3) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "   Description: " FUNCTION TRIM(WS-T4) INTO WS-MSG END-STRING
+               STRING "    Description: " FUNCTION TRIM(WS-T4) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
            END-PERFORM
            EXIT.
@@ -1638,13 +1850,13 @@
        DISPLAY-EDUCATION.
            IF WS-EDUS-STR = SPACES
                MOVE SPACES TO WS-MSG
-               STRING "Education: None" INTO WS-MSG END-STRING
+               STRING "  Education: None" INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
                EXIT PARAGRAPH
            END-IF
 
            MOVE SPACES TO WS-MSG
-           STRING "Education:" INTO WS-MSG END-STRING
+           STRING "  Education:" INTO WS-MSG END-STRING
            PERFORM DISPLAY-AND-LOG
 
            MOVE 1 TO WS-J
@@ -1661,15 +1873,15 @@
                END-UNSTRING
 
                MOVE SPACES TO WS-MSG
-               STRING "   Degree: " FUNCTION TRIM(WS-T1) INTO WS-MSG END-STRING
+               STRING "    Degree: " FUNCTION TRIM(WS-T1) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "   University: " FUNCTION TRIM(WS-T2) INTO WS-MSG END-STRING
+               STRING "    University: " FUNCTION TRIM(WS-T2) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "   Years: " FUNCTION TRIM(WS-T3) INTO WS-MSG END-STRING
+               STRING "    Years: " FUNCTION TRIM(WS-T3) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
            END-PERFORM
            EXIT.
@@ -1731,7 +1943,9 @@
              EXIT PARAGRAPH
            END-IF
 
+           PERFORM RESET-PROFILE-INPUTS
            MOVE MSG-EDIT-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+           MOVE MSG-BACK-INSTRUCTION TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-FIRST-IN) NOT = SPACES
                MOVE MSG-ENTER-FIRST TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -1742,6 +1956,11 @@
                END-IF
                IF FUNCTION TRIM(WS-PROF-FIRST-IN) = SPACES
                    MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
                END-IF
            END-PERFORM
 
@@ -1755,6 +1974,11 @@
                IF FUNCTION TRIM(WS-PROF-LAST-IN) = SPACES
                    MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
+               END-IF
            END-PERFORM
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-UNIV-IN) NOT = SPACES
@@ -1767,6 +1991,11 @@
                IF FUNCTION TRIM(WS-PROF-UNIV-IN) = SPACES
                    MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
+               END-IF
            END-PERFORM
 
            PERFORM UNTIL FUNCTION TRIM(WS-PROF-MAJOR-IN) NOT = SPACES
@@ -1778,6 +2007,11 @@
                END-IF
                IF FUNCTION TRIM(WS-PROF-MAJOR-IN) = SPACES
                    MOVE MSG-REQUIRED TO WS-MSG PERFORM DISPLAY-AND-LOG
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
                END-IF
            END-PERFORM
 
@@ -1793,11 +2027,24 @@
                IF YEAR-INVALID
                    MOVE MSG-YEAR-INVALID TO WS-MSG PERFORM DISPLAY-AND-LOG
                END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
+               END-IF
            END-PERFORM
 
            MOVE MSG-ABOUT-ME TO WS-MSG PERFORM DISPLAY-AND-LOG
            PERFORM READ-NEXT-LINE
            MOVE WS-LINE TO WS-PROF-ABOUT-IN
+           IF EOF-IN
+               EXIT PARAGRAPH
+           END-IF
+           PERFORM CHECK-BACK-FROM-LINE
+           IF BACK-REQUEST
+               PERFORM HANDLE-BACK-EXIT
+               EXIT PARAGRAPH
+           END-IF
 
            PERFORM ADD-EXPERIENCE
            PERFORM ADD-EDUCATION
@@ -1833,6 +2080,23 @@
            MOVE MSG-PROFILE-SAVED-OK TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
 
+       RESET-PROFILE-INPUTS.
+           MOVE SPACES TO
+                WS-PROF-FIRST-IN
+                WS-PROF-LAST-IN
+                WS-PROF-UNIV-IN
+                WS-PROF-MAJOR-IN
+                WS-PROF-GYEAR-IN
+                WS-PROF-ABOUT-IN
+                WS-EXPS-STR
+                WS-EDUS-STR
+           INITIALIZE WS-EXPERIENCE
+           INITIALIZE WS-EDUCATION
+           MOVE 0 TO WS-EXP-COUNT WS-EDU-COUNT
+           MOVE SPACES TO WS-EXP-CHOICE WS-EDU-CHOICE
+           EXIT.
+
+       *> ADD-EXPERIENCE — Collect up to 3 experience entries with optional exit.
        ADD-EXPERIENCE.
            MOVE 0 TO WS-EXP-COUNT
            MOVE SPACES TO WS-EXP-CHOICE
@@ -1842,6 +2106,11 @@
                MOVE WS-LINE TO WS-EXP-CHOICE
                IF EOF-IN
                    EXIT PERFORM
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
                END-IF
                IF WS-EXP-CHOICE = "DONE"
                    EXIT PERFORM
@@ -1857,6 +2126,11 @@
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
+                   END-IF
                    MOVE WS-TITLE-INPUT TO WS-EXP-TITLE(WS-EXP-COUNT)
 
                    MOVE SPACES TO WS-MSG
@@ -1869,6 +2143,11 @@
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
+                   END-IF
                    MOVE WS-COMPANY-INPUT TO WS-EXP-COMPANY(WS-EXP-COUNT)
 
                    MOVE SPACES TO WS-MSG
@@ -1880,6 +2159,11 @@
                    MOVE WS-LINE TO WS-DATES-INPUT
                    IF EOF-IN
                        EXIT PERFORM
+                   END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
                    END-IF
                    MOVE WS-DATES-INPUT TO WS-EXP-DATES(WS-EXP-COUNT)
 
@@ -1894,6 +2178,11 @@
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
+                   END-IF
                    IF WS-DESC-INPUT NOT = SPACES
                        MOVE WS-DESC-INPUT TO WS-EXP-DESC(WS-EXP-COUNT)
                    END-IF
@@ -1901,6 +2190,7 @@
            END-PERFORM
            EXIT.
 
+       *> ADD-EDUCATION — Collect up to 3 education entries with optional exit.
        ADD-EDUCATION.
            MOVE 0 TO WS-EDU-COUNT
            MOVE SPACES TO WS-EDU-CHOICE
@@ -1910,6 +2200,11 @@
                MOVE WS-LINE TO WS-EDU-CHOICE
                IF EOF-IN
                    EXIT PERFORM
+               END-IF
+               PERFORM CHECK-BACK-FROM-LINE
+               IF BACK-REQUEST
+                   PERFORM HANDLE-BACK-EXIT
+                   EXIT PARAGRAPH
                END-IF
                IF WS-EDU-CHOICE = "DONE"
                    EXIT PERFORM
@@ -1925,6 +2220,11 @@
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
+                   END-IF
                    MOVE WS-DEGREE-INPUT TO WS-EDU-DEGREE(WS-EDU-COUNT)
 
                    MOVE SPACES TO WS-MSG
@@ -1937,6 +2237,11 @@
                    IF EOF-IN
                        EXIT PERFORM
                    END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
+                   END-IF
                    MOVE WS-SCHOOL-INPUT TO WS-EDU-SCHOOL(WS-EDU-COUNT)
 
                    MOVE SPACES TO WS-MSG
@@ -1948,6 +2253,11 @@
                    MOVE WS-LINE TO WS-YEARS-INPUT
                    IF EOF-IN
                        EXIT PERFORM
+                   END-IF
+                   PERFORM CHECK-BACK-FROM-LINE
+                   IF BACK-REQUEST
+                       PERFORM HANDLE-BACK-EXIT
+                       EXIT PARAGRAPH
                    END-IF
                    MOVE WS-YEARS-INPUT TO WS-EDU-YEARS(WS-EDU-COUNT)
                END-IF
@@ -1973,7 +2283,7 @@
            MOVE MSG-VIEW-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
 
            MOVE SPACES TO WS-MSG
-           STRING "Name: "                         DELIMITED BY SIZE
+           STRING "  Name: "                           DELIMITED BY SIZE
                   FUNCTION TRIM(WS-PROF-FIRST-IN)  DELIMITED BY SIZE
                   " "                              DELIMITED BY SIZE
                   FUNCTION TRIM(WS-PROF-LAST-IN)   DELIMITED BY SIZE
@@ -1982,23 +2292,23 @@
            PERFORM DISPLAY-AND-LOG
 
            MOVE SPACES TO WS-MSG
-           STRING "University: " FUNCTION TRIM(WS-PROF-UNIV-IN) INTO WS-MSG
+           STRING "  University: " FUNCTION TRIM(WS-PROF-UNIV-IN) INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
 
            MOVE SPACES TO WS-MSG
-           STRING "Major: " FUNCTION TRIM(WS-PROF-MAJOR-IN) INTO WS-MSG
+           STRING "  Major: " FUNCTION TRIM(WS-PROF-MAJOR-IN) INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
 
            MOVE SPACES TO WS-MSG
-           STRING "Graduation Year: " FUNCTION TRIM(WS-PROF-GYEAR-IN) INTO WS-MSG
+           STRING "  Graduation Year: " FUNCTION TRIM(WS-PROF-GYEAR-IN) INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
 
            IF FUNCTION TRIM(WS-PROF-ABOUT-IN) NOT = SPACES
                MOVE SPACES TO WS-MSG
-               STRING "About Me: " FUNCTION TRIM(WS-PROF-ABOUT-IN) INTO WS-MSG
+               STRING "  About Me: " FUNCTION TRIM(WS-PROF-ABOUT-IN) INTO WS-MSG
                END-STRING
                PERFORM DISPLAY-AND-LOG
            END-IF
@@ -2013,20 +2323,20 @@
            MOVE MSG-PENDING-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
            OPEN INPUT REQUEST-FILE
            IF WS-REQ-STATUS = "00"
-              SET NOT-EOF-REQ TO TRUE
-              MOVE 0 TO WS-I
-              PERFORM UNTIL EOF-REQ
+             SET NOT-EOF-REQ TO TRUE
+             MOVE 0 TO WS-I
+             PERFORM UNTIL EOF-REQ
                  READ REQUEST-FILE
                    AT END SET EOF-REQ TO TRUE
                    NOT AT END PERFORM CHECK-PENDING-REQUEST
                  END-READ
-              END-PERFORM
-              CLOSE REQUEST-FILE
-              IF WS-I = 0
+             END-PERFORM
+             CLOSE REQUEST-FILE
+             IF WS-I = 0
                  MOVE MSG-NO-PENDING-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG
-              END-IF
+             END-IF
            ELSE
-              MOVE MSG-NO-PENDING-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG
+             MOVE MSG-NO-PENDING-REQUESTS TO WS-MSG PERFORM DISPLAY-AND-LOG
            END-IF
            MOVE "-----------------------------------" TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
@@ -2039,17 +2349,17 @@
                     WS-REQ-STATUS-VALUE
            END-UNSTRING
            IF FUNCTION TRIM(WS-REQ-RECEIVER) = FUNCTION TRIM(WS-CURRENT-USERNAME)
-              AND FUNCTION TRIM(WS-REQ-STATUS-VALUE) = "PENDING"
-              ADD 1 TO WS-I
-              PERFORM FIND-SENDER-NAME
-              MOVE SPACES TO WS-MSG
-              STRING
-                 "Connection request from " DELIMITED BY SIZE
-                 FUNCTION TRIM(WS-T1)       DELIMITED BY SIZE
-                 "."                        DELIMITED BY SIZE
-                 INTO WS-MSG
-              END-STRING
-              PERFORM DISPLAY-AND-LOG
+             AND FUNCTION TRIM(WS-REQ-STATUS-VALUE) = "PENDING"
+             ADD 1 TO WS-I
+             PERFORM FIND-SENDER-NAME
+             MOVE SPACES TO WS-MSG
+             STRING
+               "Connection request from " DELIMITED BY SIZE
+               FUNCTION TRIM(WS-T1)       DELIMITED BY SIZE
+               "."                        DELIMITED BY SIZE
+               INTO WS-MSG
+             END-STRING
+             PERFORM DISPLAY-AND-LOG
            END-IF
            EXIT.
 
@@ -2081,6 +2391,8 @@
            IF EOF-IN
                EXIT PARAGRAPH
            END-IF
+           MOVE WS-REQUEST-CHOICE TO WS-CHOICE-BUFFER
+           PERFORM ECHO-CHOICE-VALUE
            EVALUATE WS-REQUEST-CHOICE
                WHEN '1'
                    *> Placeholder for future SEND-REQUEST
@@ -2121,28 +2433,24 @@
 
        JOBS-SECTION.
        JOBS-MENU.
+           MOVE SPACES TO WS-JOB-CHOICE
            PERFORM UNTIL WS-JOB-CHOICE = '4' OR EOF-IN
                MOVE MSG-JOBS-HEADER   TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-JOBS-POST     TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-JOBS-BROWSE   TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-JOBS-VIEW-APPS TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-JOBS-BACK     TO WS-MSG PERFORM DISPLAY-AND-LOG
-               *>MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "   " FUNCTION TRIM(MSG-JOBS-POST) INTO WS-MSG END-STRING
+               STRING "  " FUNCTION TRIM(MSG-JOBS-POST) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "   " FUNCTION TRIM(MSG-JOBS-BROWSE) INTO WS-MSG END-STRING
+               STRING "  " FUNCTION TRIM(MSG-JOBS-BROWSE) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "   " FUNCTION TRIM(MSG-JOBS-VIEW-APPS) INTO WS-MSG END-STRING
+               STRING "  " FUNCTION TRIM(MSG-JOBS-VIEW-APPS) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE SPACES TO WS-MSG
-               STRING "   " FUNCTION TRIM(MSG-JOBS-BACK) INTO WS-MSG END-STRING
+               STRING "  " FUNCTION TRIM(MSG-JOBS-BACK) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE MSG-ENTER-CHOICE  TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -2152,6 +2460,8 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               MOVE WS-JOB-CHOICE TO WS-CHOICE-BUFFER
+               PERFORM ECHO-CHOICE-VALUE
 
                EVALUATE WS-JOB-CHOICE
                    WHEN '1'  PERFORM POST-NEW-JOB
@@ -2185,6 +2495,8 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               MOVE WS-LINE TO WS-CHOICE-BUFFER
+               PERFORM ECHO-CHOICE-VALUE
 
                MOVE FUNCTION NUMVAL(WS-LINE) TO WS-SEL-NUM
                IF WS-SEL-NUM = 0
@@ -2236,14 +2548,11 @@
            MOVE SPACES TO WS-MSG
            MOVE MSG-JOB-DETAILS-DIVIDER TO WS-MSG PERFORM DISPLAY-AND-LOG
 
-           *>MOVE MSG-APPLY-OPT    TO WS-MSG PERFORM DISPLAY-AND-LOG
-           *>MOVE MSG-BACK-OPT     TO WS-MSG PERFORM DISPLAY-AND-LOG
-
            MOVE SPACES TO WS-MSG
-               STRING "   " FUNCTION TRIM(MSG-APPLY-OPT) INTO WS-MSG END-STRING
+               STRING "  " FUNCTION TRIM(MSG-APPLY-OPT) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
            MOVE SPACES TO WS-MSG
-               STRING "   " FUNCTION TRIM(MSG-BACK-OPT) INTO WS-MSG END-STRING
+               STRING "  " FUNCTION TRIM(MSG-BACK-OPT) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
            MOVE MSG-ENTER-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
@@ -2252,6 +2561,8 @@
            IF EOF-IN
                EXIT PARAGRAPH
            END-IF
+           MOVE WS-LINE TO WS-CHOICE-BUFFER
+           PERFORM ECHO-CHOICE-VALUE
 
            EVALUATE WS-LINE
                WHEN "1"  PERFORM APPLY-FOR-JOB
@@ -2260,7 +2571,6 @@
                    MOVE MSG-INVALID-CHOICE TO WS-MSG PERFORM DISPLAY-AND-LOG
            END-EVALUATE
 
-           *>MOVE MSG-SEPARATOR-LINE TO WS-MSG PERFORM DISPLAY-AND-LOG
            EXIT.
 
        APPLY-FOR-JOB.
@@ -2277,20 +2587,20 @@
            END-IF
 
            ADD 1 TO WS-APPLICATIONS-COUNT
-           MOVE WS-JOB-ID(WS-I)        TO WS-APP-JOB-ID(WS-APPLICATIONS-COUNT)
-           MOVE WS-CURRENT-USERNAME    TO WS-APP-USER(WS-APPLICATIONS-COUNT)
+           MOVE WS-JOB-ID(WS-I)       TO WS-APP-JOB-ID(WS-APPLICATIONS-COUNT)
+           MOVE WS-CURRENT-USERNAME   TO WS-APP-USER(WS-APPLICATIONS-COUNT)
 
            IF TEST-MODE-OFF
                PERFORM SAVE-APPLICATION-REC
            END-IF
 
            MOVE SPACES TO WS-MSG
-           STRING MSG-APPLY-SUCCESS            DELIMITED BY ' '
-                  " "                          DELIMITED BY SIZE
+           STRING MSG-APPLY-SUCCESS           DELIMITED BY ' '
+                  " "                         DELIMITED BY SIZE
                   FUNCTION TRIM(WS-JOB-TITLE(WS-I))
-                  " at "                       DELIMITED BY SIZE
+                  " at "                      DELIMITED BY SIZE
                   FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))
-                  " has been submitted."        DELIMITED BY SIZE
+                  " has been submitted."      DELIMITED BY SIZE
                   INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
@@ -2399,7 +2709,7 @@
                            NOT AT END PERFORM PARSE-JOB-REC
                        END-READ
                        IF WS-JOBS-FILE-STATUS NOT = "00"
-                          AND WS-JOBS-FILE-STATUS NOT = "10"
+                         AND WS-JOBS-FILE-STATUS NOT = "10"
                            SET JOBS-IO-ERROR TO TRUE
                            MOVE "reading jobs file" TO WS-JOBS-ERR-CONTEXT
                            PERFORM REPORT-JOBS-FILE-ERROR
@@ -2470,22 +2780,22 @@
                PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-JOBS-COUNT
                    MOVE SPACES TO JOB-REC
                    MOVE WS-JOB-ID(WS-I) TO WS-JOB-ID-DISPLAY
-                   MOVE SPACES           TO WS-JOB-ID-TEXT
+                   MOVE SPACES            TO WS-JOB-ID-TEXT
                    MOVE WS-JOB-ID-DISPLAY TO WS-JOB-ID-TEXT
                    STRING
-                       FUNCTION TRIM(WS-JOB-ID-TEXT)           DELIMITED BY SIZE
-                       "|"                                     DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-ID-TEXT)          DELIMITED BY SIZE
+                       "|"                                    DELIMITED BY SIZE
                        FUNCTION TRIM(WS-JOB-POSTER-USER(WS-I)) DELIMITED BY SIZE
-                       "|"                                     DELIMITED BY SIZE
-                       FUNCTION TRIM(WS-JOB-TITLE(WS-I))       DELIMITED BY SIZE
-                       "|"                                     DELIMITED BY SIZE
-                       FUNCTION TRIM(WS-JOB-DESC(WS-I))        DELIMITED BY SIZE
-                       "|"                                     DELIMITED BY SIZE
-                       FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))    DELIMITED BY SIZE
-                       "|"                                     DELIMITED BY SIZE
-                       FUNCTION TRIM(WS-JOB-LOCATION(WS-I))    DELIMITED BY SIZE
-                       "|"                                     DELIMITED BY SIZE
-                       FUNCTION TRIM(WS-JOB-SALARY(WS-I))      DELIMITED BY SIZE
+                       "|"                                    DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-TITLE(WS-I))      DELIMITED BY SIZE
+                       "|"                                    DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-DESC(WS-I))       DELIMITED BY SIZE
+                       "|"                                    DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))   DELIMITED BY SIZE
+                       "|"                                    DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-LOCATION(WS-I))   DELIMITED BY SIZE
+                       "|"                                    DELIMITED BY SIZE
+                       FUNCTION TRIM(WS-JOB-SALARY(WS-I))     DELIMITED BY SIZE
                        INTO JOB-REC
                    END-STRING
                    WRITE JOB-REC
@@ -2516,7 +2826,7 @@
                FUNCTION TRIM(WS-JOBS-ERR-CONTEXT) DELIMITED BY SIZE
                " (status "                        DELIMITED BY SIZE
                WS-JOBS-FILE-STATUS                DELIMITED BY SIZE
-               ")."                                DELIMITED BY SIZE
+               ")."                               DELIMITED BY SIZE
                INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
@@ -2528,13 +2838,15 @@
                MOVE WS-I TO WS-IDX-DISPLAY
                MOVE SPACES TO WS-MSG
                STRING
-                   "   "                                  DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-TITLE(WS-I))      DELIMITED BY SIZE
-                   " at "                                 DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))   DELIMITED BY SIZE
-                   " ("                                  DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-JOB-LOCATION(WS-I))   DELIMITED BY SIZE
-                   ")"                                    DELIMITED BY SIZE
+                   "  "                                 DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-IDX-DISPLAY)       DELIMITED BY SIZE
+                   ". "                                DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-TITLE(WS-I))     DELIMITED BY SIZE
+                   " at "                                DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-EMPLOYER(WS-I))  DELIMITED BY SIZE
+                   " ("                                 DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-JOB-LOCATION(WS-I))  DELIMITED BY SIZE
+                   ")"                                   DELIMITED BY SIZE
                    INTO WS-MSG
                END-STRING
                PERFORM DISPLAY-AND-LOG
@@ -2543,9 +2855,10 @@
 
        VIEW-MY-APPLICATIONS.
            MOVE MSG-APPS-HEADER TO WS-MSG PERFORM DISPLAY-AND-LOG
+
+           *> This is the corrected line to match the sample output
            MOVE SPACES TO WS-MSG
            STRING MSG-APPS-USER-SUMMARY        DELIMITED BY ' '
-                  " "                          DELIMITED BY SIZE
                   FUNCTION TRIM(WS-CURRENT-USERNAME) DELIMITED BY SIZE
                   INTO WS-MSG
            END-STRING
@@ -2556,9 +2869,11 @@
            MOVE 0 TO WS-TMP-COUNT
 
            *> Loop through all applications
-           PERFORM VARYING APP-IDX FROM WS-APPLICATIONS-COUNT BY -1 UNTIL APP-IDX < 1
+           PERFORM VARYING APP-IDX FROM WS-APPLICATIONS-COUNT BY -1
+               UNTIL APP-IDX < 1
                *> Check if the application belongs to the current user
-               IF FUNCTION TRIM(WS-APP-USER(APP-IDX)) = FUNCTION TRIM(WS-CURRENT-USERNAME)
+               IF FUNCTION TRIM(WS-APP-USER(APP-IDX)) =
+                  FUNCTION TRIM(WS-CURRENT-USERNAME)
                    *> Found an application. Now find the job details.
                    SET MATCH-NOT-FOUND TO TRUE
                    PERFORM VARYING JOB-IDX FROM 1 BY 1
@@ -2575,18 +2890,21 @@
 
                            *> Display Job Details
                            MOVE SPACES TO WS-MSG
-                           STRING "Job Title: " FUNCTION TRIM(WS-JOB-TITLE(JOB-IDX))
-                                  INTO WS-MSG END-STRING
+                           STRING "Job Title: "
+                               FUNCTION TRIM(WS-JOB-TITLE(JOB-IDX))
+                               INTO WS-MSG END-STRING
                            PERFORM DISPLAY-AND-LOG
 
                            MOVE SPACES TO WS-MSG
-                           STRING "Employer: " FUNCTION TRIM(WS-JOB-EMPLOYER(JOB-IDX))
-                                  INTO WS-MSG END-STRING
+                           STRING "Employer: "
+                               FUNCTION TRIM(WS-JOB-EMPLOYER(JOB-IDX))
+                               INTO WS-MSG END-STRING
                            PERFORM DISPLAY-AND-LOG
 
                            MOVE SPACES TO WS-MSG
-                           STRING "Location: " FUNCTION TRIM(WS-JOB-LOCATION(JOB-IDX))
-                                  INTO WS-MSG END-STRING
+                           STRING "Location: "
+                               FUNCTION TRIM(WS-JOB-LOCATION(JOB-IDX))
+                               INTO WS-MSG END-STRING
                            PERFORM DISPLAY-AND-LOG
                        END-IF
                    END-PERFORM
@@ -2601,7 +2919,8 @@
            ELSE
                MOVE SPACES TO WS-MSG
                MOVE WS-TMP-COUNT TO WS-IDX-DISPLAY
-               STRING MSG-APPS-TOTAL FUNCTION TRIM(WS-IDX-DISPLAY) INTO WS-MSG END-STRING
+               STRING MSG-APPS-TOTAL
+                   FUNCTION TRIM(WS-IDX-DISPLAY) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
            END-IF
 
@@ -2622,12 +2941,12 @@
 
            IF SAVE-JOBS-COUNT = 0
                ADD 1 TO WS-JOBS-COUNT
-               MOVE 1           TO WS-JOB-ID(WS-JOBS-COUNT)
-               MOVE "Test Title" TO WS-JOB-TITLE(WS-JOBS-COUNT)
-               MOVE "Test Desc"  TO WS-JOB-DESC(WS-JOBS-COUNT)
-               MOVE "TestCo"    TO WS-JOB-EMPLOYER(WS-JOBS-COUNT)
+               MOVE 1             TO WS-JOB-ID(WS-JOBS-COUNT)
+               MOVE "Test Title"  TO WS-JOB-TITLE(WS-JOBS-COUNT)
+               MOVE "Test Desc"   TO WS-JOB-DESC(WS-JOBS-COUNT)
+               MOVE "TestCo"     TO WS-JOB-EMPLOYER(WS-JOBS-COUNT)
                MOVE "Tampa, FL"  TO WS-JOB-LOCATION(WS-JOBS-COUNT)
-               MOVE "NONE"      TO WS-JOB-SALARY(WS-JOBS-COUNT)
+               MOVE "NONE"        TO WS-JOB-SALARY(WS-JOBS-COUNT)
            ELSE
                MOVE SAVE-JOBS-COUNT TO WS-JOBS-COUNT
            END-IF
@@ -2656,14 +2975,21 @@
 
        MESSAGES-SECTION.
        MESSAGE-MENU.
+           MOVE SPACES TO WS-MESSAGE-CHOICE
            MOVE MSG-MESSAGES-HEADER TO WS-MSG
            PERFORM DISPLAY-AND-LOG
            PERFORM UNTIL WS-MESSAGE-CHOICE = '3' OR EOF-IN
-               MOVE MSG-MESSAGES-SEND TO WS-MSG
+
+               MOVE SPACES TO WS-MSG
+               STRING "  " FUNCTION TRIM(MSG-MESSAGES-SEND) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MESSAGES-VIEW TO WS-MSG
+
+               MOVE SPACES TO WS-MSG
+               STRING "  " FUNCTION TRIM(MSG-MESSAGES-VIEW) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
-               MOVE MSG-MESSAGES-BACK TO WS-MSG
+
+               MOVE SPACES TO WS-MSG
+               STRING "  " FUNCTION TRIM(MSG-MESSAGES-BACK) INTO WS-MSG END-STRING
                PERFORM DISPLAY-AND-LOG
 
                MOVE MSG-ENTER-CHOICE TO WS-MSG
@@ -2673,6 +2999,8 @@
                IF EOF-IN
                    EXIT PERFORM
                END-IF
+               MOVE WS-MESSAGE-CHOICE TO WS-CHOICE-BUFFER
+               PERFORM ECHO-CHOICE-VALUE
 
                EVALUATE WS-MESSAGE-CHOICE
                    WHEN '1'
@@ -2754,9 +3082,9 @@
            *> Display success message
            MOVE SPACES TO WS-MSG
            STRING
-               MSG-SEND-SUCCESS-1         DELIMITED BY SIZE
+               MSG-SEND-SUCCESS-1       DELIMITED BY SIZE
                FUNCTION TRIM(WS-RECEIVER)   DELIMITED BY SIZE
-               MSG-SEND-SUCCESS-2         DELIMITED BY SIZE
+               MSG-SEND-SUCCESS-2       DELIMITED BY SIZE
                INTO WS-MSG
            END-STRING
            PERFORM DISPLAY-AND-LOG
@@ -2803,142 +3131,142 @@
            END-IF
 
            EXIT.
-    
+
        *> Sort messages chronologically (oldest to newest)
        *> Uses bubble sort algorithm on timestamp field
        *> Only sorts messages for current user to maintain efficiency
        SORT-MESSAGES-BY-TIMESTAMP.
            MOVE 0 TO WS-J
-           PERFORM VARYING WS-I FROM 1 BY 1 
+           PERFORM VARYING WS-I FROM 1 BY 1
                UNTIL WS-I >= WS-MESSAGES-COUNT
-               PERFORM VARYING WS-J FROM 1 BY 1 
+               PERFORM VARYING WS-J FROM 1 BY 1
                    UNTIL WS-J > (WS-MESSAGES-COUNT - WS-I)
-                   
+
                    *> Compare timestamps of adjacent messages
-                   IF WS-MSG-TIMESTAMP-ENTRY(WS-J) > 
+                   IF WS-MSG-TIMESTAMP-ENTRY(WS-J) >
                       WS-MSG-TIMESTAMP-ENTRY(WS-J + 1)
                        *> Swap all fields
                        MOVE WS-MSG-SENDER-ENTRY(WS-J) TO WS-T1
-                       MOVE WS-MSG-SENDER-ENTRY(WS-J + 1) 
+                       MOVE WS-MSG-SENDER-ENTRY(WS-J + 1)
                            TO WS-MSG-SENDER-ENTRY(WS-J)
                        MOVE WS-T1 TO WS-MSG-SENDER-ENTRY(WS-J + 1)
-                       
+
                        MOVE WS-MSG-RECEIVER-ENTRY(WS-J) TO WS-T2
-                       MOVE WS-MSG-RECEIVER-ENTRY(WS-J + 1) 
+                       MOVE WS-MSG-RECEIVER-ENTRY(WS-J + 1)
                            TO WS-MSG-RECEIVER-ENTRY(WS-J)
                        MOVE WS-T2 TO WS-MSG-RECEIVER-ENTRY(WS-J + 1)
-                       
+
                        MOVE WS-MSG-CONTENT-ENTRY(WS-J) TO WS-T3
-                       MOVE WS-MSG-CONTENT-ENTRY(WS-J + 1) 
+                       MOVE WS-MSG-CONTENT-ENTRY(WS-J + 1)
                            TO WS-MSG-CONTENT-ENTRY(WS-J)
                        MOVE WS-T3 TO WS-MSG-CONTENT-ENTRY(WS-J + 1)
-                       
+
                        MOVE WS-MSG-TIMESTAMP-ENTRY(WS-J) TO WS-T4
-                       MOVE WS-MSG-TIMESTAMP-ENTRY(WS-J + 1) 
+                       MOVE WS-MSG-TIMESTAMP-ENTRY(WS-J + 1)
                            TO WS-MSG-TIMESTAMP-ENTRY(WS-J)
                        MOVE WS-T4 TO WS-MSG-TIMESTAMP-ENTRY(WS-J + 1)
                    END-IF
                END-PERFORM
            END-PERFORM
            EXIT.
-    
+
        VIEW-MESSAGES.
-      *> IMPLEMENTED FOR EPIC 9
-      *> Purpose: Displays all messages received by the currently logged-in user
-      *> Uses a two-pass approach: first counts messages, then displays them
-      *> This allows early exit if no messages are found
-        *> Display header
-        MOVE "--- Your Messages ---" TO WS-MSG
-        PERFORM DISPLAY-AND-LOG
+       *> IMPLEMENTED FOR EPIC 9
+       *> Purpose: Displays all messages received by the currently logged-in user
+       *> Uses a two-pass approach: first counts messages, then displays them
+       *> This allows early exit if no messages are found
+       *> Display header
+       MOVE "--- Your Messages ---" TO WS-MSG
+       PERFORM DISPLAY-AND-LOG
 
-        *> Pass 1: Count messages for current user
-        *> Iterate through all messages to determine if user has any messages
-        MOVE 0 TO WS-TMP-COUNT
-        PERFORM VARYING WS-I FROM 1 BY 1
-            UNTIL WS-I > WS-MESSAGES-COUNT
-            IF FUNCTION TRIM(WS-MSG-RECEIVER-ENTRY(WS-I)) =
-            FUNCTION TRIM(WS-CURRENT-USERNAME)
-                ADD 1 TO WS-TMP-COUNT
-            END-IF
-        END-PERFORM
+       *> Pass 1: Count messages for current user
+       *> Iterate through all messages to determine if user has any messages
+       MOVE 0 TO WS-TMP-COUNT
+       PERFORM VARYING WS-I FROM 1 BY 1
+           UNTIL WS-I > WS-MESSAGES-COUNT
+           IF FUNCTION TRIM(WS-MSG-RECEIVER-ENTRY(WS-I)) =
+           FUNCTION TRIM(WS-CURRENT-USERNAME)
+               ADD 1 TO WS-TMP-COUNT
+           END-IF
+       END-PERFORM
 
-        *> Early exit if no messages found
-        *> Display "no messages" message and footer, then return to menu
-        IF WS-TMP-COUNT = 0
-            MOVE "You have no messages at this time." TO WS-MSG
-            PERFORM DISPLAY-AND-LOG
-            MOVE MSG-MESSAGES-FOOTER TO WS-MSG
-            PERFORM DISPLAY-AND-LOG
-            EXIT PARAGRAPH
-        END-IF
+       *> Early exit if no messages found
+       *> Display "no messages" message and footer, then return to menu
+       IF WS-TMP-COUNT = 0
+           MOVE "You have no messages at this time." TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+           MOVE MSG-MESSAGES-FOOTER TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
+           EXIT PARAGRAPH
+       END-IF
 
-        PERFORM SORT-MESSAGES-BY-TIMESTAMP
+       PERFORM SORT-MESSAGES-BY-TIMESTAMP
 
-        *> Pass 2: Display all messages for the current user
-        *> Loop through messages again, displaying only those for current user
-        PERFORM VARYING WS-I FROM 1 BY 1
-            UNTIL WS-I > WS-MESSAGES-COUNT
-            IF FUNCTION TRIM(WS-MSG-RECEIVER-ENTRY(WS-I)) =
-            FUNCTION TRIM(WS-CURRENT-USERNAME)
-                *> Display sender information
-                MOVE SPACES TO WS-MSG
-                STRING "From: " DELIMITED BY SIZE
-                    FUNCTION TRIM(WS-MSG-SENDER-ENTRY(WS-I))
-                    DELIMITED BY SIZE
-                    INTO WS-MSG
-                END-STRING
-                PERFORM DISPLAY-AND-LOG
-
-                *> Display message content
-                MOVE SPACES TO WS-MSG
-                STRING "Message: " DELIMITED BY SIZE
-                    FUNCTION TRIM(WS-MSG-CONTENT-ENTRY(WS-I))
-                    DELIMITED BY SIZE
-                    INTO WS-MSG
-                END-STRING
-                PERFORM DISPLAY-AND-LOG
-
-                *> Display timestamp
-                PERFORM FORMAT-TIMESTAMP
-                MOVE SPACES TO WS-MSG
-                STRING "Sent: " DELIMITED BY SIZE
-                   FUNCTION TRIM(WS-FORMATTED-TS)
+       *> Pass 2: Display all messages for the current user
+       *> Loop through messages again, displaying only those for current user
+       PERFORM VARYING WS-I FROM 1 BY 1
+           UNTIL WS-I > WS-MESSAGES-COUNT
+           IF FUNCTION TRIM(WS-MSG-RECEIVER-ENTRY(WS-I)) =
+           FUNCTION TRIM(WS-CURRENT-USERNAME)
+               *> Display sender information
+               MOVE SPACES TO WS-MSG
+               STRING "From: " DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-MSG-SENDER-ENTRY(WS-I))
+                   DELIMITED BY SIZE
                    INTO WS-MSG
-                END-STRING
-                PERFORM DISPLAY-AND-LOG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
 
-                *> Display separator between messages for visual clarity
-                MOVE "---" TO WS-MSG
-                PERFORM DISPLAY-AND-LOG
-            END-IF
-        END-PERFORM
+               *> Display message content
+               MOVE SPACES TO WS-MSG
+               STRING "Message: " DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-MSG-CONTENT-ENTRY(WS-I))
+                   DELIMITED BY SIZE
+                   INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
 
-        *> Display footer separator before returning to menu
-        MOVE MSG-MESSAGES-FOOTER TO WS-MSG
-        PERFORM DISPLAY-AND-LOG
-        EXIT.
+               *> Display timestamp
+               PERFORM FORMAT-TIMESTAMP
+               MOVE SPACES TO WS-MSG
+               STRING "Sent: " DELIMITED BY SIZE
+                  FUNCTION TRIM(WS-FORMATTED-TS)
+                  INTO WS-MSG
+               END-STRING
+               PERFORM DISPLAY-AND-LOG
+
+               *> Display separator between messages for visual clarity
+               MOVE "---" TO WS-MSG
+               PERFORM DISPLAY-AND-LOG
+           END-IF
+       END-PERFORM
+
+       *> Display footer separator before returning to menu
+       MOVE MSG-MESSAGES-FOOTER TO WS-MSG
+       PERFORM DISPLAY-AND-LOG
+       EXIT.
 
        SAVE-MESSAGES.
-      *> IMPLEMENTED FOR EPIC 8
-      *> Purpose: Persists all messages from memory to messages.txt file
-      *> Format: sender|receiver|content (pipe-delimited, one per line)
-        OPEN OUTPUT MESSAGES-FILE
-        PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-MESSAGES-COUNT
-            MOVE SPACES TO MESSAGE-REC
-            STRING
-                FUNCTION TRIM(WS-MSG-SENDER-ENTRY(WS-I))   DELIMITED BY SIZE
-                "|"                                         DELIMITED BY SIZE
-                FUNCTION TRIM(WS-MSG-RECEIVER-ENTRY(WS-I)) DELIMITED BY SIZE
-                "|"                                         DELIMITED BY SIZE
-                FUNCTION TRIM(WS-MSG-CONTENT-ENTRY(WS-I))  DELIMITED BY SIZE
-                "|"                                         DELIMITED BY SIZE
-                FUNCTION TRIM(WS-MSG-TIMESTAMP-ENTRY(WS-I)) DELIMITED BY SIZE
-                INTO MESSAGE-REC
-            END-STRING
-            WRITE MESSAGE-REC
-        END-PERFORM
-        CLOSE MESSAGES-FILE
-        EXIT.
+       *> IMPLEMENTED FOR EPIC 8
+       *> Purpose: Persists all messages from memory to messages.txt file
+       *> Format: sender|receiver|content (pipe-delimited, one per line)
+           OPEN OUTPUT MESSAGES-FILE
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-MESSAGES-COUNT
+               MOVE SPACES TO MESSAGE-REC
+               STRING
+                   FUNCTION TRIM(WS-MSG-SENDER-ENTRY(WS-I))    DELIMITED BY SIZE
+                   "|"                                        DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-MSG-RECEIVER-ENTRY(WS-I)) DELIMITED BY SIZE
+                   "|"                                        DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-MSG-CONTENT-ENTRY(WS-I))  DELIMITED BY SIZE
+                   "|"                                        DELIMITED BY SIZE
+                   FUNCTION TRIM(WS-MSG-TIMESTAMP-ENTRY(WS-I)) DELIMITED BY SIZE
+                   INTO MESSAGE-REC
+               END-STRING
+               WRITE MESSAGE-REC
+           END-PERFORM
+           CLOSE MESSAGES-FILE
+           EXIT.
 
 
        INIT-LOAD-MESSAGES.
@@ -2974,22 +3302,22 @@
        FORMAT-TIMESTAMP.
            *> Input: WS-MSG-TIMESTAMP-ENTRY(WS-I) = YYYYMMDDHHmmSS
            *> Output: WS-FORMATTED-TS = YYYY-MM-DD HH:MM
-           
+
            MOVE SPACES TO WS-FORMATTED-TS
-           
+
            IF WS-MSG-TIMESTAMP-ENTRY(WS-I) = SPACES OR
               WS-MSG-TIMESTAMP-ENTRY(WS-I) = LOW-VALUES
                MOVE "N/A" TO WS-FORMATTED-TS
                EXIT PARAGRAPH
            END-IF
-           
+
            *> Extract components from YYYYMMDDHHmmSS (14 chars)
            MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(1:4)  TO WS-TS-YEAR
            MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(5:2)  TO WS-TS-MONTH
            MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(7:2)  TO WS-TS-DAY
            MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(9:2)  TO WS-TS-HOUR
            MOVE WS-MSG-TIMESTAMP-ENTRY(WS-I)(11:2) TO WS-TS-MINUTE
-           
+
            *> Build formatted string: YYYY-MM-DD HH:MM
            STRING
                WS-TS-YEAR      DELIMITED BY SIZE
@@ -3021,4 +3349,32 @@
                NOT AT END
                    MOVE FUNCTION TRIM(INPUT-REC) TO WS-LINE
            END-READ
+           EXIT.
+
+       CHECK-BACK-REQUEST.
+           MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(WS-INPUT-NORMALIZED))
+               TO WS-INPUT-NORMALIZED
+           IF WS-INPUT-NORMALIZED = "0" OR WS-INPUT-NORMALIZED = "BACK"
+               SET BACK-REQUEST TO TRUE
+           ELSE
+               SET NO-BACK-REQUEST TO TRUE
+           END-IF
+           EXIT.
+
+       CHECK-BACK-FROM-LINE.
+           MOVE WS-LINE TO WS-INPUT-NORMALIZED
+           SET NO-BACK-REQUEST TO TRUE
+           PERFORM CHECK-BACK-REQUEST
+           EXIT.
+
+       HANDLE-BACK-EXIT.
+           IF BACK-REQUEST
+               MOVE MSG-RETURNING TO WS-MSG PERFORM DISPLAY-AND-LOG
+           END-IF
+           EXIT.
+
+       ECHO-CHOICE-VALUE.
+           MOVE SPACES TO WS-MSG
+           MOVE FUNCTION TRIM(WS-CHOICE-BUFFER) TO WS-MSG
+           PERFORM DISPLAY-AND-LOG
            EXIT.

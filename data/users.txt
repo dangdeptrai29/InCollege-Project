@@ -1,3 +1,6 @@
+AdminUser|AdminPass1!
+ProfSmith|profpass1!
+FriendA|friendpass1!
 sender1|Pass123!
 sender2|Pass456!
 receiver|Pass789!

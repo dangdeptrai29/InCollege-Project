@@ -1,0 +1,3 @@
+bob|alice|P
+charlie|alice|P
+dave|alice|P

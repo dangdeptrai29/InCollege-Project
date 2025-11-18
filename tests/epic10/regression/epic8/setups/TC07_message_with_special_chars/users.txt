@@ -1,0 +1,2 @@
+alice|Abcdef1!
+charlie|SecureP3#

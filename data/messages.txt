@@ -16,3 +16,5 @@ SendingUser|ConnectedUser|This is a test message.|20250729092000
 charlie|alice|Hey Alice! How are you?|20251112003839
 SendingUser|ReceivingUser|Hi there! Glad we connected on InCollege.|20251112033429
 AnotherConnection|ReceivingUser|Check out this interesting job posting I found!|20251112033503
+ProfSmith|AdminUser|Great work on the project!|20251101100000
+FriendA|AdminUser|Did you see the new internship posting?|20251102120000

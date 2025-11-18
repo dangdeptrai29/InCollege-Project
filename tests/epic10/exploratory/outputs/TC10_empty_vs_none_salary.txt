@@ -1,0 +1,110 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter 0 (or BACK) at any prompt to return to the menu.
+Enter Your Choice:
+1
+Enter 0 (or BACK) at any prompt to return to the menu.
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+
+Welcome, alice!
+Main Menu:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter Your Choice:
+7
+--- Job Search/Internship Menu ---
+  1. Post a Job/Internship
+  2. Browse Jobs/Internships
+  3. View My Applications
+  4. Back to Main Menu
+Enter Your Choice:
+2
+--- Available Jobs Listings ---
+  1. Job Empty at Co1 (Loc1)
+  2. Job NONE at Co2 (Loc2)
+  3. Job Spaces at Co3 (Loc3)
+-----------------------------
+Enter job number to view details, or 0 to go back:
+1
+--- Job Details ---
+Title: Job Empty
+Employer: Co1
+Location: Loc1
+Description: Desc1
+-------------------
+  1. Apply for this Job
+  2. Back to Job List
+Enter Your Choice:
+2
+--- Available Jobs Listings ---
+  1. Job Empty at Co1 (Loc1)
+  2. Job NONE at Co2 (Loc2)
+  3. Job Spaces at Co3 (Loc3)
+-----------------------------
+Enter job number to view details, or 0 to go back:
+2
+--- Job Details ---
+Title: Job NONE
+Employer: Co2
+Location: Loc2
+Description: Desc2
+-------------------
+  1. Apply for this Job
+  2. Back to Job List
+Enter Your Choice:
+2
+--- Available Jobs Listings ---
+  1. Job Empty at Co1 (Loc1)
+  2. Job NONE at Co2 (Loc2)
+  3. Job Spaces at Co3 (Loc3)
+-----------------------------
+Enter job number to view details, or 0 to go back:
+3
+--- Job Details ---
+Title: Job Spaces
+Employer: Co3
+Location: Loc3
+Description: Desc3
+-------------------
+  1. Apply for this Job
+  2. Back to Job List
+Enter Your Choice:
+2
+--- Available Jobs Listings ---
+  1. Job Empty at Co1 (Loc1)
+  2. Job NONE at Co2 (Loc2)
+  3. Job Spaces at Co3 (Loc3)
+-----------------------------
+Enter job number to view details, or 0 to go back:
+0
+----------------------------------
+--- Job Search/Internship Menu ---
+  1. Post a Job/Internship
+  2. Browse Jobs/Internships
+  3. View My Applications
+  4. Back to Main Menu
+Enter Your Choice:
+4
+Main Menu:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter Your Choice:
+9
+--- END_OF_PROGRAM_EXECUTION ---

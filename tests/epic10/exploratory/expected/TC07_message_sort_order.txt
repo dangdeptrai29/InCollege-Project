@@ -1,0 +1,9 @@
+# Test: Messages sorted chronologically (oldest first)
+From: bob
+Message: First message
+---
+From: charlie
+Message: Second message
+---
+From: charlie
+Message: Third message

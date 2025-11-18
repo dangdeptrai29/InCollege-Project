@@ -1,0 +1,6 @@
+# Test: Handles multiple pending requests sequentially
+Connection request from Bob Jones
+1. Accept
+Connection accepted with Bob Jones
+Connection request from Charlie Brown
+1. Accept

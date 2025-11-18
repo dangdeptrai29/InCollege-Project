@@ -1,0 +1,5 @@
+# Bug: Delimiters (~^|) in data corrupt serialization
+  Experience:
+    Title: Senior~Developer
+    Company: Tech|Company
+    Dates: 2020^2024
