@@ -64,11 +64,12 @@ cobc -x -free -o InCollegeTest src/InCollege.cob
 
 ### Automated Testing (Recommended)
 
-#### Run All Epic 8 Test Cases
+#### Run All Epic 10 Test Cases
 
-To verify the stability of the Alpha release, we utilize robust scripts for both formal regression and unstructured exploratory testing.
+To verify the stability of the application, we utilize robust scripts for both formal regression and unstructured exploratory testing.
 
 1. Regression Testing
+
 This script (`run_epic10_tests.sh`) runs formally predefined test cases from Epics 1-9 to confirm existing functionality remains intact after bug fixes and enhancements.
 
 - To run:
@@ -81,6 +82,7 @@ scripts/run_epic10_tests.sh
 - Process: Automatically handles data setup, execution, comparison against expected outputs, and generates a Pass/Fail summary.
 
 2. Exploratory Testing
+
 This script (`run_all.sh`) is designed to run unstructured and edge case test scenarios (TC01 through TC15) used in exploratory testing to discover unexpected behaviors.
 
 - To run:
