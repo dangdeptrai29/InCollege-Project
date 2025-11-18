@@ -1,60 +1,36 @@
-## InCollege Project – Week 8 Deliverable
+## InCollege Project – Week 10 (Final) Deliverable
 
 ### Description
 
-This repository contains the Week 8 deliverable for the InCollege Project. The objective of this milestone is to implement the Basic Messaging System (Part 1), enabling users to send private messages to other users they are already connected with.
+This repository contains the Week 10 deliverable for the InCollege Project. The objective of this milestone is system enhancements & bug fixing. The application has been tested for bugs, and quality-of-life enhancements have been implemented to ensure stability and user-friendliness.
 
-All inputs are read from file, and all outputs are displayed on screen and duplicated into an output file for verification and automated testing.
+This version represents the culmination of Weeks 1 through 9. To ensure no previous functionality has been broken by recent changes, we utilize a full Regression Testing Suite and complement this with Exploratory Testing
 
 ### Key Features
 
-- **Messaging System – Part 1 (Send Message)**
-  - A new Messages option is added to the main post-login menu.
-  - Upon selecting Messages, users will see:
-    1. Send a New Message
-    2. View My Messages (under construction for this week)
+The InCollege application now supports the full suite of user stories implemeted throughout the semester:
 
-- **Sending a Message**
-  - The user selects Send a New Message and enters the recipient’s username.
-  - The program verifies:
-    - The recipient exists and is already connected to the sender.
-    - If not connected or not found, an appropriate error is displayed.
-  - After validation, the user is prompted to enter message content (free-form text).
-  - Once entered:
-    - The message is persistently saved in a data file.
-    - Confirmation is displayed on screen and recorded in the output file.
+- **User Management**
+  - Registration: Create unique accounts with password validation (uppercase, digit, special character)
+  - Authentication: Secure login with credential verification
 
-- **Message Persistence**
-  - Each message record includes:
-    - Sender’s Username
-    - Recipient’s Username
-    - Message Content
-    - (Optional) Timestamp of when the message was sent
-  - Messages remain available even after the program exits (for Week 9 retrieval).
+- **Profile System**
+  - Create/Edit: Users can add details including University, Major, About Me, and lists for Experience and Education
+  - View Profile: Display profile details for self and searched users
 
-- **File I/O Requirements**
-  - Input: All inputs are read from `io/InCollege-Input.txt`.
-  - Output: All screen output is mirrored to `io/InCollege-Output.txt`.
-  - Ensures reproducible and verifiable test runs.
+- **Job System**
+  - Post Jobs: Users can post job opportunities (persisted to file)
+  - Browse & Apply: View available jobs and apply for them
+  - Application History: View a summary of jobs the user has applied to
 
-### Tester Responsibilities
+- **Message System**
+  - Send Message: Send private messages to connected users
+  - View Inbox: View received messages, sorted chronologically by timestamp
 
-Testers are responsible for verifying all new message-sending functionality end-to-end.
-
-- **Develop Test Cases**
-  -  Positive cases (sending messages to valid connections)
-  -  Negative cases:
-    - Sending to non-existent users
-    - Sending to users not in network
-    - Sending to pending connections
-    - Sending overly long messages (edge case)
-  - Persistence test: Verify that sent messages are saved correctly.
-
-- **Run Automated Tests**
-  - Use the provided script to compile, seed data, and run each case.
-
-- **Verify Outputs**
-  - Compare the console and output files — they must be identical.
+- **Quality-of-life Enhancements (Week 10)**
+  - Universal Navigation: Added "Go Back" options to sub-menus
+  - Data Persistence: All Data (Users, Profiles, Connections, Jobs, Applications, Messages) is saved to text files
+  - Input/Output: All user interactions are read from `io/InCollege-Input.txt` and mirrored to `io/InCollege-Output.txt`
 
 ### Installation & Usage
 
@@ -90,23 +66,35 @@ cobc -x -free -o InCollegeTest src/InCollege.cob
 
 #### Run All Epic 8 Test Cases
 
-To automatically compile, seed data, and run every Epic 8 test case:
+To verify the stability of the Alpha release, we utilize robust scripts for both formal regression and unstructured exploratory testing.
+
+1. Regression Testing
+This script (`run_epic10_tests.sh`) runs formally predefined test cases from Epics 1-9 to confirm existing functionality remains intact after bug fixes and enhancements.
+
+- To run:
 
 ```bash
-scripts/run_epic8_generate_outputs.sh
+scripts/run_epic10_tests.sh
 ```
 
-This will:
+- Purpose: Confirms that bug fixes haven't introduced regressions.
+- Process: Automatically handles data setup, execution, comparison against expected outputs, and generates a Pass/Fail summary.
 
-- Reset persistent data (`data/users.txt`, `data/connections.txt`, `data/messages.txt`)
-- Automatically execute every file in `tests/epic8/inputs/`
-- Save outputs to `tests/epic8/outputs/`
+2. Exploratory Testing
+This script (`run_all.sh`) is designed to run unstructured and edge case test scenarios (TC01 through TC15) used in exploratory testing to discover unexpected behaviors.
 
-Each successful test shows:
+- To run:
 
-```text
-🟩 Generated: tests/epic8_outputs/TC01_send_valid_connection.out.txt
+```bash
+tests/epic10/exploratory/run_all.sh
 ```
+
+- Purpose: Executes non-formal test cases to cover edge cases and unexpected behaviors.
+- Process: 
+  - Wipes and resets the data/ and io/ directories for each test run.
+  - Loads setup files from tests/epic10/exploratory/setups/$tc/ if present.
+  - Runs the InCollege executable.
+  - Saves the resulting InCollege-Output.txt to tests/epic10/exploratory/outputs/ for manual review.
 
 ### Sample Input/Output
 
@@ -114,13 +102,19 @@ Each successful test shows:
 
 ```text
 1
-SendingUser
-Password123!
-6
+AdminUser
+AdminPass1!
+7
+2
 1
-ConnectedUser
-Hello there! How are you?
+1
+0
 3
+4
+8
+2
+3
+9
 ```
 
 #### Sample Output (`io/InCollege-Output.txt`)
@@ -128,23 +122,24 @@ Hello there! How are you?
 
 ### Repository Structure
 
-- `src/` → COBOL source files
-- `data/` → Users, connections, and messages data
-- `io/` → Active input/output files for program runs
-- `tests/epic8/inputs/` → Input test cases for Week 8
-- `tests/epic8/outputs/` → Generated outputs
-- `scripts/`
-- `submission/epic8/` → Zipped deliverables for submission
+- `src/` → `InCollege.cob` (Main source code)
+- `data/` → `users.txt`, `profiles.txt`, `connections.txt`, `jobs.txt`, `applications.txt`, `messages.txt`, `requests.txt`, `search_history.txt`
+- `io/` → Active I/O files (`InCollege-Input.txt`, `InCollege-Output.txt`)
+- `scripts/run_epic10_tests.sh` → Main regression testing script.
+- `tests/epic10/exploratory/run_all.sh` → Script for running exploratory test cases.
+- `tests/epic10/regression/` → Inputs and expected outputs for formal regression.
+- `tests/epic10/exploratory/` → Inputs, setups, and generated outputs for exploratory tests.
+- `submission/week10/` → Deliverables.
 
 ### Deliverables Summary
 
 | # | Deliverable                    | Description                                       |
 |---|--------------------------------|---------------------------------------------------|
 | 1 | `Roles.txt`                    | Roles of all team members                         |
-| 2 | `InCollege.cob`                | Working COBOL program with Messaging menu         |
-| 3 | `InCollege-Input.txt`          | Sample input demonstrating message sending        |
-| 4 | `InCollege-Output.txt`         | Sample output of message sent successfully        |
-| 5 | `Epic8-Storyx-Test-Input.zip`  | Compressed test input files                       |
-| 6 | `Epic8-Storyx-Test-Output.zip` | Actual generated test outputs                     |
-| 7 | `Jira.jpg`                      | Screenshot of updated Jira board (Epic #8)        |
+| 2 | `InCollege.cob`                | Working COBOL program        |
+| 3 | `InCollege-Input.txt`          | Sample input demonstrating all features        |
+| 4 | `InCollege-Output.txt`         | Sample output        |
+| 5 | `Epic10-Tests.zip`  | Screenshot of the Jira board                       |
+| 6 | `Jira.jpg` | Actual generated test outputs                     |
+| 7 | `Burndown.jpg`                      | Sprint Burndown charts        |
 | 8 | `GitHub.jpg`                    | Screenshot of GitHub commit history               |
